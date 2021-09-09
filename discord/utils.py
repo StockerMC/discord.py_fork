@@ -64,7 +64,7 @@ import warnings
 from .errors import InvalidArgument
 
 try:
-    import orjson
+    import orjson # type: ignore
 except ModuleNotFoundError:
     HAS_ORJSON = False
 else:
@@ -90,13 +90,13 @@ DISCORD_EPOCH = 1420070400000
 
 
 class _MissingSentinel:
-    def __eq__(self, other):
+    def __eq__(self, other: Any) -> bool:
         return False
 
-    def __bool__(self):
+    def __bool__(self) -> bool:
         return False
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return '...'
 
 
