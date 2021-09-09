@@ -234,7 +234,7 @@ class VoiceClient(VoiceProtocol):
         super().__init__(client, channel)
         state = client._connection
         self.token: str = MISSING
-        self.socket = MISSING
+        self.socket: socket.socket = MISSING
         self.loop: asyncio.AbstractEventLoop = state.loop
         self._state: ConnectionState = state
         # this will be used in the AudioPlayer thread
@@ -255,6 +255,8 @@ class VoiceClient(VoiceProtocol):
         self.encoder: Encoder = MISSING
         self._lite_nonce: int = 0
         self.ws: DiscordVoiceWebSocket = MISSING
+        self.ip: str = MISSING
+        self.port: int = MISSING
 
     warn_nacl = not has_nacl
     supported_modes: Tuple[SupportedModes, ...] = (
@@ -271,7 +273,8 @@ class VoiceClient(VoiceProtocol):
     @property
     def user(self) -> ClientUser:
         """:class:`ClientUser`: The user connected to voice (i.e. ourselves)."""
-        return self._state.user
+        # the bot's user won't be None here
+        return self._state.user # type: ignore
 
     def checked_add(self, attr, value, limit):
         val = getattr(self, attr)
@@ -543,7 +546,7 @@ class VoiceClient(VoiceProtocol):
 
     def _encrypt_xsalsa20_poly1305_suffix(self, header: bytes, data) -> bytes:
         box = nacl.secret.SecretBox(bytes(self.secret_key))
-        nonce = nacl.utils.random(nacl.secret.SecretBox.NONCE_SIZE)
+        nonce = nacl.utils.random(nacl.secret.SecretBox.NONCE_SIZE) # type: ignore
 
         return header + box.encrypt(bytes(data), nonce).ciphertext + nonce
 
