@@ -70,7 +70,7 @@ if TYPE_CHECKING:
 
     from .types.activity import Activity as ActivityPayload
     from .types.channel import DMChannel as DMChannelPayload
-    from .types.user import User as UserPayload
+    from .types.user import User as UserPayload, PartialUser as PartialUserPayload
     from .types.emoji import Emoji as EmojiPayload
     from .types.sticker import GuildSticker as GuildStickerPayload
     from .types.guild import Guild as GuildPayload
@@ -338,7 +338,7 @@ class ConnectionState:
     def deref_user(self, user_id: int) -> None:
         self._users.pop(user_id, None)
 
-    def create_user(self, data: UserPayload) -> User:
+    def create_user(self, data: Union[UserPayload, PartialUserPayload]) -> User:
         return User(state=self, data=data)
 
     def deref_user_no_intents(self, user_id: int) -> None:
