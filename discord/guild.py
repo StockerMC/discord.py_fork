@@ -76,6 +76,7 @@ from .stage_instance import StageInstance
 from .threads import Thread, ThreadMember
 from .sticker import GuildSticker
 from .file import File
+from .welcome_screen import WelcomeScreen
 
 
 __all__ = (
@@ -2942,3 +2943,31 @@ class Guild(Hashable):
         ws = self._state._get_websocket(self.id)
         channel_id = channel.id if channel else None
         await ws.voice_state(self.id, channel_id, self_mute, self_deaf)
+
+    async def welcome_screen(self) -> Optional[WelcomeScreen]:
+        """|coro|
+
+        Returns the guild's welcome screen.
+
+        The guild must have ``COMMUNITY`` in :attr:`~Guild.features`.
+
+        You must have the :attr:`~Permissions.manage_guild` permission to use
+        this as well.
+
+        .. versionadded:: 2.0
+
+        Raises
+        -------
+        Forbidden
+            You do not have the proper permissions to get this.
+        HTTPException
+            Retrieving the welcome screen failed.
+
+        Returns
+        --------
+        Optional[:class:`WelcomeScreen`]
+            The welcome screen. If this is ``None``, the guild does not
+            have a welcome screen.
+        """
+        data = await self._state.http.get_guild_welcome_screen(self.id)
+        return WelcomeScreen(state=self._state, data=data, guild=self)

@@ -28,6 +28,12 @@ from typing import List, Optional, TypedDict
 from .snowflake import Snowflake
 
 
+class ModifiedWelcomeScreen(TypedDict, total=False):
+    enabled: Optional[bool]
+    description: Optional[str]
+    welcome_channels: Optional[List[WelcomeScreenChannel]]
+
+
 class WelcomeScreen(TypedDict):
     description: str
     welcome_channels: List[WelcomeScreenChannel]

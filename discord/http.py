@@ -82,7 +82,7 @@ if TYPE_CHECKING:
         channel,
         widget,
         threads,
-        voice,
+        welcome_screen,
         sticker,
     )
     from .types.snowflake import Snowflake, SnowflakeList
@@ -189,7 +189,7 @@ class HTTPClient:
                 connector=self.connector, ws_response_class=DiscordClientWebSocketResponse
             )
 
-    async def ws_connect(self, url: str, *, compress: int = 0) -> Any:
+    async def ws_connect(self, url: str, *, compress: int = 0) -> aiohttp.ClientWebSocketResponse:
         kwargs = {
             'proxy_auth': self.proxy_auth,
             'proxy': self.proxy,
@@ -1922,3 +1922,14 @@ class HTTPClient:
 
     def get_user(self, user_id: Snowflake) -> Response[user.User]:
         return self.request(Route('GET', '/users/{user_id}', user_id=user_id))
+
+    def get_guild_welcome_screen(self, guild_id: Snowflake) -> Response[welcome_screen.WelcomeScreen]:
+        return self.request(Route('GET', '/guilds/{guild_id}/welcome-screen', guild_id=guild_id))
+
+    def modify_guild_welcome_screen(
+        self,
+        guild_id: Snowflake,
+        payload: welcome_screen.ModifiedWelcomeScreen,
+        reason: Optional[str] = None
+    ) -> Response[welcome_screen.WelcomeScreen]:
+        return self.request(Route('PATCH', '/guilds/{guild_id}/welcome-screen', guild_id=guild_id), json=payload, reason=reason)

@@ -31,6 +31,7 @@ from .object import Object
 from .mixins import Hashable
 from .enums import ChannelType, VerificationLevel, InviteTarget, try_enum
 from .appinfo import PartialAppInfo
+from .welcome_screen import WelcomeScreen
 
 __all__ = (
     'PartialInviteChannel',
@@ -48,14 +49,25 @@ if TYPE_CHECKING:
         PartialChannel as InviteChannelPayload,
     )
     from .state import ConnectionState
-    from .guild import Guild
     from .abc import GuildChannel
     from .user import User
+    from .guild import Guild
 
     InviteGuildType = Union[Guild, 'PartialInviteGuild', Object]
     InviteChannelType = Union[GuildChannel, 'PartialInviteChannel', Object]
 
     import datetime
+
+
+def _resolve_welcome_screen(state: ConnectionState, data: Optional[InviteGuildPayload], guild: Union[Guild, PartialInviteGuild, Object]) -> Optional[WelcomeScreen]:
+    if data is None:
+        return None
+
+    welcome_screen = data.get('welcome_screen')
+    if welcome_screen is None:
+        return None
+
+    return WelcomeScreen(state=state, data=welcome_screen, guild=guild)
 
 
 class PartialInviteChannel:
@@ -154,9 +166,20 @@ class PartialInviteGuild:
         The partial guild's description.
     """
 
-    __slots__ = ('_state', 'features', '_icon', '_banner', 'id', 'name', '_splash', 'verification_level', 'description')
+    __slots__ = (
+        'features',
+        'id',
+        'name',
+        'verification_level',    
+        'description',
+        '_state',
+        '_icon',
+        '_banner',
+        '_splash',
+        '_welcome_screen'
+    )
 
-    def __init__(self, state: ConnectionState, data: InviteGuildPayload, id: int):
+    def __init__(self, state: ConnectionState, data: InviteGuildPayload, id: int) -> None:
         self._state: ConnectionState = state
         self.id: int = id
         self.name: str = data['name']
@@ -166,6 +189,7 @@ class PartialInviteGuild:
         self._splash: Optional[str] = data.get('splash')
         self.verification_level: VerificationLevel = try_enum(VerificationLevel, data.get('verification_level'))
         self.description: Optional[str] = data.get('description')
+        self._welcome_screen: Optional[WelcomeScreen] = _resolve_welcome_screen(state, data, self)
 
     def __str__(self) -> str:
         return self.name
@@ -201,6 +225,23 @@ class PartialInviteGuild:
         if self._splash is None:
             return None
         return Asset._from_guild_image(self._state, self.id, self._splash, path='splashes')
+
+    async def welcome_screen(self) -> Optional[WelcomeScreen]:
+        """|coro|
+
+        Returns the guild's welcome screen.
+
+        The guild must have ``COMMUNITY`` in :attr:`~PartialInviteGuild.features`.
+
+        .. versionadded:: 2.0
+
+        Returns
+        --------
+        Optional[:class:`WelcomeScreen`]
+            The welcome screen. If this is ``None``, the guild does not
+            have a welcome screen.
+        """
+        return self._welcome_screen
 
 
 I = TypeVar('I', bound='Invite')
