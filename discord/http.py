@@ -1929,7 +1929,7 @@ class HTTPClient:
     def modify_guild_welcome_screen(
         self,
         guild_id: Snowflake,
-        payload: welcome_screen.ModifiedWelcomeScreen,
+        payload: welcome_screen.EditWelcomeScreen,
         reason: Optional[str] = None
     ) -> Response[welcome_screen.WelcomeScreen]:
         return self.request(Route('PATCH', '/guilds/{guild_id}/welcome-screen', guild_id=guild_id), json=payload, reason=reason)

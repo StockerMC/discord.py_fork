@@ -15,7 +15,7 @@ if TYPE_CHECKING:
     from .types.welcome_screen import (
         WelcomeScreen as WelcomeScreenPayload,
         WelcomeScreenChannel as WelcomeScreenChannelPayload,
-        ModifiedWelcomeScreen as ModifiedWelcomeScreenPayload,
+        EditWelcomeScreen as EditWelcomeScreenPayload,
     )
 
     WCT = TypeVar('WCT', bound='WelcomeScreenChannel')
@@ -106,7 +106,7 @@ class WelcomeScreen:
         :class:`WelcomeScreen`
             The edited welcome screen.
         """
-        ret: ModifiedWelcomeScreenPayload = {}
+        ret: EditWelcomeScreenPayload = {}
         if enabled is not MISSING:
             ret['enabled'] = enabled
 

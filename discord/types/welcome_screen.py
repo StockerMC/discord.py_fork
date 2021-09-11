@@ -28,7 +28,7 @@ from typing import List, Optional, TypedDict
 from .snowflake import Snowflake
 
 
-class ModifiedWelcomeScreen(TypedDict, total=False):
+class EditWelcomeScreen(TypedDict, total=False):
     enabled: Optional[bool]
     description: Optional[str]
     welcome_channels: Optional[List[WelcomeScreenChannel]]
