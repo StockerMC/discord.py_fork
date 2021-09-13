@@ -13,10 +13,10 @@ discord.py
 
 A modern, easy to use, feature-rich, and async ready API wrapper for Discord written in Python.
 
-The Future of discord.py
+This is a fork of discord.py
 --------------------------
 
-Please read the `gist <https://gist.github.com/Rapptz/4a2f62751b9600a31a0d3c78100287f1>`_ for the future of this project. It's been a good one.
+Please read the `gist <https://gist.github.com/Rapptz/4a2f62751b9600a31a0d3c78100287f1>`_ for why the original was discontinued.
 
 Key Features
 -------------
