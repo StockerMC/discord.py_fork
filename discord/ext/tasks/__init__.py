@@ -27,15 +27,14 @@ from __future__ import annotations
 import asyncio
 import datetime
 from typing import (
-    Any, 
-    Awaitable, 
+    Any,
     Callable,
-    Coroutine, 
+    Coroutine,
     Generic,
-    List, 
+    List,
     Optional,
-    TYPE_CHECKING, 
-    Type, 
+    TYPE_CHECKING,
+    Type,
     TypeVar,
     Union,
     Tuple,
