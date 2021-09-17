@@ -151,12 +151,12 @@ class FFmpegAudio(AudioSource):
 
         self._process: subprocess.Popen = self._spawn_process(args, **kwargs)
         self._stdout: IO[bytes] = self._process.stdout  # type: ignore
-        self._stdin: Optional[IO[Bytes]] = None
+        self._stdin: IO[bytes] = MISSING
         self._pipe_thread: Optional[threading.Thread] = None
 
         if piping:
             n = f'popen-stdin-writer:{id(self):#x}'
-            self._stdin = self._process.stdin
+            self._stdin = self._process.stdin  # type: ignore
             self._pipe_thread = threading.Thread(target=self._pipe_writer, args=(source,), daemon=True, name=n)
             self._pipe_thread.start()
 
@@ -725,6 +725,6 @@ class AudioPlayer(threading.Thread):
 
     def _speak(self, speaking: bool) -> None:
         try:
-            asyncio.run_coroutine_threadsafe(self.client.ws.speak(speaking), self.client.loop)
+            asyncio.run_coroutine_threadsafe(self.client.ws.speak(speaking), self.client.loop)  # type: ignore
         except Exception as e:
             _log.info("Speaking call in player failed: %s", e)
