@@ -1152,7 +1152,7 @@ class Messageable:
     @overload
     async def send(
         self,
-        content: Optional[str] = ...,
+        content: Optional[Any] = ...,
         *,
         tts: bool = ...,
         embed: Embed = ...,
@@ -1170,7 +1170,7 @@ class Messageable:
     @overload
     async def send(
         self,
-        content: Optional[str] = ...,
+        content: Optional[Any] = ...,
         *,
         tts: bool = ...,
         embed: Embed = ...,
@@ -1188,7 +1188,7 @@ class Messageable:
     @overload
     async def send(
         self,
-        content: Optional[str] = ...,
+        content: Optional[Any] = ...,
         *,
         tts: bool = ...,
         embeds: List[Embed] = ...,
@@ -1206,7 +1206,7 @@ class Messageable:
     @overload
     async def send(
         self,
-        content: Optional[str] = ...,
+        content: Optional[Any] = ...,
         *,
         tts: bool = ...,
         embeds: List[Embed] = ...,
