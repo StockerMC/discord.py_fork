@@ -35,27 +35,27 @@ To install the library without full voice support, you can just run the followin
 .. code:: sh
 
     # Linux/macOS
-    python3 -m pip install -U discord.py
+    python3 -m pip install -U git+https://github.com/StockerMC/discord.py
 
     # Windows
-    py -3 -m pip install -U discord.py
+    py -3 -m pip install -U git+https://github.com/StockerMC/discord.py
 
 Otherwise to get voice support you should run the following command:
 
 .. code:: sh
 
     # Linux/macOS
-    python3 -m pip install -U "discord.py[voice]"
+    python3 -m pip install -U "git+https://github.com/StockerMC/discord.py[voice]"
 
     # Windows
-    py -3 -m pip install -U discord.py[voice]
+    py -3 -m pip install -U git+https://github.com/StockerMC/discord.py[voice]
 
 
 To install the development version, do the following:
 
 .. code:: sh
 
-    $ git clone https://github.com/Rapptz/discord.py
+    $ git clone git+https://github.com/StockerMC/discord.py
     $ cd discord.py
     $ python3 -m pip install -U .[voice]
 
@@ -79,7 +79,9 @@ Quick Example
 
     class MyClient(discord.Client):
         async def on_ready(self):
-            print('Logged on as', self.user)
+            print(f'Logged in as {self.user} (ID: {self.user.id})')
+            print('------')
+
 
         async def on_message(self, message):
             # don't respond to ourselves
@@ -107,6 +109,33 @@ Bot Example
         await ctx.send('pong')
 
     bot.run('token')
+
+Slash Command Example
+~~~~~~~~~~~~~
+
+.. code:: py
+
+    import discord
+
+    class MyClient(discord.Client):
+        async def on_ready(self):
+            print(f'Logged in as {self.user} (ID: {self.user.id})')
+            print('------')
+
+    class Avatar(discord.SlashCommand):
+        """Get information about yourself or the provided user."""
+
+        # the `required` kwarg keyword argument can also be set to `False`
+        # instead of typehinting the argument as optional
+        user: typing.Optional[discord.User] = discord.application_command_option(description='The user to get information about.')
+
+        async def callback(self, response: discord.SlashCommandResponse):
+            avatar = response.options.user.display_avatar.url
+            await response.interaction.response.send_message(avatar, ephemeral=True)
+
+    client = MyClient()
+    client.add_application_command(Avatar())
+    client.run('token')
 
 You can find more examples in the examples directory.
 
