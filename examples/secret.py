@@ -12,7 +12,7 @@ async def secret(ctx: commands.Context):
     if ctx.invoked_subcommand is None:
         await ctx.send('Shh!', delete_after=5)
 
-def create_overwrites(ctx, *objects):
+def create_overwrites(ctx: commands.Context, *objects):
     """This is just a helper function that creates the overwrites for the 
     voice/text channels.
 
