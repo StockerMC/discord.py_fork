@@ -77,7 +77,7 @@ Quick Example
             print('------')
 
 
-        async def on_message(self, message):
+        async def on_message(self, message: discord.Message):
             # don't respond to ourselves
             if message.author == self.user:
                 return
@@ -99,7 +99,7 @@ Bot Example
     bot = commands.Bot(command_prefix='>')
 
     @bot.command()
-    async def ping(ctx):
+    async def ping(ctx: commands.Context):
         await ctx.send('pong')
 
     bot.run('token')
