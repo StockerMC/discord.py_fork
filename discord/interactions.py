@@ -121,7 +121,7 @@ class Interaction:
 
     def __init__(self, *, data: InteractionPayload, state: ConnectionState):
         self._state: ConnectionState = state
-        self._session: ClientSession = state.http._HTTPClient__session
+        self._session: ClientSession = state.http._HTTPClient__session  # type: ignore
         self._original_message: Optional[InteractionMessage] = None
         self._from_data(data)
 
@@ -611,7 +611,7 @@ class InteractionResponse:
             payload['attachments'] = [a.to_dict() for a in attachments]
 
         if view is not MISSING:
-            state.prevent_view_updates_for(message_id)
+            state.prevent_view_updates_for(message_id)  # type: ignore
             if view is None:
                 payload['components'] = []
             else:
