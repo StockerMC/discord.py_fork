@@ -63,7 +63,6 @@ from .application_commands import (
     MessageCommandResponse,
     UserCommandResponse,
     SlashCommandOptions,
-    BaseApplicationCommand,
 )
 
 if TYPE_CHECKING:
@@ -1106,10 +1105,10 @@ class ConnectionState:
 
         return self._add_guild_from_data(data)
 
-    def is_guild_evicted(self, guild) -> bool:
+    def is_guild_evicted(self, guild: Guild) -> bool:
         return guild.id not in self._guilds
 
-    async def chunk_guild(self, guild, *, wait=True, cache=None):
+    async def chunk_guild(self, guild: Guild, *, wait: bool = True, cache: bool = True) -> Union[List[Member], asyncio.Future[List[Member]]]:
         cache = cache or self.member_cache_flags.joined
         request = self._chunk_requests.get(guild.id)
         if request is None:
