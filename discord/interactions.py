@@ -51,6 +51,9 @@ if TYPE_CHECKING:
         Interaction as InteractionPayload,
         InteractionData,
     )
+    from .types.webhook import (
+        Webhook as WebhookPayload
+    )
     from .guild import Guild
     from .state import ConnectionState
     from .file import File
@@ -201,7 +204,7 @@ class Interaction:
     @utils.cached_slot_property('_cs_followup')
     def followup(self) -> Webhook:
         """:class:`Webhook`: Returns the follow up webhook for follow up interactions."""
-        payload = {
+        payload: WebhookPayload = {
             'id': self.application_id,
             'type': 3,
             'token': self.token,

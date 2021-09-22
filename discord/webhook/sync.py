@@ -37,7 +37,7 @@ import time
 import re
 
 from urllib.parse import quote as urlquote
-from typing import Any, Dict, List, Literal, Optional, TYPE_CHECKING, Tuple, Type, TypeVar, Union, overload
+from typing import Any, Dict, List, Literal, Optional, TYPE_CHECKING, Tuple, Type, TypeVar, Union, Coroutine, overload
 
 from .. import utils
 from ..errors import InvalidArgument, HTTPException, Forbidden, NotFound, DiscordServerError
@@ -61,36 +61,47 @@ if TYPE_CHECKING:
     from ..types.webhook import (
         Webhook as WebhookPayload,
     )
-    from ..abc import Snowflake
+    from ..types.message import (
+        Message as MessagePayload
+    )
 
-    try:
-        from requests import Session, Response
-    except ModuleNotFoundError:
-        pass
+    from ..abc import Snowflake
+    from ..state import ConnectionState
+
+    from types import TracebackType
+    from requests import Session, Response
+
+    DLT = TypeVar('DLT', bound='DeferredLock')
+    SWT = TypeVar('SWT', bound='SyncWebhook')
+    T = TypeVar('T')
 
 MISSING = utils.MISSING
 
 
 class DeferredLock:
-    def __init__(self, lock: threading.Lock):
-        self.lock = lock
+    def __init__(self, lock: threading.Lock) -> None:
+        self.lock: threading.Lock = lock
         self.delta: Optional[float] = None
 
-    def __enter__(self):
+    def __enter__(self: DLT) -> DLT:
         self.lock.acquire()
         return self
 
     def delay_by(self, delta: float) -> None:
         self.delta = delta
 
-    def __exit__(self, type, value, traceback):
+    def __exit__(self,
+        exc_type: Optional[Type[BaseException]],
+        exc_value: Optional[BaseException],
+        traceback: Optional[TracebackType],
+    ) -> None:
         if self.delta:
             time.sleep(self.delta)
         self.lock.release()
 
 
 class WebhookAdapter:
-    def __init__(self):
+    def __init__(self) -> None:
         self._locks: Dict[Any, threading.Lock] = {}
 
     def request(
@@ -216,7 +227,7 @@ class WebhookAdapter:
         token: Optional[str] = None,
         session: Session,
         reason: Optional[str] = None,
-    ):
+    ) -> None:
         route = Route('DELETE', '/webhooks/{webhook_id}', webhook_id=webhook_id)
         return self.request(route, session, reason=reason, auth_token=token)
 
@@ -227,7 +238,7 @@ class WebhookAdapter:
         *,
         session: Session,
         reason: Optional[str] = None,
-    ):
+    ) -> None:
         route = Route('DELETE', '/webhooks/{webhook_id}/{webhook_token}', webhook_id=webhook_id, webhook_token=token)
         return self.request(route, session, reason=reason)
 
@@ -239,7 +250,7 @@ class WebhookAdapter:
         *,
         session: Session,
         reason: Optional[str] = None,
-    ):
+    ) -> WebhookPayload:
         route = Route('PATCH', '/webhooks/{webhook_id}', webhook_id=webhook_id)
         return self.request(route, session, reason=reason, payload=payload, auth_token=token)
 
@@ -251,9 +262,51 @@ class WebhookAdapter:
         *,
         session: Session,
         reason: Optional[str] = None,
-    ):
+    ) -> WebhookPayload:
         route = Route('PATCH', '/webhooks/{webhook_id}/{webhook_token}', webhook_id=webhook_id, webhook_token=token)
         return self.request(route, session, reason=reason, payload=payload)
+
+    @overload
+    def execute_webhook(
+        self,
+        webhook_id: int,
+        token: str,
+        *,
+        session: Session,
+        payload: Optional[Dict[str, Any]] = None,
+        multipart: Optional[List[Dict[str, Any]]] = None,
+        files: Optional[List[File]] = None,
+        thread_id: Optional[int] = None,
+        wait: Literal[True],
+    ) -> MessagePayload: ...
+
+    @overload
+    def execute_webhook(
+        self,
+        webhook_id: int,
+        token: str,
+        *,
+        session: Session,
+        payload: Optional[Dict[str, Any]] = None,
+        multipart: Optional[List[Dict[str, Any]]] = None,
+        files: Optional[List[File]] = None,
+        thread_id: Optional[int] = None,
+        wait: Literal[False],
+    ) -> None: ...
+
+    @overload
+    def execute_webhook(
+        self,
+        webhook_id: int,
+        token: str,
+        *,
+        session: Session,
+        payload: Optional[Dict[str, Any]] = None,
+        multipart: Optional[List[Dict[str, Any]]] = None,
+        files: Optional[List[File]] = None,
+        thread_id: Optional[int] = None,
+        wait: bool = ...,
+    ) -> None: ...
 
     def execute_webhook(
         self,
@@ -266,8 +319,8 @@ class WebhookAdapter:
         files: Optional[List[File]] = None,
         thread_id: Optional[int] = None,
         wait: bool = False,
-    ):
-        params = {'wait': int(wait)}
+    ) -> Optional[MessagePayload]:
+        params: Dict[str, Any] = {'wait': wait}
         if thread_id:
             params['thread_id'] = thread_id
         route = Route('POST', '/webhooks/{webhook_id}/{webhook_token}', webhook_id=webhook_id, webhook_token=token)
@@ -280,7 +333,7 @@ class WebhookAdapter:
         message_id: int,
         *,
         session: Session,
-    ):
+    ) -> MessagePayload:
         route = Route(
             'GET',
             '/webhooks/{webhook_id}/{webhook_token}/messages/{message_id}',
@@ -300,7 +353,7 @@ class WebhookAdapter:
         payload: Optional[Dict[str, Any]] = None,
         multipart: Optional[List[Dict[str, Any]]] = None,
         files: Optional[List[File]] = None,
-    ):
+    ) -> MessagePayload:
         route = Route(
             'PATCH',
             '/webhooks/{webhook_id}/{webhook_token}/messages/{message_id}',
@@ -317,7 +370,7 @@ class WebhookAdapter:
         message_id: int,
         *,
         session: Session,
-    ):
+    ) -> None:
         route = Route(
             'DELETE',
             '/webhooks/{webhook_id}/{webhook_token}/messages/{message_id}',
@@ -333,7 +386,7 @@ class WebhookAdapter:
         token: str,
         *,
         session: Session,
-    ):
+    ) -> WebhookPayload:
         route = Route('GET', '/webhooks/{webhook_id}', webhook_id=webhook_id)
         return self.request(route, session=session, auth_token=token)
 
@@ -343,7 +396,7 @@ class WebhookAdapter:
         token: str,
         *,
         session: Session,
-    ):
+    ) -> WebhookPayload:
         route = Route('GET', '/webhooks/{webhook_id}/{webhook_token}', webhook_id=webhook_id, webhook_token=token)
         return self.request(route, session=session)
 
@@ -514,11 +567,17 @@ class SyncWebhook(BaseWebhook):
 
     __slots__: Tuple[str, ...] = ('session',)
 
-    def __init__(self, data: WebhookPayload, session: Session, token: Optional[str] = None, state=None):
+    def __init__(
+        self,
+        data: WebhookPayload,
+        session: Session,
+        token: Optional[str] = None,
+        state: Optional[Union[ConnectionState, _WebhookState]] = None
+    ) -> None:
         super().__init__(data, token, state)
         self.session = session
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f'<Webhook id={self.id!r}>'
 
     @property
@@ -527,7 +586,7 @@ class SyncWebhook(BaseWebhook):
         return f'https://discord.com/api/webhooks/{self.id}/{self.token}'
 
     @classmethod
-    def partial(cls, id: int, token: str, *, session: Session = MISSING, bot_token: Optional[str] = None) -> SyncWebhook:
+    def partial(cls: Type[SWT], id: int, token: str, *, session: Session = MISSING, bot_token: Optional[str] = None) -> SWT:
         """Creates a partial :class:`Webhook`.
 
         Parameters
@@ -566,7 +625,7 @@ class SyncWebhook(BaseWebhook):
         return cls(data, session, token=bot_token)
 
     @classmethod
-    def from_url(cls, url: str, *, session: Session = MISSING, bot_token: Optional[str] = None) -> SyncWebhook:
+    def from_url(cls: Type[SWT], url: str, *, session: Session = MISSING, bot_token: Optional[str] = None) -> SyncWebhook:
         """Creates a partial :class:`Webhook` from a webhook URL.
 
         Parameters
@@ -605,7 +664,7 @@ class SyncWebhook(BaseWebhook):
             if not isinstance(session, requests.Session):
                 raise TypeError(f'expected requests.Session not {session.__class__!r}')
         else:
-            session = requests  # type: ignore
+            session = requests.Session()
         return cls(data, session, token=bot_token)  # type: ignore
 
     def fetch(self, *, prefer_auth: bool = True) -> SyncWebhook:

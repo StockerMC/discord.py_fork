@@ -1009,7 +1009,7 @@ class HTTPClient:
         channel_id: Snowflake,
         webhook_channel_id: Snowflake,
         reason: Optional[str] = None,
-    ) -> Response[None]:
+    ) -> Response[channel.FollowedChannel]:
         payload = {
             'webhook_channel_id': str(webhook_channel_id),
         }

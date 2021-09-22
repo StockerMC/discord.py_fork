@@ -155,3 +155,8 @@ class StageInstance(TypedDict):
     topic: str
     privacy_level: PrivacyLevel
     discoverable_disabled: bool
+
+
+class FollowedChannel(TypedDict):
+    channel_id: Snowflake
+    webhook_id: Snowflake

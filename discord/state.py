@@ -330,7 +330,7 @@ class ConnectionState:
         for vc in self.voice_clients:
             vc.main_ws = ws  # type: ignore
 
-    def store_user(self, data: UserPayload) -> User:
+    def store_user(self, data: Union[UserPayload, PartialUserPayload]) -> User:
         user_id = int(data['id'])
         try:
             return self._users[user_id]

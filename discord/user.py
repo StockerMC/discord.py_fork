@@ -84,7 +84,7 @@ class BaseUser(_UserTag):
         _public_flags: int
 
     def __init__(self, *, state: ConnectionState, data: Union[UserPayload, PartialUserPayload]) -> None:
-        self._state = state
+        self._state: ConnectionState = state
         self._update(data)
 
     def __repr__(self) -> str:
