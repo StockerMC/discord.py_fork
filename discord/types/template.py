@@ -29,10 +29,12 @@ from .snowflake import Snowflake
 from .user import User
 from .guild import Guild
 
+class _CreateTemplateOptional(TypedDict, total=False):
+    description: Optional[str]
 
-class CreateTemplate(TypedDict):
+
+class CreateTemplate(_CreateTemplateOptional):
     name: str
-    icon: Optional[bytes]
 
 
 class Template(TypedDict):
