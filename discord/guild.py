@@ -2819,7 +2819,7 @@ class Guild(Hashable):
 
         await self._state.http.edit_widget(self.id, payload=payload)
 
-    async def chunk(self, *, cache: bool = True) -> None:
+    async def chunk(self, *, cache: bool = True) -> Optional[List[Member]]:
         """|coro|
 
         Requests all members that belong to this guild. In order to use this,
@@ -2834,6 +2834,13 @@ class Guild(Hashable):
         cache: :class:`bool`
             Whether to cache the members as well.
 
+        Returns
+        -----------
+        Optional[List[:class:`Member`]]
+            The members that belong to the guild.
+
+            If the bot is not in the guild, ``None`` is returned.
+
         Raises
         -------
         ClientException
@@ -2844,7 +2851,10 @@ class Guild(Hashable):
             raise ClientException('Intents.members must be enabled to use this.')
 
         if not self._state.is_guild_evicted(self):
-            return await self._state.chunk_guild(self, cache=cache)
+            # wait is set to True by default, therefore a list of members is returned
+            return await self._state.chunk_guild(self, cache=cache)  # type: ignore
+
+        return None
 
     async def query_members(
         self,
