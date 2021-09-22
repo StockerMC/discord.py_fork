@@ -1,6 +1,11 @@
 import discord
 
 class MyClient(discord.Client):
+    def __init__(self):
+        # setting the application_id kwarg is required when
+        # registering application commands
+        super().__init__(application_id=123)
+
     async def on_ready(self):
         print(f'Logged in as {self.user} (ID: {self.user.id})')
         print('------')
