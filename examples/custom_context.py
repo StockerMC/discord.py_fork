@@ -3,7 +3,6 @@ import random
 import discord
 from discord.ext import commands
 
-
 class MyContext(commands.Context):
     async def tick(self, value):
         # reacts to the message with an emoji
@@ -20,8 +19,14 @@ class MyContext(commands.Context):
             # we don't mind, so we can just ignore them
             pass
 
-
 class MyBot(commands.Bot):
+    def __init__(self):
+        super().__init__(command_prefix=commands.when_mentioned_or('$'))
+
+    async def on_ready(self):
+        print(f'Logged in as {self.user} (ID: {self.user.id})')
+        print('------')
+
     async def get_context(self, message, *, cls=MyContext):
         # when you override this method, you pass your new Context
         # subclass to the super() method, which tells the bot to
@@ -29,7 +34,7 @@ class MyBot(commands.Bot):
         return await super().get_context(message, cls=cls)
         
 
-bot = MyBot(command_prefix='!')
+bot = MyBot()
 
 @bot.command()
 async def guess(ctx: MyContext, number: int):

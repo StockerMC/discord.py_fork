@@ -5,11 +5,22 @@ import typing
 import discord
 from discord.ext import commands
 
-intents = discord.Intents.default()
-intents.members = True
+import typing
 
-bot = commands.Bot('!', intents=intents)
+import discord
+from discord.ext import commands
 
+class MyBot(commands.Bot):
+    def __init__(self):
+        intents = discord.Intents.default()
+        intents.members = True
+        super().__init__(command_prefix=commands.when_mentioned_or('$'), intents=intents)
+
+    async def on_ready(self):
+        print(f'Logged in as {self.user} (ID: {self.user.id})')
+        print('------')
+
+bot = MyBot()
 
 @bot.command()
 async def userinfo(ctx: commands.Context, user: discord.User):
@@ -71,7 +82,6 @@ class ChannelOrMemberConverter(commands.Converter):
         # so our error handlers can deal with it in one place.
         # The error has to be CommandError derived, so BadArgument works fine here.
         raise commands.BadArgument(f'No Member or TextChannel could be converted from "{argument}"')
-
 
 
 @bot.command()

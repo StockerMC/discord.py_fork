@@ -3,7 +3,15 @@ import typing
 import discord
 from discord.ext import commands
 
-bot = commands.Bot(command_prefix=commands.when_mentioned, description="Nothing to see here!")
+class MyBot(commands.Bot):
+    def __init__(self):
+        super().__init__(command_prefix=commands.when_mentioned_or('$'), description='Nothing to see here!')
+
+    async def on_ready(self):
+        print(f'Logged in as {self.user} (ID: {self.user.id})')
+        print('------')
+
+bot = MyBot()
 
 # the `hidden` keyword argument hides it from the help command. 
 @bot.group(hidden=True)
@@ -12,7 +20,7 @@ async def secret(ctx: commands.Context):
     if ctx.invoked_subcommand is None:
         await ctx.send('Shh!', delete_after=5)
 
-def create_overwrites(ctx: commands.Context, *objects):
+def create_overwrites(ctx, *objects):
     """This is just a helper function that creates the overwrites for the 
     voice/text channels.
 

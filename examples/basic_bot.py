@@ -4,20 +4,22 @@ import discord
 from discord.ext import commands
 import random
 
-description = '''An example bot to showcase the discord.ext.commands extension
-module.
+class MyBot(commands.Bot):
+    def __init__(self):
+        description = '''An example bot to showcase the discord.ext.commands extension
+        module.
 
-There are a number of utility commands being showcased here.'''
+        There are a number of utility commands being showcased here.'''
 
-intents = discord.Intents.default()
-intents.members = True
+        intents = discord.Intents.default()
+        intents.members = True
+        super().__init__(command_prefix=commands.when_mentioned_or('$'), description=description, intents=intents)
 
-bot = commands.Bot(command_prefix='?', description=description, intents=intents)
+    async def on_ready(self):
+        print(f'Logged in as {self.user} (ID: {self.user.id})')
+        print('------')
 
-@bot.event
-async def on_ready():
-    print(f'Logged in as {bot.user} (ID: {bot.user.id})')
-    print('------')
+bot = MyBot()
 
 @bot.command()
 async def add(ctx: commands.Context, left: int, right: int):
