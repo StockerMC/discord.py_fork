@@ -29,7 +29,9 @@ import logging
 import signal
 import sys
 import traceback
-from typing import Any, Callable, Coroutine, Dict, Generator, List, Optional, Sequence, TYPE_CHECKING, Tuple, TypeVar, Union
+import collections
+import inspect
+from typing import Any, Callable, Coroutine, Dict, Generator, List, Optional, Sequence, TYPE_CHECKING, Tuple, TypeVar, Union, Type
 
 import aiohttp
 
@@ -40,7 +42,7 @@ from .widget import Widget
 from .guild import Guild
 from .emoji import Emoji
 from .channel import _threaded_channel_factory, PartialMessageable
-from .enums import ChannelType
+from .enums import ChannelType, ApplicationCommandType
 from .mentions import AllowedMentions
 from .errors import *
 from .enums import Status, VoiceRegion
@@ -61,6 +63,15 @@ from .ui.view import View
 from .stage_instance import StageInstance
 from .threads import Thread
 from .sticker import GuildSticker, StandardSticker, StickerPack, _sticker_factory
+from .application_commands import (
+    SlashCommand,
+    MessageCommand,
+    UserCommand,
+    BaseApplicationCommand,
+    SlashCommandResponse,
+    MessageCommandResponse,
+    UserCommandResponse
+)
 
 if TYPE_CHECKING:
     from .abc import SnowflakeTime, PrivateChannel, GuildChannel, Snowflake
@@ -68,6 +79,10 @@ if TYPE_CHECKING:
     from .message import Message
     from .member import Member
     from .voice_client import VoiceProtocol
+
+    ApplicationCommand = Union[SlashCommand, MessageCommand, UserCommand]
+    ApplicationCommandResponse = Union[SlashCommandResponse, MessageCommandResponse, UserCommandResponse]
+    ApplicationCommandKey = Tuple[str, int, Optional['ApplicationCommandKey']]  # name, type, parent
 
 __all__ = (
     'Client',
@@ -77,6 +92,7 @@ Coro = TypeVar('Coro', bound=Callable[..., Coroutine[Any, Any, Any]])
 
 
 _log = logging.getLogger(__name__)
+_valid_application_command_types = (SlashCommand, MessageCommand, UserCommand)
 
 def _cancel_tasks(loop: asyncio.AbstractEventLoop) -> None:
     tasks = {t for t in asyncio.all_tasks(loop=loop) if not t.done()}
@@ -117,6 +133,9 @@ class Client:
 
     Parameters
     -----------
+    application_id: :class:`int`
+        The client's application ID. This is must be passed if you are
+        registering application commands.
     max_messages: Optional[:class:`int`]
         The maximum number of messages to store in the internal message cache.
         This defaults to ``1000``. Passing in ``None`` disables the message cache.
@@ -137,8 +156,6 @@ class Client:
         Integer starting at ``0`` and less than :attr:`.shard_count`.
     shard_count: Optional[:class:`int`]
         The total number of shards.
-    application_id: :class:`int`
-        The client's application ID.
     intents: :class:`Intents`
         The intents that you want to enable for the session. This is a way of
         disabling and enabling certain gateway events from triggering and being sent.
@@ -234,6 +251,7 @@ class Client:
         self._ready: asyncio.Event = asyncio.Event()
         self._connection._get_websocket = self._get_websocket
         self._connection._get_client = lambda: self
+        self._application_commands: Dict[ApplicationCommandKey, ApplicationCommand] = {}
 
         if VoiceClient.warn_nacl:
             VoiceClient.warn_nacl = False
@@ -413,6 +431,18 @@ class Client:
         """
         print(f'Ignoring exception in {event_method}', file=sys.stderr)
         traceback.print_exc()
+
+    async def on_application_command_error(self, response: ApplicationCommandResponse, exception: Exception) -> None:
+        """|coro|
+
+        The default application command error handler provided by the client.
+
+        By default this prints to :data:`sys.stderr` however it could be
+        overridden to have a different implementation.
+        Check :func:`~discord.on_application_command_error` for more details.
+        """
+        print(f'Ignoring exception in application command {response.command}:', file=sys.stderr)
+        traceback.print_exception(type(exception), exception, exception.__traceback__, file=sys.stderr)
 
     # hooks
 
@@ -603,6 +633,29 @@ class Client:
             An unexpected keyword argument was received.
         """
         await self.login(token)
+        if not self._application_commands:
+            return
+
+        if self.application_id is None:
+            raise TypeError('application_id must be passed to the client if you are registering application commands.')
+
+        guild_payloads = collections.defaultdict(list)
+        global_payload = []
+        for command in self._application_commands.values():
+            command_payload = command.to_dict()
+            for guild_id in command.__application_command_guild_ids__:
+                guild_payloads[guild_id].append(command_payload)
+
+            if command.__application_command_global_command__:
+                global_payload.append(command_payload)
+
+        # TODO make application_id required kwarg and use self.application_id
+        for guild_id, commands in guild_payloads.items():
+            await self.http.bulk_upsert_guild_commands(self.user.id, guild_id, commands)  # type: ignore
+
+        if global_payload:
+            await self.http.bulk_upsert_global_commands(self.user.id, global_payload) # type: ignore
+
         await self.connect(reconnect=reconnect)
 
     def run(self, *args: Any, **kwargs: Any) -> None:
@@ -1640,3 +1693,53 @@ class Client:
         .. versionadded:: 2.0
         """
         return self._connection.persistent_views
+
+    @property
+    def application_commands(self) -> List[ApplicationCommand]:
+        return list(self._application_commands.values())
+
+    def get_application_commands(
+        self,
+        name: str,
+        type: Optional[ApplicationCommandType] = None,
+        global_command: Optional[bool] = None
+    ) -> List[ApplicationCommand]:
+        """
+        
+        """
+        ## USE COMMAND._get_key
+        return [
+            command for command in self._application_commands.values()
+            if command.__application_command_name__ == name and
+            (command.__application_command_type__ == type if type is not None else True) and
+            (command.__application_command_global_command__ is global_command if global_command is not None else True)
+        ]
+
+    def remove_application_command(self, application_command: Union[ApplicationCommand, Type[ApplicationCommand]]) -> Optional[ApplicationCommand]:
+        """
+        
+        """
+        if not hasattr(application_command, '__discord_application_command__'):
+            raise TypeError('application_command must derive from SlashCommand, MessageCommand, or UserCommand')
+
+        return self._application_commands.pop(application_command._get_key(), None)
+
+    def add_application_command(self, application_command: ApplicationCommand) -> None:
+        """
+        
+        """
+        if not isinstance(application_command, _valid_application_command_types):
+            raise TypeError(f'application_command must derive from SlashCommand, MessageCommand, or UserCommand')
+
+        self._application_commands[application_command._get_key()] = application_command
+        subcommands = list(application_command.__application_command_subcommands__.items())
+        while subcommands:
+            name, subcommand = subcommands.pop(0)
+            parent = subcommand.__application_command_parent__
+            parent = parent() if not isinstance(parent, BaseApplicationCommand) else parent
+            subcommand.__application_command_parent__ = parent
+
+            if not isinstance(subcommand, BaseApplicationCommand):
+                parent.__application_command_subcommands__[name] = subcommand()
+
+            subcommands.extend(subcommand.__application_command_subcommands__.items())
