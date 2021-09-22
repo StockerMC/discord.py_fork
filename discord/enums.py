@@ -55,6 +55,7 @@ __all__ = (
     'InteractionType',
     'InteractionResponseType',
     'NSFWLevel',
+    'ApplicationCommandOptionType'
 )
 
 
@@ -587,6 +588,31 @@ class NSFWLevel(Enum, comparable=True):
     explicit = 1
     safe = 2
     age_restricted = 3
+
+
+class ApplicationCommandOptionType(Enum):
+    SUB_COMMAND = 1
+    SUB_COMMAND_GROUP = 2
+    STRING = 3
+    INTEGER = 4 # Any integer between -2^53 and 2^53
+    BOOLEAN = 5
+    USER = 6
+    CHANNEL = 7 # Includes all channel types + categories
+    ROLE = 8
+    MENTIONABLE = 9 # Includes users and roles
+    NUMBER = 10 # Any double between -2^53 and 2^53
+
+    def __int__(self):
+        return self.value
+
+
+class ApplicationCommandType(Enum):
+    SLASH = 1
+    USER = 2
+    MESSAGE = 3
+
+    def __int__(self):
+        return self.value
 
 
 T = TypeVar('T')

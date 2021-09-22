@@ -25,8 +25,9 @@ from __future__ import annotations
 
 import inspect
 import discord.utils
+import discord.application_commands
 
-from typing import Any, Callable, ClassVar, Dict, Generator, List, Optional, TYPE_CHECKING, Tuple, TypeVar, Type
+from typing import Any, Callable, ClassVar, Dict, Generator, List, Optional, TYPE_CHECKING, Tuple, TypeVar, Type, Union
 
 from ._types import _BaseCommand
 
@@ -34,6 +35,13 @@ if TYPE_CHECKING:
     from .bot import BotBase
     from .context import Context
     from .core import Command
+
+    ApplicationCommand = Union[
+        discord.application_commands.SlashCommand,
+        discord.application_commands.MessageCommand,
+        discord.application_commands.UserCommand
+    ]
+    ApplicationCommandKey = Tuple[str, int, Optional['ApplicationCommandKey']]  # name, type, parent
 
 __all__ = (
     'CogMeta',
@@ -187,6 +195,7 @@ class Cog(metaclass=CogMeta):
     __cog_settings__: ClassVar[Dict[str, Any]]
     __cog_commands__: ClassVar[List[Command]]
     __cog_listeners__: ClassVar[List[Tuple[str, str]]]
+    __cog_application_commands__: Dict[ApplicationCommandKey, ApplicationCommand] = {}
 
     def __new__(cls: Type[CogT], *args: Any, **kwargs: Any) -> CogT:
         # For issue 426, we need to store a copy of the command objects
@@ -324,6 +333,15 @@ class Cog(metaclass=CogMeta):
         """
         return not hasattr(self.cog_command_error.__func__, '__cog_special_method__')
 
+    def add_application_command(self, application_command: ApplicationCommand) -> None:
+        self.__cog_application_commands__[application_command._get_key()] = application_command
+
+    def get_application_commands(self) -> List[ApplicationCommand]:
+        return list(self.__cog_application_commands__.values())
+
+    def remove_application_command(self, application_command: Union[ApplicationCommand, Type[ApplicationCommand]]) -> Optional[ApplicationCommand]:
+        return self.__cog_application_commands__.pop(application_command._get_key(), None)
+
     @_cog_special_method
     def cog_unload(self) -> None:
         """A special method that is called when the cog gets removed.
@@ -447,6 +465,9 @@ class Cog(metaclass=CogMeta):
         for name, method_name in self.__cog_listeners__:
             bot.add_listener(getattr(self, method_name), name)
 
+        for command in self.__cog_application_commands__.values():
+            bot.add_application_command(command)  # type: ignore
+
         return self
 
     def _eject(self, bot: BotBase) -> None:
@@ -465,6 +486,9 @@ class Cog(metaclass=CogMeta):
 
             if cls.bot_check_once is not Cog.bot_check_once:
                 bot.remove_check(self.bot_check_once, call_once=True)
+
+            for command in self.__cog_application_commands__.values():
+                bot.T(command)  # type: ignore
         finally:
             try:
                 self.cog_unload()

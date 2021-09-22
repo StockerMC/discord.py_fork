@@ -298,6 +298,20 @@ to handle it, which defaults to print a traceback and ignoring the exception.
     :param kwargs: The keyword arguments for the event that raised the
         exception.
 
+.. function:: discord.ext.commands.on_command_error(response, error)
+
+    An error handler that is called when an error is raised
+    inside an application commands' callback.
+
+    A default one is provided (:meth:`.Client.on_application_command_error`).
+
+    .. versionadded:: 2.0
+
+    :param response: The command's response.
+    :type response: Union[:class:`SlashCommandResponse`, :class:`MessageCommandResponse`, :class:`UserCommandResponse`]
+    :param error: The error that was raised.
+    :type error: :class:`Exception`
+
 .. function:: on_socket_event_type(event_type)
 
     Called whenever a websocket event is received from the WebSocket.

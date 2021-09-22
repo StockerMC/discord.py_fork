@@ -158,12 +158,12 @@ class _ApplicationCommandInteractionDataOptional(TypedDict, total=False):
     options: List[ApplicationCommandInteractionDataOption]
     resolved: ApplicationCommandInteractionDataResolved
     target_id: Snowflake
-    type: ApplicationCommandType
 
 
 class ApplicationCommandInteractionData(_ApplicationCommandInteractionDataOptional):
     id: Snowflake
     name: str
+    type: ApplicationCommandType
 
 
 class _ComponentInteractionDataOptional(TypedDict, total=False):

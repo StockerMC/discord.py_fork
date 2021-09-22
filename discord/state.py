@@ -26,10 +26,10 @@ from __future__ import annotations
 
 import asyncio
 from collections import deque, OrderedDict
-import copy
 import datetime
 import itertools
 import logging
+import copy
 from typing import Dict, Optional, TYPE_CHECKING, Union, Callable, Any, List, TypeVar, Coroutine, Sequence, Tuple, Deque
 import inspect
 
@@ -58,6 +58,13 @@ from .ui.view import ViewStore, View
 from .stage_instance import StageInstance
 from .threads import Thread, ThreadMember
 from .sticker import GuildSticker
+from .application_commands import (
+    SlashCommandResponse,
+    MessageCommandResponse,
+    UserCommandResponse,
+    SlashCommandOptions,
+    BaseApplicationCommand,
+)
 
 if TYPE_CHECKING:
     from .abc import PrivateChannel
@@ -704,6 +711,60 @@ class ConnectionState:
             custom_id = interaction.data['custom_id']  # type: ignore
             component_type = interaction.data['component_type']  # type: ignore
             self._view_store.dispatch(component_type, custom_id, interaction)
+        elif data['type'] == 2:  # application command
+            client = self._get_client()
+            application_command_data = data['data']
+            application_command_type = application_command_data['type']
+            resolved_data = application_command_data.get('resolved')
+            guild_id = utils._get_as_snowflake(data, 'guild_id')
+            target_id = application_command_data.get('target_id')
+            for command in client._application_commands.values():
+                used_command = command._verify_data(application_command_data, guild_id)
+                if used_command is None:
+                    continue
+
+                # TODO: default target to an `Object` if it wasn't resolved?
+
+                if application_command_type == 1:  # slash command
+                    optional_options = [option.name for option in command.__application_command_options__.values() if not option.required]
+                    options = SlashCommandOptions(
+                        guild_id=guild_id,
+                        options=application_command_data.get('options'),
+                        resolved_data=resolved_data,
+                        state=self,
+                        optional_options=optional_options,
+                    )
+                    response = SlashCommandResponse(interaction, options, used_command)  # type: ignore
+                elif application_command_type == 2:  # user command
+                    resolved_users = resolved_data.get('users', {})
+                    resolved_members = resolved_data.get('members', {})
+                    if guild_id is not None:
+                        guild = self._get_guild(guild_id) # or Object(id=guild_id)
+                        target = None
+                        if guild is not None:
+                            target = guild.get_member(int(target_id))
+
+                        if target is None:
+                            member_with_user = {**resolved_members[target_id], 'user': resolved_users[target_id]}
+                            target = Member(data=member_with_user, guild=guild, state=self)  # type: ignore
+                    else:
+                        target = self.get_user(int(target_id))
+                        if target is None:
+                            target = User(data=resolved_users[target_id], state=self)
+
+                    response = UserCommandResponse(interaction, target, used_command)  # type: ignore
+                elif application_command_type == 3:  # message command
+                    resolved_messages = resolved_data.get('messages', {})
+                    channel_id = resolved_messages[target_id]['channel_id']
+                    type = ChannelType.text if guild_id is not None else ChannelType.private
+                    channel = self.get_channel(channel_id) or PartialMessageable(self, channel_id, type=type)
+                    response = MessageCommandResponse(interaction, Message(state=self, channel=channel, data=resolved_messages[target_id]), used_command)  # type: ignore
+
+                else:  # if discord adds a new command type
+                    break
+
+                asyncio.create_task(used_command._scheduled_task(response, self._get_client()))
+                break
 
         self.dispatch('interaction', interaction)
 
