@@ -1149,7 +1149,7 @@ class Client:
                 continue
 
             if activity is not None:
-                me.activities = (activity,)
+                me.activities = (activity,)  # type: ignore
             else:
                 me.activities = ()
 
