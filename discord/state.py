@@ -84,7 +84,7 @@ if TYPE_CHECKING:
 
     T = TypeVar('T')
     CS = TypeVar('CS', bound='ConnectionState')
-    Channel = Union[GuildChannel, VocalGuildChannel, PrivateChannel, PartialMessageable]
+    Channel = Union[GuildChannel, VocalGuildChannel, PrivateChannel]
 
 
 class ChunkRequest:
@@ -468,7 +468,7 @@ class ConnectionState:
         # If presences are enabled then we get back the old guild.large behaviour
         return self._chunk_guilds and not guild.chunked and not (self._intents.presences and not guild.large)
 
-    def _get_guild_channel(self, data: MessagePayload) -> Tuple[Union[Channel, Thread], Optional[Guild]]:
+    def _get_guild_channel(self, data: MessagePayload) -> Tuple[Union[Channel, PartialMessageable, Thread], Optional[Guild]]:
         channel_id = int(data['channel_id'])
         try:
             guild = self._get_guild(int(data['guild_id']))
