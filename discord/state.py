@@ -30,7 +30,7 @@ import datetime
 import itertools
 import logging
 import copy
-from typing import Dict, Optional, TYPE_CHECKING, Union, Callable, Any, List, TypeVar, Coroutine, Sequence, Tuple, Deque
+from typing import Dict, Optional, TYPE_CHECKING, Union, Callable, Any, List, TypeVar, Coroutine, Sequence, Tuple, Literal, Deque, overload
 import inspect
 
 import os
@@ -1107,6 +1107,15 @@ class ConnectionState:
 
     def is_guild_evicted(self, guild: Guild) -> bool:
         return guild.id not in self._guilds
+
+    @overload
+    async def chunk_guild(self, guild: Guild, *, wait: Literal[True] = ..., cache: bool = ...) -> List[Member]: ...
+
+    @overload
+    async def chunk_guild(self, guild: Guild, *, wait: Literal[False] = ..., cache: bool = ...) -> asyncio.Future[List[Member]]: ...
+
+    @overload
+    async def chunk_guild(self, guild: Guild, *, wait: Literal[False] = ..., cache: bool = ...) -> asyncio.Future[List[Member]]: ...
 
     async def chunk_guild(self, guild: Guild, *, wait: bool = True, cache: bool = True) -> Union[List[Member], asyncio.Future[List[Member]]]:
         cache = cache or self.member_cache_flags.joined

@@ -2852,7 +2852,7 @@ class Guild(Hashable):
 
         if not self._state.is_guild_evicted(self):
             # wait is set to True by default, therefore a list of members is returned
-            return await self._state.chunk_guild(self, cache=cache)  # type: ignore
+            return await self._state.chunk_guild(self, cache=cache)
 
         return None
 
