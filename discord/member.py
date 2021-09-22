@@ -42,6 +42,7 @@ from .permissions import Permissions
 from .enums import Status, try_enum
 from .colour import Colour
 from .object import Object
+from .errors import InvalidArgument
 
 __all__ = (
     'VoiceState',
@@ -60,11 +61,13 @@ if TYPE_CHECKING:
         UserWithMember as UserWithMemberPayload,
     )
     from .types.user import User as UserPayload
+    from .types.voice import VoiceState as VoiceStatePayload
+    from .types.guild import GuildVoiceState as GuildVoiceStatePayload
+
     from .abc import Snowflake
     from .state import ConnectionState
     from .message import Message
     from .role import Role
-    from .types.voice import VoiceState as VoiceStatePayload
 
     VocalGuildChannel = Union[VoiceChannel, StageChannel]
 
@@ -126,11 +129,11 @@ class VoiceState:
         'suppress',
     )
 
-    def __init__(self, *, data: VoiceStatePayload, channel: Optional[VocalGuildChannel] = None):
+    def __init__(self, *, data: Union[VoiceStatePayload, GuildVoiceStatePayload], channel: Optional[VocalGuildChannel] = None):
         self.session_id: str = data.get('session_id')
         self._update(data, channel)
 
-    def _update(self, data: VoiceStatePayload, channel: Optional[VocalGuildChannel]):
+    def _update(self, data: Union[VoiceStatePayload, GuildVoiceStatePayload], channel: Optional[VocalGuildChannel]):
         self.self_mute: bool = data.get('self_mute', False)
         self.self_deaf: bool = data.get('self_deaf', False)
         self.self_stream: bool = data.get('self_stream', False)
@@ -727,7 +730,7 @@ class Member(discord.abc.Messageable, _UserTag):
 
         if suppress is not MISSING:
             voice_state_payload = {
-                'channel_id': self.voice.channel.id,
+                'channel_id': self.voice.channel.id,  # type: ignore
                 'suppress': suppress,
             }
 
@@ -773,7 +776,7 @@ class Member(discord.abc.Messageable, _UserTag):
             The operation failed.
         """
         payload = {
-            'channel_id': self.voice.channel.id,
+            'channel_id': self.voice.channel.id,  # type: ignore
             'request_to_speak_timestamp': datetime.datetime.utcnow().isoformat(),
         }
 

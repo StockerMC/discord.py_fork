@@ -42,6 +42,7 @@ __all__ = (
 if TYPE_CHECKING:
     from .types.invite import (
         Invite as InvitePayload,
+        VanityInvite as VanityInvitePayload,
         InviteGuild as InviteGuildPayload,
         GatewayInvite as GatewayInvitePayload,
     )
@@ -373,13 +374,14 @@ class Invite(Hashable):
         self,
         *,
         state: ConnectionState,
-        data: InvitePayload,
+        data: Union[InvitePayload, VanityInvitePayload],
         guild: Optional[Union[PartialInviteGuild, Guild]] = None,
         channel: Optional[Union[PartialInviteChannel, GuildChannel]] = None,
     ):
         self._state: ConnectionState = state
         self.max_age: Optional[int] = data.get('max_age')
-        self.code: str = data['code']
+        # Invite won't be constructed with a VanityInvitePayload that is missing a code
+        self.code: str = data['code']  # type: ignore
         self.guild: Optional[InviteGuildType] = self._resolve_guild(data.get('guild'), guild)
         self.revoked: Optional[bool] = data.get('revoked')
         self.created_at: Optional[datetime.datetime] = parse_time(data.get('created_at'))

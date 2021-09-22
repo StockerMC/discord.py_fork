@@ -1158,7 +1158,7 @@ class HTTPClient:
     ) -> Response[guild.GuildPrune]:
         payload: Dict[str, Any] = {
             'days': days,
-            'compute_prune_count': 'true' if compute_prune_count else 'false',
+            'compute_prune_count': compute_prune_count,
         }
         if roles:
             payload['include_roles'] = ', '.join(roles)
@@ -1194,7 +1194,7 @@ class HTTPClient:
         )
 
     def create_guild_sticker(
-        self, guild_id: Snowflake, payload: sticker.CreateGuildSticker, file: File, reason: str
+        self, guild_id: Snowflake, payload: sticker.CreateGuildSticker, file: File, reason: Optional[str]
     ) -> Response[sticker.GuildSticker]:
         initial_bytes = file.fp.read(16)
 
@@ -1254,7 +1254,7 @@ class HTTPClient:
         self,
         guild_id: Snowflake,
         name: str,
-        image: bytes,
+        image: str,
         *,
         roles: Optional[SnowflakeList] = None,
         reason: Optional[str] = None,

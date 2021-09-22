@@ -39,6 +39,8 @@ from typing import (
     TYPE_CHECKING,
     Tuple,
     Union,
+    Coroutine,
+    TypeVar,
     overload,
 )
 
@@ -87,17 +89,32 @@ MISSING = utils.MISSING
 
 if TYPE_CHECKING:
     from .abc import Snowflake, SnowflakeTime
-    from .types.guild import Ban as BanPayload, Guild as GuildPayload, MFALevel, GuildFeature
+    from .types.guild import (
+        Ban as BanPayload,
+        Guild as GuildPayload,
+        RolePositionUpdate,
+        MFALevel,
+        GuildFeature,
+    )
     from .types.threads import (
         Thread as ThreadPayload,
     )
     from .types.voice import GuildVoiceState
+    from .types.integration import IntegrationType
+    from .types.snowflake import SnowflakeList
+    from .types.sticker import CreateGuildSticker
+    from .types.template import CreateTemplate
+    from .types import channel
+
     from .permissions import Permissions
     from .channel import VoiceChannel, StageChannel, TextChannel, CategoryChannel, StoreChannel
     from .template import Template
     from .webhook import Webhook
     from .state import ConnectionState
     from .voice_client import VoiceProtocol
+
+    T = TypeVar('T')
+    Response = Coroutine[Any, Any, T]
 
     import datetime
 
@@ -349,7 +366,8 @@ class Guild(Hashable):
 
     def _update_voice_state(self, data: GuildVoiceState, channel_id: int) -> Tuple[Optional[Member], VoiceState, VoiceState]:
         user_id = int(data['user_id'])
-        channel = self.get_channel(channel_id)
+            # channel will be the correct type
+        channel: VocalGuildChannel = self.get_channel(channel_id)  # type: ignore
         try:
             # check if we should remove the voice state from cache
             if channel is None:
@@ -450,8 +468,9 @@ class Guild(Hashable):
 
         cache_joined = self._state.member_cache_flags.joined
         self_id = self._state.self_id
-        for mdata in guild.get('members', []):
-            member = Member(data=mdata, guild=self, state=state)
+        for member_data in guild.get('members', []):
+            # member_data will have the user key
+            member = Member(data=member_data, guild=self, state=state)  # type: ignore
             if cache_joined or member.id == self_id:
                 self._add_member(member)
 
@@ -544,7 +563,7 @@ class Guild(Hashable):
         """:class:`Member`: Similar to :attr:`Client.user` except an instance of :class:`Member`.
         This is essentially used to get the member version of yourself.
         """
-        self_id = self._state.user.id
+        self_id = self._state.self_id
         # The self member is *always* cached
         return self.get_member(self_id)  # type: ignore
 
@@ -956,6 +975,76 @@ class Guild(Hashable):
 
         return utils.find(pred, members)
 
+    @overload
+    def _create_channel(
+        self,
+        name: str,
+        channel_type: Literal[ChannelType.text],
+        overwrites: Dict[Union[Role, Member], PermissionOverwrite] = MISSING,
+        category: Optional[Snowflake] = None,
+        **options: Any,
+    ) -> Response[channel.TextChannel]: ...
+
+    @overload
+    def _create_channel(
+        self,
+        name: str,
+        channel_type: Literal[ChannelType.voice],
+        overwrites: Dict[Union[Role, Member], PermissionOverwrite] = MISSING,
+        category: Optional[Snowflake] = None,
+        **options: Any,
+    ) -> Response[channel.VoiceChannel]: ...
+
+    @overload
+    def _create_channel(
+        self,
+        name: str,
+        channel_type: Literal[ChannelType.category],
+        overwrites: Dict[Union[Role, Member], PermissionOverwrite] = MISSING,
+        category: Optional[Snowflake] = None,
+        **options: Any,
+    ) -> Response[channel.CategoryChannel]: ...
+
+    @overload
+    def _create_channel(
+        self,
+        name: str,
+        channel_type: Literal[ChannelType.news],
+        overwrites: Dict[Union[Role, Member], PermissionOverwrite] = MISSING,
+        category: Optional[Snowflake] = None,
+        **options: Any,
+    ) -> Response[channel.NewsChannel]: ...
+
+    @overload
+    def _create_channel(
+        self,
+        name: str,
+        channel_type: Literal[ChannelType.store],
+        overwrites: Dict[Union[Role, Member], PermissionOverwrite] = MISSING,
+        category: Optional[Snowflake] = None,
+        **options: Any,
+    ) -> Response[channel.StoreChannel]: ...
+
+    @overload
+    def _create_channel(
+        self,
+        name: str,
+        channel_type: Literal[ChannelType.stage_voice],
+        overwrites: Dict[Union[Role, Member], PermissionOverwrite] = MISSING,
+        category: Optional[Snowflake] = None,
+        **options: Any,
+    ) -> Response[channel.StageChannel]: ...
+
+    @overload
+    def _create_channel(
+        self,
+        name: str,
+        channel_type: Literal[ChannelType.news_thread, ChannelType.public_thread, ChannelType.private_thread],
+        overwrites: Dict[Union[Role, Member], PermissionOverwrite] = MISSING,
+        category: Optional[Snowflake] = None,
+        **options: Any,
+    ) -> Response[channel.ThreadChannel]: ...
+
     def _create_channel(
         self,
         name: str,
@@ -963,7 +1052,7 @@ class Guild(Hashable):
         overwrites: Dict[Union[Role, Member], PermissionOverwrite] = MISSING,
         category: Optional[Snowflake] = None,
         **options: Any,
-    ):
+    ) -> Response[channel.GuildChannel]:
         if overwrites is MISSING:
             overwrites = {}
         elif not isinstance(overwrites, dict):
@@ -1783,7 +1872,8 @@ class Guild(Hashable):
         if ch_type in (ChannelType.group, ChannelType.private):
             raise InvalidData('Channel ID resolved to a private channel')
 
-        guild_id = int(data['guild_id'])
+        # data won't be a group or private channel
+        guild_id = int(data['guild_id'])  # type: ignore
         if self.id != guild_id:
             raise InvalidData('Guild ID resolved to a different guild')
 
@@ -2022,7 +2112,7 @@ class Guild(Hashable):
         """
         from .template import Template
 
-        payload = {'name': name}
+        payload: CreateTemplate = {'name': name}
 
         if description:
             payload['description'] = description
@@ -2031,7 +2121,7 @@ class Guild(Hashable):
 
         return Template(state=self._state, data=data)
 
-    async def create_integration(self, *, type: str, id: int) -> None:
+    async def create_integration(self, *, type: IntegrationType, id: int) -> None:
         """|coro|
 
         Attaches an integration to the guild.
@@ -2188,7 +2278,8 @@ class Guild(Hashable):
         :class:`GuildSticker`
             The created sticker.
         """
-        payload = {
+        # the tags key is set later
+        payload: CreateGuildSticker = {  # type: ignore
             'name': name,
         }
 
@@ -2330,7 +2421,7 @@ class Guild(Hashable):
 
         img = utils._bytes_to_base64_data(image)
         if roles:
-            role_ids = [role.id for role in roles]
+            role_ids: SnowflakeList = [role.id for role in roles]
         else:
             role_ids = []
 
@@ -2541,10 +2632,10 @@ class Guild(Hashable):
         if not isinstance(positions, dict):
             raise InvalidArgument('positions parameter expects a dict.')
 
-        role_positions: List[Dict[str, Any]] = []
+        role_positions: List[RolePositionUpdate] = []
         for role, position in positions.items():
 
-            payload = {'id': role.id, 'position': position}
+            payload: RolePositionUpdate = {'id': role.id, 'position': position}
 
             role_positions.append(payload)
 
@@ -2678,7 +2769,7 @@ class Guild(Hashable):
         data = await self._state.http.get_invite(payload['code'])
 
         channel = self.get_channel(int(data['channel']['id']))
-        payload['revoked'] = False
+        payload['revoked'] = False  # type: ignore
         payload['temporary'] = False
         payload['max_uses'] = 0
         payload['max_age'] = 0
