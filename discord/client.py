@@ -633,28 +633,27 @@ class Client:
             An unexpected keyword argument was received.
         """
         await self.login(token)
-        if not self._application_commands:
-            return
 
         if self.application_id is None:
             raise TypeError('application_id must be passed to the client if you are registering application commands.')
 
-        guild_payloads = collections.defaultdict(list)
-        global_payload = []
-        for command in self._application_commands.values():
-            command_payload = command.to_dict()
-            for guild_id in command.__application_command_guild_ids__:
-                guild_payloads[guild_id].append(command_payload)
+        if self.application_commands:
+            guild_payloads = collections.defaultdict(list)
+            global_payload = []
+            for command in self._application_commands.values():
+                command_payload = command.to_dict()
+                for guild_id in command.__application_command_guild_ids__:
+                    guild_payloads[guild_id].append(command_payload)
 
-            if command.__application_command_global_command__:
-                global_payload.append(command_payload)
+                if command.__application_command_global_command__:
+                    global_payload.append(command_payload)
 
-        # TODO make application_id required kwarg and use self.application_id
-        for guild_id, commands in guild_payloads.items():
-            await self.http.bulk_upsert_guild_commands(self.user.id, guild_id, commands)  # type: ignore
+            # TODO make application_id required kwarg and use self.application_id
+            for guild_id, commands in guild_payloads.items():
+                await self.http.bulk_upsert_guild_commands(self.user.id, guild_id, commands)  # type: ignore
 
-        if global_payload:
-            await self.http.bulk_upsert_global_commands(self.user.id, global_payload) # type: ignore
+            if global_payload:
+                await self.http.bulk_upsert_global_commands(self.user.id, global_payload) # type: ignore
 
         await self.connect(reconnect=reconnect)
 
