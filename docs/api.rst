@@ -2609,6 +2609,71 @@ of :class:`enum.Enum`.
 
         The guild may contain NSFW content.
 
+..class:: ApplicationCommandType
+
+    Represents the type of a Discord application command.
+
+    .. versionadded:: 2.0
+
+    .. attribute:: slash
+
+        A slash command.
+
+    .. attribute:: user
+
+        A user command.
+
+    .. attribute:: message
+
+        A message command.
+
+..class:: ApplicationCommandOptionType
+
+    Represents the type of an option of a Discord application command.
+
+    .. versionadded:: 2.0
+
+    .. attribute:: sub_command
+
+        A subcommand.
+
+    .. attribute:: sub_command_group
+
+        A subcommand group.
+
+    .. attribute:: string
+
+        A string.
+
+    .. attribute:: integer
+
+        Any int between -2^53 and 2^53.
+
+    .. attribute:: boolean
+
+        A boolean.
+
+    .. attribute:: user
+
+        In direct messages with the bot, either the user or the bot.
+        In a guild, a member in the guild.
+
+    .. attribute:: channel
+
+        All channel types including categories.
+
+    .. attribute:: role
+
+        A role.
+
+    .. attribute:: mentionable
+
+        Includes users and roles.
+
+    .. attribute:: number
+
+        Any float or integer between -2^53 and 2^53.
+
 Async Iterator
 ----------------
 
@@ -3933,6 +3998,14 @@ PartialWebhookChannel
     :members:
 
 .. _discord_api_data:
+
+ApplicationCommandOption
+~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: ApplicationCommandOption
+
+.. autoclass:: ApplicationCommandOption()
+    :members:
 
 Data Classes
 --------------
