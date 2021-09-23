@@ -254,7 +254,7 @@ class GuildChannel:
 
     if TYPE_CHECKING:
 
-        def __init__(self, *, state: ConnectionState, guild: Guild, data: Dict[str, Any]):
+        def __init__(self, *, state: ConnectionState, guild: Guild, data: GuildChannelPayload):
             ...
 
     def __str__(self) -> str:
@@ -264,7 +264,7 @@ class GuildChannel:
     def _sorting_bucket(self) -> int:
         raise NotImplementedError
 
-    def _update(self, guild: Guild, data: Dict[str, Any]) -> None:
+    def _update(self, guild: Guild, data: GuildChannelPayload) -> None:
         raise NotImplementedError
 
     async def _move(
@@ -798,7 +798,7 @@ class GuildChannel:
             await http.delete_channel_permissions(self.id, target.id, reason=reason)
         elif isinstance(overwrite, PermissionOverwrite):
             (allow, deny) = overwrite.pair()
-            await http.edit_channel_permissions(self.id, target.id, allow.value, deny.value, perm_type, reason=reason)
+            await http.edit_channel_permissions(self.id, target.id, str(allow.value), str(deny.value), perm_type, reason=reason)
         else:
             raise InvalidArgument('Invalid overwrite type provided.')
 
