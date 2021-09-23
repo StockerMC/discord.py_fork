@@ -37,9 +37,10 @@ from typing import (
     Iterator,
     List,
     Literal,
-    Mapping,
+    Generator,
+    Awaitable,
+    Set,
     Optional,
-    Protocol,
     Sequence,
     Tuple,
     Type,
@@ -128,9 +129,10 @@ if TYPE_CHECKING:
     from .invite import Invite
     from .template import Template
 
-    class _RequestLike(Protocol):
-        headers: Mapping[str, Any]
+    from aiohttp import ClientResponse
+    from requests import Response
 
+    _RequestLike = Union[ClientResponse, Response]
 
     P = ParamSpec('P')
 
@@ -497,7 +499,7 @@ else:
     _from_json = json.loads
 
 
-def _parse_ratelimit_header(request: Any, *, use_clock: bool = False) -> float:
+def _parse_ratelimit_header(request: _RequestLike, *, use_clock: bool = False) -> float:
     reset_after: Optional[str] = request.headers.get('X-Ratelimit-Reset-After')
     if use_clock or not reset_after:
         utc = datetime.timezone.utc
@@ -516,7 +518,7 @@ async def maybe_coroutine(f, *args, **kwargs):
         return value
 
 
-async def async_all(gen, *, check=_isawaitable):
+async def async_all(gen: Generator[Awaitable[Any], Any, Any], *, check: Callable[[Any], bool] = _isawaitable) -> bool:
     for elem in gen:
         if check(elem):
             elem = await elem
@@ -525,7 +527,7 @@ async def async_all(gen, *, check=_isawaitable):
     return True
 
 
-async def sane_wait_for(futures, *, timeout):
+async def sane_wait_for(futures: Iterable[Awaitable[T]], *, timeout: Optional[float]) -> Set[asyncio.Task[T]]:
     ensured = [asyncio.ensure_future(fut) for fut in futures]
     done, pending = await asyncio.wait(ensured, timeout=timeout, return_when=asyncio.ALL_COMPLETED)
 
@@ -543,7 +545,7 @@ def get_slots(cls: Type[Any]) -> Iterator[str]:
             continue
 
 
-def compute_timedelta(dt: datetime.datetime):
+def compute_timedelta(dt: datetime.datetime) -> float:
     if dt.tzinfo is None:
         dt = dt.astimezone()
     now = datetime.datetime.now(datetime.timezone.utc)
