@@ -210,7 +210,7 @@ class SequenceProxy(Generic[T_co], collections.abc.Sequence):
     def __reversed__(self) -> Iterator[T_co]:
         return reversed(self.__proxied)
 
-    def index(self, value: Any, *args, **kwargs) -> int:
+    def index(self, value: Any, *args: Any, **kwargs: Any) -> int:
         return self.__proxied.index(value, *args, **kwargs)
 
     def count(self, value: Any) -> int:
