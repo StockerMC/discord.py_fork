@@ -4200,6 +4200,41 @@ PublicUserFlags
 
 .. _discord_ui_kit:
 
+SlashCommandResponse
+~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: SlashCommandResponse
+
+.. autoclass:: SlashCommandResponse()
+    :members:
+    :inherited-members:
+
+MessageCommandResponse
+~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: MessageCommandResponse
+
+.. autoclass:: MessageCommandResponse()
+    :members:
+    :inherited-members:
+
+UserCommandResponse
+~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: UserCommandResponse
+
+.. autoclass:: UserCommandResponse()
+    :members:
+    :inherited-members:
+
+ApplicationCommandOptionChoice
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: discord.ApplicationCommandOptionChoice
+
+.. autoclass:: discord.ApplicationCommandOptionChoice()
+    :members:
+
 Bot UI Kit
 -------------
 

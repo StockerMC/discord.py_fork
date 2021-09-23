@@ -37,6 +37,7 @@ from .role import Role
 from .message import Message
 from .interactions import Interaction, InteractionResponse
 from .object import Object
+from .guild import Guild
 from .channel import TextChannel, StageChannel, VoiceChannel, CategoryChannel, StoreChannel, Thread, PartialMessageable
 
 if TYPE_CHECKING:
@@ -50,7 +51,6 @@ if TYPE_CHECKING:
     )
 
     from .state import ConnectionState
-    from .guild import Guild
     from .webhook import Webhook
     from .permissions import Permissions
     from .client import Client
@@ -87,17 +87,17 @@ __all__ = (
 
 
 OPTION_TYPE_MAPPING: Dict[Union[ValidOptionTypes], ApplicationCommandOptionType] = {
-    str: ApplicationCommandOptionType.STRING,
-    int: ApplicationCommandOptionType.INTEGER,
-    float: ApplicationCommandOptionType.NUMBER,
-    bool: ApplicationCommandOptionType.BOOLEAN,
-    User: ApplicationCommandOptionType.USER,
-    Member: ApplicationCommandOptionType.USER,
-    Role: ApplicationCommandOptionType.ROLE,
+    str: ApplicationCommandOptionType.string,
+    int: ApplicationCommandOptionType.integer,
+    float: ApplicationCommandOptionType.number,
+    bool: ApplicationCommandOptionType.boolean,
+    User: ApplicationCommandOptionType.user,
+    Member: ApplicationCommandOptionType.user,
+    Role: ApplicationCommandOptionType.role,
 }
 
 for channel_type in [TextChannel, StageChannel, VoiceChannel, CategoryChannel]:
-    OPTION_TYPE_MAPPING[channel_type] = ApplicationCommandOptionType.CHANNEL
+    OPTION_TYPE_MAPPING[channel_type] = ApplicationCommandOptionType.channel
 
 def _resolve_option_type(option: Union[ValidOptionTypes, ApplicationCommandOptionType]) -> ApplicationCommandOptionType:
     if isinstance(option, ApplicationCommandOptionType):
@@ -109,32 +109,52 @@ def _resolve_option_type(option: Union[ValidOptionTypes, ApplicationCommandOptio
 
     return resolved_type
 
-def _get_subcommands_from_data(options: List[ApplicationCommandOptionPayload]) -> Iterator[Tuple[str, Optional[str], int]]:
-    previous = None
-    while options:
-        option = options.pop(0)
-        if 'options' in option:
-            options.extend(option['options'])
-
-        if option['type'] in (1, 2):
-            yield option['name'], previous, option['type']
-            previous = option['name']
-
 
 class ApplicationCommandOptionChoice:
-    def __init__(self, *, name: str, value: Union[str, int]) -> None:
+    """Represents a choice of an option of an application command.
+
+    Attributes
+    -----------
+    name: :class:`str`
+        The name of the choice. This is shown to users.
+    value: Union[:class:`str`, :class:`int`, :class:`float`]
+        The value of the choice. This is what you will receive if the choice is selected.
+        The type of this should be the same type of the option it is for.
+    """
+    def __init__(self, *, name: str, value: Union[str, int, float]) -> None:
         self.name: str = name
-        self.value: Union[str, int] = value
+        self.value: Union[str, int, float] = value
 
     def to_dict(self) -> ApplicationCommandOptionChoicePayload:
         return {
             'name': self.name,
-            'value': self.value
+            'value': self.value,
         }
 
-# TODO make ApplicationCommandOption and ApplicationCommandInteractionOption generic for their option type?
 
 class ApplicationCommandOption:
+    """Represents an option of a discord application command.
+
+    This should not be constructed manually. Instead, use :func:`discord.application_command_option`.
+
+    .. versionadded:: 2.0
+
+    Attributes
+    -----------
+    type: :class:`ApplicationCommandOptionType`
+        The type of the option.
+    name: :class:`str`
+        The name of the option.
+    description: :class:`str`
+        The description of the option.
+    required: :class:`bool`
+        Whether the option is required or not.
+    choices: Optional[List[:class:`ApplicationCommandOptionChoice`]]
+        The choices of the option.
+    options: Optional[List[:class:`ApplicationCommandOption`]]
+        The parameters of the option if it's a subcommand or subcommand group type.
+    """
+
     __slots__= (
         'type',
         'name',
@@ -152,7 +172,7 @@ class ApplicationCommandOption:
         description: str,
         required: bool = MISSING,
         choices: Optional[List[ApplicationCommandOptionChoice]] = None,
-        options: Optional[List[ApplicationCommandOption]] = None
+        options: Optional[List[ApplicationCommandOption]] = None,
     ) -> None:
         self.type: ApplicationCommandOptionType = type
         self.name: str = name
@@ -165,9 +185,6 @@ class ApplicationCommandOption:
         return f'<{self.__class__.__name__} type={self.type!r} name={self.name!r} description={self.description!r} required={self.required!r}>'
 
     def to_dict(self) -> ApplicationCommandOptionPayload:
-        if self.type is MISSING:
-            raise TypeError(f'the type of the option {self.name!r} must be set')
-
         ret: ApplicationCommandOptionPayload = {
             'type': int(self.type),  # type: ignore
             'name': self.name,
@@ -194,7 +211,17 @@ def application_command_option(
     required: bool = True,
     choices: Optional[List[ApplicationCommandOptionChoice]] = None,
 ) -> Any:
-    """
+    """Used for creating an option for an application command.
+
+    To avoid type checker errors when using this with typehints,
+    the return type is ``Any``.        
+
+    .. versionadded:: 2.0
+
+    Returns
+    --------
+    :class:`ApplicationCommandOption`
+        The created application command option.
 
     """
     if type is not MISSING:
@@ -219,7 +246,7 @@ def _get_options(
     attr_namespace: Dict[str, Any],
     annotation_namespace: Dict[str, Any],
     globals: Dict[str, Any],
-    locals: Dict[str, Any]
+    locals: Dict[str, Any],
 ) -> Dict[str, ApplicationCommandOption]:
     options: Dict[str, ApplicationCommandOption] = {}
     cache: Dict[str, Any] = {}
@@ -256,10 +283,20 @@ def _get_options(
 
         options[attr_name] = attr
 
+    for option in options.values():
+        if option.type is MISSING:
+            raise TypeError(f'the type of the option {option.name!r} must be set')
+
     return options
 
 
-class SlashCommandOptions:
+class ApplicationCommandOptions:
+    """Represents the received options of an application command.
+
+    The attributes of a ``ApplicationCommandOptions`` instance are the options of the
+    application command it is for. If an option is not required and was not provided,
+    it will be ``None``.
+    """
     def __init__(
         self,
         *,
@@ -273,7 +310,7 @@ class SlashCommandOptions:
         if options is None:
             return
 
-        options = options[:]  # so we don't modify the original list
+        options = options[:]  # make a copy so we don't modify the original list
 
         while options:
             option = options.pop(0)
@@ -282,7 +319,9 @@ class SlashCommandOptions:
                 options.extend(nested_options)
                 continue
 
-            value = option.get('value')
+            # we already check if options is present and continue, so value will be present
+            value = option['value']  # type: ignore
+
             if option['type'] == 6:  # user
                 resolved_user = resolved_data['users'][value]  # type: ignore
                 if guild_id is not None:
@@ -291,11 +330,6 @@ class SlashCommandOptions:
                     value = Member(state=state, data=member_with_user, guild=guild)  # type: ignore
                 else:
                     value = User(state=state, data=resolved_user, guild=guild)  # type: ignore
-            elif option['type'] == 7:  # channel
-                resolved_channel = resolved_data['channels'][value]  # type: ignore
-                if guild_id is not None:
-                    guild = state._get_guild(guild_id) or Object(id=guild_id)
-                    value = TextChannel(state=state, guild=guild, data=resolved_channel)  # type: ignore
             elif option['type'] == 7:  # channel
                 resolved_channel = resolved_data['channels'][value]  # type: ignore
                 if guild_id is not None:
@@ -334,14 +368,6 @@ def _get_used_subcommand(options: Union[ApplicationCommandPayload, ApplicationCo
         return None
 
     return None
-
-
-# def _recursively_set_subcommand_instance(subcommand_instance: BaseApplicationCommand) -> None:
-    # parent = subcommand_instance.__application_command_parent__
-    # while parent is not None:
-    #     subcommand = parent.__application_command_subcommands__[subcommand_instance.__application_command_name__]
-    #     parent.__application_command_subcommands__[subcommand_instance.__application_command_name__] = subcommand_instance
-    #     parent = subcommand.__application_command_parent__
 
 
 # original function is flatten_user in member.py
@@ -394,9 +420,6 @@ def flatten(original_cls: Type[Any], original_attr: str) -> Callable[[Type[BaseA
 @flatten(Interaction, 'interaction')
 @flatten(InteractionResponse, 'interaction.response')
 class BaseApplicationCommandResponse:
-    """
-    
-    """
     if TYPE_CHECKING:
         command: BaseApplicationCommand
         # interaction attributes
@@ -427,41 +450,60 @@ class BaseApplicationCommandResponse:
         send_message = InteractionResponse.send_message
         edit_message = InteractionResponse.edit_message
 
-    def __init__(self, interaction: Interaction) -> None:
-        self.interaction: Interaction = interaction
-
 
 class SlashCommandResponse(BaseApplicationCommandResponse):
+    """A class that represents the response from a slash command.
+
+    Attributes
+    -----------
+    interaction: :class:`Interaction`
+        The interaction of the response.
+    options: :class:`SlashCommandOptions`
+        The options of the slash command used.
+    command: :class:`SlashCommand`
+        The slash command used.
     """
-    
-    """
-    def __init__(self, interaction: Interaction, options: SlashCommandOptions, command: SlashCommand) -> None:
-        super().__init__(interaction)
+    def __init__(self, interaction: Interaction, options: ApplicationCommandOptions, command: SlashCommand) -> None:
+        self.interaction: Interaction = interaction
         self.options: Any = options  # we typehint it as `Any` to avoid type checker errors when accessing attributes
         self.command: SlashCommand = command
 
 
 class MessageCommandResponse(BaseApplicationCommandResponse):
-    """
-    
+    """A class that represents the response from a message command.
+
+    Attributes
+    -----------
+    interaction: :class:`Interaction`
+        The interaction of the response.
+    target: :class:`Message`
+        The message the command was used on.
+    command: :class:`MessageCommand`
+        The message command used.
     """
     def __init__(self, interaction: Interaction, target: Message, command: MessageCommand) -> None:
-        super().__init__(interaction)
+        self.interaction: Interaction = interaction
         self.target: Message = target
         self.command: MessageCommand = command
 
 
 class UserCommandResponse(BaseApplicationCommandResponse):
-    """
-    
+    """A class that represents the response from a message command.
+
+    Attributes
+    -----------
+    interaction: :class:`Interaction`
+        The interaction of the response.
+    target: Union[:class:`User`, :class:`Member`]
+        The user or member the command was used on.
+    command: :class:`UserCommand`
+        The user command used.
     """
     def __init__(self, interaction: Interaction, target: Union[Member, User], command: UserCommand) -> None:
-        super().__init__(interaction)
+        self.interaction: Interaction = interaction
         self.target: Union[Member, User] = target
         self.command: UserCommand = command
 
-
-# TODO make sure global/guild specific commands work
 
 def _traverse_mro_for_attr(cls: Type[object], attr_name: str, default: T = MISSING) -> Union[Any, T]:
     attr = default
@@ -525,8 +567,7 @@ class BaseApplicationCommand:
         if name is None:
             name = cls.__name__
 
-        # NOTE: should we be doing this?
-        if command_type is ApplicationCommandType.SLASH:
+        if command_type is ApplicationCommandType.slash:
             name = name.lower()
 
         if description is MISSING:
@@ -537,10 +578,10 @@ class BaseApplicationCommand:
                 description = inspect.cleandoc(doc)
 
         if parent is not None:
-            if parent.__application_command_type__ is not ApplicationCommandType.SLASH:
+            if parent.__application_command_type__ is not ApplicationCommandType.slash:
                 raise TypeError(f'parent must derive from SlashCommand not {parent.__name__}')
 
-            if command_type is not ApplicationCommandType.SLASH:
+            if command_type is not ApplicationCommandType.slash:
                 raise TypeError('only slash commands can have parents')
 
         if command_type is not MISSING and not isinstance(command_type, ApplicationCommandType):
@@ -635,12 +676,12 @@ class BaseApplicationCommand:
 
     @classmethod
     def _as_option(cls) -> ApplicationCommandOption:
-        type = ApplicationCommandOptionType.SUB_COMMAND_GROUP if cls.__application_command_group_command__ else ApplicationCommandOptionType.SUB_COMMAND
+        type = ApplicationCommandOptionType.sub_command_group if cls.__application_command_group_command__ else ApplicationCommandOptionType.sub_command
         return ApplicationCommandOption(
             type=type,
             name=cls.__application_command_name__,
             description=cls.__application_command_description__,
-            options=list(cls.__application_command_options__.values())
+            options=list(cls.__application_command_options__.values()),
         )
 
     async def _scheduled_task(self, response: BaseApplicationCommandResponse, client: Client) -> None:
@@ -658,29 +699,35 @@ class BaseApplicationCommand:
 
     @classmethod
     def set_name(cls, name: str) -> None:
+        """Sets the name of the application command.
+
+        Parameters
+        -----------
+        name: :class:`str`
+            The description of the application command.
+        """
         cls.__application_command_name__ = str(name)
 
     @classmethod
     def set_type(cls, type: ApplicationCommandType) -> None:
+        """Sets the type of the application command.
+
+        Parameters
+        -----------
+        type: :class:`ApplicationCommandType`
+            The type of the application command.
+        """
+        if not isinstance(type, ApplicationCommandType):
+            raise TypeError(f'type must be an ApplicationCommandType member not {type.__class__.__name__}')
         cls.__application_command_type__ = type
 
     async def callback(self, response: BaseApplicationCommandResponse) -> None:
-        """
-
-        """
         pass
 
     async def command_check(self, response: BaseApplicationCommandResponse) -> bool:
-        """
-
-        """
         return True
 
-    # make a note that says that it doesn't propogate down to subcommands
-    async def on_error(self, response: BaseApplicationCommandResponse, error: BaseException) -> None:
-        """
-        
-        """
+    async def on_error(self, response: BaseApplicationCommandResponse, error: Exception) -> None:
         pass
 
     @classmethod
@@ -691,19 +738,19 @@ class BaseApplicationCommand:
             'default_permission': cls.__application_command_default_permission__,
         }
 
-        if cls.__application_command_type__ is ApplicationCommandType.SLASH:
+        if cls.__application_command_type__ is ApplicationCommandType.slash:
             ret['description'] = cls.__application_command_description__
 
             extra = []
             for command in cls.__application_command_subcommands__.values():
-                type = ApplicationCommandOptionType.SUB_COMMAND_GROUP if command.__application_command_group_command__ else ApplicationCommandOptionType.SUB_COMMAND
+                type = ApplicationCommandOptionType.sub_command_group if command.__application_command_group_command__ else ApplicationCommandOptionType.sub_command
                 extra.append(ApplicationCommandOption(
                     type=type,
                     name=command.__application_command_name__,
                     description=command.__application_command_description__,
                     options=[
                         *list(command.__application_command_options__.values()),
-                        *[subcommand._as_option() for subcommand in command.__application_command_subcommands__.values()]
+                        *[subcommand._as_option() for subcommand in command.__application_command_subcommands__.values()],
                     ],
                 ))
                 
@@ -716,10 +763,8 @@ class BaseApplicationCommand:
 
 # TODO add examples and docstrings
 
-class SlashCommand(BaseApplicationCommand, command_type=ApplicationCommandType.SLASH):
-    """Represents a discord slash command.
-    
-    """
+class SlashCommand(BaseApplicationCommand, command_type=ApplicationCommandType.slash):
+    """Represents a Discord slash command."""
     
     __application_command_repr_attrs__: Dict[str, str] = {  # actual key: key to display
         '__application_command_name__': 'name',
@@ -729,35 +774,94 @@ class SlashCommand(BaseApplicationCommand, command_type=ApplicationCommandType.S
     }
 
     async def callback(self, response: SlashCommandResponse) -> None:
+        """|coro|
+
+        The callback associated with this slash command.
+
+        This can be overriden by subclasses.
+
+        Parameters
+        -----------
+        response: :class:`SlashCommandResponse`
+            The response of the slash command used.
+        """
         pass
 
     async def command_check(self, response: SlashCommandResponse) -> bool:
+        """|coro|
+
+        A callback that is called when the slash command is used that checks
+        whether the command's callback should be called.
+
+        The default implementation of this returns ``True``.
+
+        .. note::
+
+            If an exception occurs within the body then the check
+            is considered a failure and :meth:`on_error` is called.
+
+        Parameters
+        -----------
+        response: :class:`SlashCommandResponse`
+            The response of the slash command used.
+
+        Returns
+        ---------
+        :class:`bool`
+            Whether the command's callback should be called.
+        """
         return True
 
-    async def on_error(self, error: BaseException, response: SlashCommandResponse) -> None:
+    async def on_error(self, error: Exception, response: SlashCommandResponse) -> None:
+        """|coro|
+
+        A callback that is called when a slash command's callback or :meth:`command_check`
+        fails with an error.
+
+        The default implementation does nothing.
+
+        Parameters
+        -----------
+        error: :class:`Exception`
+            The exception that was raised.
+        response: :class:`SlashCommandResponse`
+            The response of the slash command used.
+        """
         pass
 
     @classmethod
     def set_description(cls, description: str) -> None:
-        """
-        
+        """Sets the description of the slash command.
+
+        Parameters
+        -----------
+        description: :class:`str`
+            The description of the slash command.
         """
         cls.__application_command_description__ = str(description)
 
     @classmethod
     def add_subcommand(cls, subcommand: SlashCommand) -> None:
-        """
-        
+        """Adds a subcommand to the slash command.
+
+        Parameters
+        -----------
+        subcommand: :class:`SlashCommand`
+            The subcommand to add.
         """
         if not isinstance(subcommand, SlashCommand):
             raise TypeError(f'subcommand must be a SlashCommand not {subcommand.__class__.__name__}')
 
-        cls.__application_command_parent__ = subcommand
+        cls.__application_command_subcommands__[subcommand.__application_command_name__] = subcommand
 
     @classmethod
-    def set_subcommand(cls, parent: SlashCommand) -> None:
-        """
-        
+    def set_parent(cls, parent: SlashCommand) -> None:
+        """Sets the parent of the slash command.
+
+        Parameters
+        -----------
+        parent: :class:`SlashCommand`
+            The slash command to set as the parent.
         """
         if not isinstance(parent, SlashCommand):
             raise TypeError(f'parent must be a SlashCommand not {parent.__class__.__name__}')
@@ -766,8 +870,12 @@ class SlashCommand(BaseApplicationCommand, command_type=ApplicationCommandType.S
 
     @classmethod
     def add_option(cls, option: ApplicationCommandOption) -> None:
-        """
-        
+        """Adds an option to the slash command.
+
+        Parameters
+        -----------
+        option: :class:`ApplicationCommandOption`
+            The option to add.
         """
         if not isinstance(option, ApplicationCommandOption):
             raise TypeError(f'option must be an ApplicationCommandOption not {option.__class__.__name__}')
@@ -776,34 +884,136 @@ class SlashCommand(BaseApplicationCommand, command_type=ApplicationCommandType.S
 
     @classmethod
     def remove_option(cls, name: str) -> Optional[ApplicationCommandOption]:
-        """
-        
+        """Removes an option from the slash command by name.
+
+        Parameters
+        -----------
+        name: :class:`str`
+            The name of the option.
+
+        Returns
+        -----------
+        Optional[:class:`ApplicationCommandOption`]
+            The option that was removed. If the name is not valid then
+            ``None`` is returned instead.
         """
         return cls.__application_command_options__.pop(name, None)
 
-class MessageCommand(BaseApplicationCommand, command_type=ApplicationCommandType.MESSAGE):
-    """Represents a discord message command.
-    
-    """
+class MessageCommand(BaseApplicationCommand, command_type=ApplicationCommandType.message):
+    """Represents a Discord message command."""
+
     async def callback(self, response: MessageCommandResponse) -> None:
+        """|coro|
+
+        The callback associated with this message command.
+
+        This can be overriden by subclasses.
+
+        Parameters
+        -----------
+        response: :class:`MessageCommandResponse`
+            The response of the message command used.
+        """
         pass
 
     async def command_check(self, response: MessageCommandResponse) -> bool:
+        """|coro|
+
+        A callback that is called when the message command is used that checks
+        whether the command's callback should be called.
+
+        The default implementation of this returns ``True``.
+
+        .. note::
+
+            If an exception occurs within the body then the check
+            is considered a failure and :meth:`on_error` is called.
+
+        Parameters
+        -----------
+        response: :class:`MessageCommandResponse`
+            The response of the message command used.
+
+        Returns
+        ---------
+        :class:`bool`
+            Whether the command's callback should be called.
+        """
         return True
 
-    async def on_error(self, error: BaseException, response: MessageCommandResponse) -> None:
+    async def on_error(self, error: Exception, response: MessageCommandResponse) -> None:
+        """|coro|
+
+        A callback that is called when a message command's callback or :meth:`command_check`
+        fails with an error.
+
+        The default implementation does nothing.
+
+        Parameters
+        -----------
+        error: :class:`Exception`
+            The exception that was raised.
+        response: :class:`MessageCommandResponse`
+            The response of the message command used.
+        """
         pass
 
 
-class UserCommand(BaseApplicationCommand, command_type=ApplicationCommandType.USER):
-    """Represents a discord user command.
-    
-    """
+class UserCommand(BaseApplicationCommand, command_type=ApplicationCommandType.user):
+    """Represents a Discord user command."""
+
     async def callback(self, response: UserCommandResponse) -> None:
+        """|coro|
+
+        The callback associated with this user command.
+
+        This can be overriden by subclasses.
+
+        Parameters
+        -----------
+        response: :class:`UserCommandResponse`
+            The response of the user command used.
+        """
         pass
 
     async def command_check(self, response: UserCommandResponse) -> bool:
+        """|coro|
+
+        A callback that is called when the user command is used that checks
+        whether the command's callback should be called.
+
+        The default implementation of this returns ``True``.
+
+        .. note::
+
+            If an exception occurs within the body then the check
+            is considered a failure and :meth:`on_error` is called.
+
+        Parameters
+        -----------
+        response: :class:`UserCommandResponse`
+            The response of the user command used.
+
+        Returns
+        ---------
+        :class:`bool`
+            Whether the command's callback should be called.
+        """
         return True
 
-    async def on_error(self, error: BaseException, response: UserCommandResponse) -> None:
+    async def on_error(self, error: Exception, response: UserCommandResponse) -> None:
+        """|coro|
+
+        A callback that is called when a user command's callback or :meth:`command_check`
+        fails with an error.
+
+        The default implementation does nothing.
+
+        Parameters
+        -----------
+        error: :class:`Exception`
+            The exception that was raised.
+        response: :class:`UserCommandResponse`
+            The response of the user command used.
+        """
         pass

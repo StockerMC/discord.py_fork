@@ -62,7 +62,7 @@ from .application_commands import (
     SlashCommandResponse,
     MessageCommandResponse,
     UserCommandResponse,
-    SlashCommandOptions,
+    ApplicationCommandOptions,
 )
 
 if TYPE_CHECKING:
@@ -726,7 +726,7 @@ class ConnectionState:
 
                 if application_command_type == 1:  # slash command
                     optional_options = [option.name for option in command.__application_command_options__.values() if not option.required]
-                    options = SlashCommandOptions(
+                    options = ApplicationCommandOptions(
                         guild_id=guild_id,
                         options=application_command_data.get('options'),
                         resolved_data=resolved_data,
