@@ -44,9 +44,8 @@ if TYPE_CHECKING:
     from discord.voice_client import VoiceProtocol
 
     from .bot import Bot, AutoShardedBot
-    from .cog import Cog
+    from discord.cog import Cog
     from .core import Command
-    from .help import HelpCommand
     from .view import StringView
 
 __all__ = (
