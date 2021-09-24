@@ -33,7 +33,7 @@ import importlib.util
 import sys
 import traceback
 import types
-from typing import Any, Callable, Mapping, List, Dict, TYPE_CHECKING, Optional, TypeVar, Type, Union
+from typing import Any, Callable, Mapping, List, Dict, TYPE_CHECKING, Optional, TypeVar, Type, Union, Iterable
 
 import discord
 
@@ -51,7 +51,14 @@ if TYPE_CHECKING:
     from ._types import (
         Check,
         CoroFunc,
+        Coro
     )
+
+    PrefixType = Union[Iterable[str], str]
+    PrefixCallable = Union[
+        Callable[[Union['Bot', 'AutoShardedBot'], Message], PrefixType],
+        Callable[[Union['Bot', 'AutoShardedBot'], Message], Coro[PrefixType]],
+    ]
 
 __all__ = (
     'when_mentioned',
@@ -103,7 +110,7 @@ def when_mentioned_or(*prefixes: str) -> Callable[[Union[Bot, AutoShardedBot], M
     ----------
     :func:`.when_mentioned`
     """
-    def inner(bot, msg):
+    def inner(bot: Union[Bot, AutoShardedBot], msg: Message) -> List[str]:
         r = list(prefixes)
         r = when_mentioned(bot, msg) + r
         return r
@@ -113,28 +120,22 @@ def when_mentioned_or(*prefixes: str) -> Callable[[Union[Bot, AutoShardedBot], M
 def _is_submodule(parent: str, child: str) -> bool:
     return parent == child or child.startswith(parent + ".")
 
-class _DefaultRepr:
-    def __repr__(self):
-        return '<default-help-command>'
-
-_default = _DefaultRepr()
-
 class BotBase(GroupMixin):
-    def __init__(self, command_prefix, help_command=_default, description=None, **options):
+    def __init__(self, command_prefix: Union[PrefixType, PrefixCallable], help_command: Optional[HelpCommand] = MISSING, description: Optional[str] = None, **options: Any) -> None:
         super().__init__(**options)
-        self.command_prefix = command_prefix
+        self.command_prefix: Union[PrefixType, PrefixCallable] = command_prefix
         self.extra_events: Dict[str, List[CoroFunc]] = {}
         self.__cogs: Dict[str, Cog] = {}
         self.__extensions: Dict[str, types.ModuleType] = {}
         self._checks: List[Check] = []
-        self._check_once = []
-        self._before_invoke = None
-        self._after_invoke = None
-        self._help_command = None
-        self.description = inspect.cleandoc(description) if description else ''
-        self.owner_id = options.get('owner_id')
-        self.owner_ids = options.get('owner_ids', set())
-        self.strip_after_prefix = options.get('strip_after_prefix', False)
+        self._check_once: List[Check] = []
+        self._before_invoke: Optional[CoroFunc] = None
+        self._after_invoke: Optional[CoroFunc] = None
+        self._help_command: Optional[HelpCommand] = None
+        self.description: str = inspect.cleandoc(description) if description else ''
+        self.owner_id: Optional[int] = options.get('owner_id')
+        self.owner_ids: Optional[collections.abc.Collection[int]] = options.get('owner_ids', set())
+        self.strip_after_prefix: bool = options.get('strip_after_prefix', False)
 
         if self.owner_id and self.owner_ids:
             raise TypeError('Both owner_id and owner_ids are set.')
@@ -142,10 +143,10 @@ class BotBase(GroupMixin):
         if self.owner_ids and not isinstance(self.owner_ids, collections.abc.Collection):
             raise TypeError(f'owner_ids must be a collection not {self.owner_ids.__class__!r}')
 
-        if help_command is _default:
-            self.help_command = DefaultHelpCommand()
+        if help_command is MISSING:
+            self._help_command = DefaultHelpCommand()
         else:
-            self.help_command = help_command
+            self._help_command = help_command
 
     # internal helpers
 
@@ -170,6 +171,7 @@ class BotBase(GroupMixin):
             except Exception:
                 pass
 
+        # super will resolve to Client
         await super().close()  # type: ignore
 
     async def on_command_error(self, context: Context, exception: errors.CommandError) -> None:
@@ -886,7 +888,8 @@ class BotBase(GroupMixin):
 
         if not isinstance(ret, str):
             try:
-                ret = list(ret)
+                # ret won't be a callable
+                ret = list(ret)  # type: ignore
             except TypeError:
                 # It's possible that a generator raised this exception.  Don't
                 # replace it with our own error if that's the case.
@@ -1030,7 +1033,7 @@ class BotBase(GroupMixin):
         ctx = await self.get_context(message)
         await self.invoke(ctx)
 
-    async def on_message(self, message):
+    async def on_message(self, message: Message) -> None:
         await self.process_commands(message)
 
 class Bot(BotBase, discord.Client):
