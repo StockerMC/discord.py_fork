@@ -83,6 +83,7 @@ __all__ = (
     'UserCommandResponse',
     'ApplicationCommandOptionChoice',
     'application_command_option',
+    'ApplicationCommandOptionDefault',
 )
 
 
@@ -110,8 +111,25 @@ def _resolve_option_type(option: Union[ValidOptionTypes, ApplicationCommandOptio
     return resolved_type
 
 
+class ApplicationCommandOptionDefault:
+    """Used for creating defaults for a :class:`ApplicationCommandOption` when it's accessed with
+    it's relevant :class:`ApplicationCommandOptions` instance.
+
+    :meth:`default` must be should be overridden by subclasses.
+    """
+
+    async def default(self, response: SlashCommandResponse) -> Any:
+        """|coro|
+
+        
+        """
+        raise NotImplementedError('Derived classes need to implement this.')
+
+
 class ApplicationCommandOptionChoice:
     """Represents a choice of an option of an application command.
+
+    .. versionadded:: 2.0
 
     Attributes
     -----------
@@ -153,6 +171,10 @@ class ApplicationCommandOption:
         The choices of the option.
     options: Optional[List[:class:`ApplicationCommandOption`]]
         The parameters of the option if it's a subcommand or subcommand group type.
+    default: Optional[:class:`ApplicationCommandOptionDefault`]
+        The default for the option, if any.
+
+        This is for when the option is accessed with it's relevant :class:`ApplicationCommandOptions` instance.
     """
 
     __slots__= (
@@ -162,6 +184,7 @@ class ApplicationCommandOption:
         'required',
         'choices',
         'options',
+        'default',
     )
 
     def __init__(
@@ -173,6 +196,7 @@ class ApplicationCommandOption:
         required: bool = MISSING,
         choices: Optional[List[ApplicationCommandOptionChoice]] = None,
         options: Optional[List[ApplicationCommandOption]] = None,
+        default: Optional[ApplicationCommandOptionDefault] = None,
     ) -> None:
         self.type: ApplicationCommandOptionType = type
         self.name: str = name
@@ -180,6 +204,7 @@ class ApplicationCommandOption:
         self.required: bool = required
         self.choices: Optional[List[ApplicationCommandOptionChoice]] = choices
         self.options: Optional[List[ApplicationCommandOption]] = options
+        self.default: Optional[ApplicationCommandOptionDefault] = default
 
     def __repr__(self) -> str:
         return f'<{self.__class__.__name__} type={self.type!r} name={self.name!r} description={self.description!r} required={self.required!r}>'
@@ -207,9 +232,10 @@ def application_command_option(
     *,
     description: str,
     name: str = MISSING,
-    type: ApplicationCommandOptionType = MISSING,
+    type: Union[ApplicationCommandOptionType, ValidOptionTypes] = MISSING,
     required: bool = True,
     choices: Optional[List[ApplicationCommandOptionChoice]] = None,
+    default: Optional[Union[ApplicationCommandOptionDefault, Type[ApplicationCommandOptionDefault]]] = None,
 ) -> Any:
     """Used for creating an option for an application command.
 
@@ -217,6 +243,23 @@ def application_command_option(
     the return type is ``Any``.        
 
     .. versionadded:: 2.0
+
+    Parameters
+    -----------
+    description: :class:`str`
+        The description of the option.
+    name: :class:`str`
+        The name of the option.
+    type: Union[:class:`ApplicationCommandOptionType`, Type[Any]]
+        The type of the option. This can be an :class:`ApplicationCommandOptionType` member or a :ref:`Discord model <discord_api_models>`.
+        Note that not all API models are acceptable types. 
+    required: :class:`bool`
+        Whether the option is required or not.
+        Defaults to ``True``.
+    choices: Optional[List[:class:`ApplicationCommandOptionChoice`]]
+        The choices of the option.
+    default: Optional[Union[:class:`ApplicationCommandOptionDefault`, Type[:class:`ApplicationCommandOptionDefault`]]]
+        The default of the option for when it's accessed with it's relevant :class:`ApplicationCommandOptions` instance.
 
     Returns
     --------
@@ -234,12 +277,23 @@ def application_command_option(
             if not isinstance(choice, ApplicationCommandOptionChoice):
                 raise TypeError(f'choices must only contain ApplicationCommandOptionChoice instances, not {choice.__class__.__name__}')
 
+    if default is not None:
+        if inspect.isclass(default):
+            if not issubclass(default, ApplicationCommandOptionDefault):
+                raise TypeError('default must derive from ApplicationCommandOptionDefault')
+
+            default = default()
+
+        if not inspect.isclass(default) and not isinstance(default, ApplicationCommandOptionDefault):
+            raise TypeError('default must derive from ApplicationCommandOptionDefault')
+
     return ApplicationCommandOption(
         name=name,
         description=description,
         type=resolved_type,
         required=required,
         choices=choices,
+        default=default,
     )
 
 def _get_options(
@@ -304,9 +358,9 @@ class ApplicationCommandOptions:
         options: Optional[List[ApplicationCommandOptionPayload]],
         resolved_data: Optional[ApplicationCommandInteractionDataResolved],
         state: ConnectionState,
-        optional_options: List[str],
+        command_options: List[ApplicationCommandOption],
     ) -> None:
-        self.__optional_options__: List[str] = optional_options
+        self.__defaults__: Dict[str, Any] = {option.name: None for option in command_options if not option.required}
         if options is None:
             return
 
@@ -349,10 +403,10 @@ class ApplicationCommandOptions:
             setattr(self, option['name'], value)
 
     def __getattr__(self, name: str) -> Any:
-        if name in self.__optional_options__:
-            return None
-
-        raise AttributeError(name)
+        try:
+            return self.__defaults__[name]
+        except KeyError:
+            raise AttributeError(name) from None
 
 
 def _get_used_subcommand(options: Union[ApplicationCommandPayload, ApplicationCommandOptionPayload]) -> Optional[str]:
@@ -458,7 +512,7 @@ class SlashCommandResponse(BaseApplicationCommandResponse):
     -----------
     interaction: :class:`Interaction`
         The interaction of the response.
-    options: :class:`SlashCommandOptions`
+    options: :class:`ApplicationCommandOptions`
         The options of the slash command used.
     command: :class:`SlashCommand`
         The slash command used.
@@ -571,10 +625,8 @@ class BaseApplicationCommand:
             name = name.lower()
 
         if description is MISSING:
-            doc = _traverse_mro_for_attr(cls, '__doc__', None)
-            if doc is None:
-                description = MISSING
-            else:
+            doc = cls.__doc__
+            if doc is not None:
                 description = inspect.cleandoc(doc)
 
         if parent is not None:
@@ -613,9 +665,9 @@ class BaseApplicationCommand:
         options = _get_options(cls_dict, cls.__annotations__, global_ns, local_ns)
 
         cls.__application_command_options__ = options
-        cls.__application_command_name__ = str(name)
+        cls.__application_command_name__ = name
 
-        cls.__application_command_description__ = str(description)
+        cls.__application_command_description__ = description
         # it gets set as an instance later
         cls.__application_command_parent__ = parent  # type: ignore
         cls.__application_command_type__ = command_type
@@ -690,6 +742,12 @@ class BaseApplicationCommand:
             if not allow:
                 return
 
+            if isinstance(response, SlashCommandResponse):
+                for option in self.__application_command_options__.values():
+                    if not option.required and option.default is not None and getattr(response.options, option.name, None) is None:
+                        resolved_default = await option.default.default(response)
+                        setattr(response.options, option.name, resolved_default)
+
             await self.callback(response)
             if not response.response._responded:
                 await response.defer()
@@ -739,7 +797,11 @@ class BaseApplicationCommand:
         }
 
         if cls.__application_command_type__ is ApplicationCommandType.slash:
-            ret['description'] = cls.__application_command_description__
+            description = cls.__application_command_description__
+            if description is MISSING:
+                raise TypeError('slash commands must have a description')
+
+            ret['description'] = description
 
             extra = []
             for command in cls.__application_command_subcommands__.values():

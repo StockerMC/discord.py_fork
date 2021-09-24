@@ -725,13 +725,13 @@ class ConnectionState:
                 # TODO: default target to an `Object` if it wasn't resolved?
 
                 if application_command_type == 1:  # slash command
-                    optional_options = [option.name for option in command.__application_command_options__.values() if not option.required]
+                    command_options = list(command.__application_command_options__.values())
                     options = ApplicationCommandOptions(
                         guild_id=guild_id,
                         options=application_command_data.get('options'),
                         resolved_data=resolved_data,
                         state=self,
-                        optional_options=optional_options,
+                        command_options=command_options,
                     )
                     response = SlashCommandResponse(interaction, options, used_command)  # type: ignore
                 elif application_command_type == 2:  # user command
