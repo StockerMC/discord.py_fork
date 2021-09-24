@@ -3367,8 +3367,6 @@ SyncWebhookMessage
 .. autoclass:: SyncWebhookMessage()
     :members:
 
-.. _cogs:
-
 Cogs
 ------
 

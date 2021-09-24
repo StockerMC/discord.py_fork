@@ -1,6 +1,6 @@
 .. currentmodule:: discord
 
-.. cogs:
+.. _cogs:
 
 Cogs
 ======
