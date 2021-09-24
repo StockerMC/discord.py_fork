@@ -582,7 +582,7 @@ Bug Fixes
 - Fix issue with large sharded bots taking too long to actually dispatch :func:`on_ready`.
 - Fix issue with fetching group DM based invites in :meth:`Client.fetch_invite`.
 - Fix out of order files being sent in webhooks when there are 10 files.
-- |commands| Extensions that fail internally due to ImportError will no longer raise :exc:`~.ext.commands.ExtensionNotFound`. (:issue:`2244`, :issue:`2275`, :issue:`2291`)
+- |commands| Extensions that fail internally due to ImportError will no longer raise :exc:`ExtensionNotFound`. (:issue:`2244`, :issue:`2275`, :issue:`2291`)
 - |commands| Updating the :attr:`Paginator.suffix <.ext.commands.Paginator.suffix>` will not cause out of date calculations. (:issue:`2251`)
 - |commands| Allow converters from custom extension packages. (:issue:`2369`, :issue:`2374`)
 - |commands| Fix issue with paginator prefix being ``None`` causing empty pages. (:issue:`2471`)

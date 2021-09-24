@@ -298,7 +298,7 @@ to handle it, which defaults to print a traceback and ignoring the exception.
     :param kwargs: The keyword arguments for the event that raised the
         exception.
 
-.. function:: discord.ext.commands.on_command_error(response, error)
+.. function:: discord.ext.commands.on_application_command_error(response, error)
 
     An error handler that is called when an error is raised
     inside an application commands' callback.
@@ -3364,6 +3364,27 @@ SyncWebhookMessage
 .. autoclass:: SyncWebhookMessage()
     :members:
 
+.. _cogs:
+
+Cogs
+------
+
+Cog
+~~~~
+
+.. attributetable:: discord.Cog
+
+.. autoclass:: discord.Cog
+    :members:
+
+CogMeta
+~~~~~~~~
+
+.. attributetable:: discord.CogMeta
+
+.. autoclass:: discord.CogMeta
+    :members:
+
 .. _discord_api_abcs:
 
 Abstract Base Classes
@@ -4000,12 +4021,14 @@ PartialWebhookChannel
 .. _discord_api_data:
 
 ApplicationCommandOption
-~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. attributetable:: ApplicationCommandOption
 
 .. autoclass:: ApplicationCommandOption()
     :members:
+
+.. autofunction:: discord.application_command_option
 
 Data Classes
 --------------
@@ -4210,7 +4233,7 @@ SlashCommandResponse
     :inherited-members:
 
 MessageCommandResponse
-~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~
 
 .. attributetable:: MessageCommandResponse
 

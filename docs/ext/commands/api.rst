@@ -173,27 +173,6 @@ GroupMixin
     .. automethod:: GroupMixin.group(*args, **kwargs)
         :decorator:
 
-.. _ext_commands_api_cogs:
-
-Cogs
-------
-
-Cog
-~~~~
-
-.. attributetable:: discord.Cog
-
-.. autoclass:: discord.Cog
-    :members:
-
-CogMeta
-~~~~~~~~
-
-.. attributetable:: discord.CogMeta
-
-.. autoclass:: discord.CogMeta
-    :members:
-
 .. _ext_commands_help_command:
 
 Help Commands
@@ -589,24 +568,6 @@ Exceptions
 .. autoexception:: discord.ext.commands.MissingRequiredFlag
     :members:
 
-.. autoexception:: discord.ext.commands.ExtensionError
-    :members:
-
-.. autoexception:: discord.ext.commands.ExtensionAlreadyLoaded
-    :members:
-
-.. autoexception:: discord.ext.commands.ExtensionNotLoaded
-    :members:
-
-.. autoexception:: discord.ext.commands.NoEntryPointError
-    :members:
-
-.. autoexception:: discord.ext.commands.ExtensionFailed
-    :members:
-
-.. autoexception:: discord.ext.commands.ExtensionNotFound
-    :members:
-
 .. autoexception:: discord.ext.commands.CommandRegistrationError
     :members:
 
@@ -665,11 +626,5 @@ Exception Hierarchy
             - :exc:`~.commands.CommandInvokeError`
             - :exc:`~.commands.CommandOnCooldown`
             - :exc:`~.commands.MaxConcurrencyReached`
-        - :exc:`~.commands.ExtensionError`
-            - :exc:`~.commands.ExtensionAlreadyLoaded`
-            - :exc:`~.commands.ExtensionNotLoaded`
-            - :exc:`~.commands.NoEntryPointError`
-            - :exc:`~.commands.ExtensionFailed`
-            - :exc:`~.commands.ExtensionNotFound`
     - :exc:`~.ClientException`
         - :exc:`~.commands.CommandRegistrationError`

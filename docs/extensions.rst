@@ -1,6 +1,6 @@
 .. currentmodule:: discord
 
-.. _ext_commands_extensions:
+.. _extensions:
 
 Extensions
 =============

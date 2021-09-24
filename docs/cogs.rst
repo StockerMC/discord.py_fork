@@ -15,7 +15,7 @@ The gist:
 - Cogs are then registered with the :meth:`.Bot.add_cog` call.
 - Cogs are subsequently removed with the :meth:`.Bot.remove_cog` call.
 
-It should be noted that cogs are typically used alongside with :ref:`ext_commands_extensions`.
+It should be noted that cogs are typically used alongside with :ref:`extensions`.
 
 Quick Example
 ---------------

@@ -81,9 +81,10 @@ __all__ = (
     'SlashCommandResponse',
     'MessageCommandResponse',
     'UserCommandResponse',
+    'ApplicationCommandOption',
     'ApplicationCommandOptionChoice',
-    'application_command_option',
     'ApplicationCommandOptionDefault',
+    'application_command_option',
 )
 
 
@@ -151,9 +152,7 @@ class ApplicationCommandOptionChoice:
 
 
 class ApplicationCommandOption:
-    """Represents an option of a discord application command.
-
-    This should not be constructed manually. Instead, use :func:`discord.application_command_option`.
+    """Represents an option of a Discord application command.
 
     .. versionadded:: 2.0
 
@@ -252,7 +251,7 @@ def application_command_option(
         The name of the option.
     type: Union[:class:`ApplicationCommandOptionType`, Type[Any]]
         The type of the option. This can be an :class:`ApplicationCommandOptionType` member or a :ref:`Discord model <discord_api_models>`.
-        Note that not all API models are acceptable types. 
+        Note that not all Discord models are acceptable types. 
     required: :class:`bool`
         Whether the option is required or not.
         Defaults to ``True``.
@@ -265,7 +264,6 @@ def application_command_option(
     --------
     :class:`ApplicationCommandOption`
         The created application command option.
-
     """
     if type is not MISSING:
         resolved_type = _resolve_option_type(type)
