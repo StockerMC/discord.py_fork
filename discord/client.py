@@ -679,12 +679,11 @@ class Client:
                 if command.__application_command_global_command__:
                     global_payload.append(command_payload)
 
-            # TODO make application_id required kwarg and use self.application_id
             for guild_id, commands in guild_payloads.items():
-                await self.http.bulk_upsert_guild_commands(self.user.id, guild_id, commands)  # type: ignore
+                await self.http.bulk_upsert_guild_commands(self.application_id, guild_id, commands)  # type: ignore
 
             if global_payload:
-                await self.http.bulk_upsert_global_commands(self.user.id, global_payload) # type: ignore
+                await self.http.bulk_upsert_global_commands(self.application_id, global_payload) # type: ignore
 
         await self.connect(reconnect=reconnect)
 
