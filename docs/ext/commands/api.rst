@@ -181,17 +181,17 @@ Cogs
 Cog
 ~~~~
 
-.. attributetable:: discord.ext.commands.Cog
+.. attributetable:: discord.Cog
 
-.. autoclass:: discord.ext.commands.Cog
+.. autoclass:: discord.Cog
     :members:
 
 CogMeta
 ~~~~~~~~
 
-.. attributetable:: discord.ext.commands.CogMeta
+.. attributetable:: discord.CogMeta
 
-.. autoclass:: discord.ext.commands.CogMeta
+.. autoclass:: discord.CogMeta
     :members:
 
 .. _ext_commands_help_command:

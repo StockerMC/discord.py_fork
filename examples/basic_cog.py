@@ -11,12 +11,12 @@ class MyBot(commands.Bot):
         print(f'Logged in as {self.user} (ID: {self.user.id})')
         print('------')
 
-class Greetings(commands.Cog):
+class Greetings(discord.Cog):
     def __init__(self, bot):
         self.bot = bot
         self._last_member = None
 
-    @commands.Cog.listener()
+    @discord.Cog.listener()
     async def on_member_join(self, member: discord.Member):
         channel = member.guild.system_channel
         if channel is not None:

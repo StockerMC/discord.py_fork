@@ -32,7 +32,7 @@ In this example we define a simple command, and when the extension is loaded thi
 .. admonition:: Cogs
     :class: helpful
 
-    Extensions are usually used in conjunction with cogs. To read more about them, check out the documentation, :ref:`ext_commands_cogs`.
+    Extensions are usually used in conjunction with cogs. To read more about them, check out the documentation, :ref:`cogs`.
 
 .. note::
 

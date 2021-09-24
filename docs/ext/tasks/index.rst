@@ -16,13 +16,13 @@ The goal of this discord.py extension is to abstract all these worries away from
 Recipes
 ---------
 
-A simple background task in a :class:`~discord.ext.commands.Cog`:
+A simple background task in a :class:`~discord.ext.discord.Cog`:
 
 .. code-block:: python3
 
     from discord.ext import tasks, commands
 
-    class MyCog(commands.Cog):
+    class MyCog(discord.Cog):
         def __init__(self):
             self.index = 0
             self.printer.start()
@@ -42,7 +42,7 @@ Adding an exception to handle during reconnect:
     import asyncpg
     from discord.ext import tasks, commands
 
-    class MyCog(commands.Cog):
+    class MyCog(discord.Cog):
         def __init__(self, bot):
             self.bot = bot
             self.data = []
@@ -80,7 +80,7 @@ Waiting until the bot is ready before the loop starts:
 
     from discord.ext import tasks, commands
 
-    class MyCog(commands.Cog):
+    class MyCog(discord.Cog):
         def __init__(self, bot):
             self.index = 0
             self.bot = bot
@@ -106,7 +106,7 @@ Doing something during cancellation:
     from discord.ext import tasks, commands
     import asyncio
 
-    class MyCog(commands.Cog):
+    class MyCog(discord.Cog):
         def __init__(self, bot):
             self.bot= bot
             self._batch = []

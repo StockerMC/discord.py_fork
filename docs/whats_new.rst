@@ -42,7 +42,7 @@ v1.7.1
 Bug Fixes
 ~~~~~~~~~~~
 
-- |commands| Fix :meth:`Cog.has_error_handler <ext.commands.Cog.has_error_handler>` not working as intended.
+- |commands| Fix :meth:`Cog.has_error_handler <discord.Cog.has_error_handler>` not working as intended.
 
 .. _vp1p7p0:
 
@@ -92,7 +92,7 @@ New Features
 - |commands| Add a converter for :class:`PartialMessage` under :class:`ext.commands.PartialMessageConverter` (:issue:`6308`)
 - |commands| Add a converter for :class:`Guild` under :class:`ext.commands.GuildConverter` (:issue:`6016`, :issue:`6365`)
 - |commands| Add :meth:`Command.has_error_handler <ext.commands.Command.has_error_handler>`
-    - This is also adds :meth:`Cog.has_error_handler <ext.commands.Cog.has_error_handler>`
+    - This is also adds :meth:`Cog.has_error_handler <discord.Cog.has_error_handler>`
 - |commands| Allow callable types to act as a bucket key for cooldowns (:issue:`6563`)
 - |commands| Add ``linesep`` keyword argument to :class:`Paginator <ext.commands.Paginator>` (:issue:`5975`)
 - |commands| Allow ``None`` to be passed to :attr:`HelpCommand.verify_checks <ext.commands.HelpCommand.verify_checks>` to only verify in a guild context (:issue:`2008`, :issue:`6446`)
@@ -167,7 +167,7 @@ New Features
 - Add support for :attr:`Member.pending` for the membership gating feature.
 - Allow ``colour`` parameter to take ``int`` in :meth:`Guild.create_role` (:issue:`6195`)
 - Add support for ``presences`` in :meth:`Guild.query_members` (:issue:`2354`)
-- |commands| Add support for ``description`` keyword argument in :class:`commands.Cog <ext.commands.Cog>` (:issue:`6028`)
+- |commands| Add support for ``description`` keyword argument in :class:`discord.Cog <discord.Cog>` (:issue:`6028`)
 - |tasks| Add support for calling the wrapped coroutine as a function via ``__call__``.
 
 

@@ -26,7 +26,7 @@ class Hello(discord.SlashCommand, guild_ids=[123]):
             message += f' {last_user.name} said hello last!'
         await response.send_message(message, ephemeral=True)
 
-class Fun(commands.Cog):
+class Fun(discord.Cog):
     def __init__(self):
         self.last_user = None
         self.add_application_command(Hello(self))

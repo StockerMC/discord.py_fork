@@ -110,7 +110,7 @@ config.py
 _cog_template = '''from discord.ext import commands
 import discord
 
-class {name}(commands.Cog{attrs}):
+class {name}(discord.Cog{attrs}):
     """The description for {name} goes here."""
 
     def __init__(self, bot):

@@ -69,13 +69,13 @@ class CogMeta(type):
 
         import abc
 
-        class CogABCMeta(commands.CogMeta, abc.ABCMeta):
+        class CogABCMeta(discord.CogMeta, abc.ABCMeta):
             pass
 
         class SomeMixin(metaclass=abc.ABCMeta):
             pass
 
-        class SomeCogMixin(SomeMixin, commands.Cog, metaclass=CogABCMeta):
+        class SomeCogMixin(SomeMixin, discord.Cog, metaclass=CogABCMeta):
             pass
 
     .. note::
@@ -86,7 +86,7 @@ class CogMeta(type):
 
         .. code-block:: python3
 
-            class MyCog(commands.Cog, name='My Cog'):
+            class MyCog(discord.Cog, name='My Cog'):
                 pass
 
     Attributes
@@ -106,7 +106,7 @@ class CogMeta(type):
 
         .. code-block:: python3
 
-            class MyCog(commands.Cog, command_attrs=dict(hidden=True)):
+            class MyCog(discord.Cog, command_attrs=dict(hidden=True)):
                 @commands.command()
                 async def foo(self, ctx):
                     pass # hidden -> True
@@ -192,7 +192,7 @@ class Cog(metaclass=CogMeta):
 
     A cog is a collection of commands, listeners, and optional state to
     help group commands together. More information on them can be found on
-    the :ref:`ext_commands_cogs` page.
+    the :ref:`cogs` page.
 
     When inheriting from this class, the options shown in :class:`CogMeta`
     are equally valid here.

@@ -993,7 +993,7 @@ For example, to implement a :class:`~.commands.HelpCommand` in a cog, the follow
         def get_command_signature(self, command):
             return '{0.clean_prefix}{1.qualified_name} {1.signature}'.format(self, command)
 
-    class MyCog(commands.Cog):
+    class MyCog(discord.Cog):
         def __init__(self, bot):
             self._original_help_command = bot.help_command
             bot.help_command = MyHelpCommand()
@@ -1007,9 +1007,9 @@ For more information, check out the relevant :ref:`documentation <ext_commands_h
 Cog Changes
 ~~~~~~~~~~~~~
 
-Cogs have completely been revamped. They are documented in :ref:`ext_commands_cogs` as well.
+Cogs have completely been revamped. They are documented in :ref:`cogs` as well.
 
-Cogs are now required to have a base class, :class:`~.commands.Cog` for future proofing purposes. This comes with special methods to customise some behaviour.
+Cogs are now required to have a base class, :class:`~.discord.Cog` for future proofing purposes. This comes with special methods to customise some behaviour.
 
 * :meth:`.Cog.cog_unload`
     - This is called when a cog needs to do some cleanup, such as cancelling a task.
@@ -1024,15 +1024,15 @@ Cogs are now required to have a base class, :class:`~.commands.Cog` for future p
 * :meth:`.Cog.cog_before_invoke` and :meth:`.Cog.cog_after_invoke`
     - A special method that registers a cog before and after invoke hook. More information can be found in :ref:`migrating_1_0_before_after_hook`.
 
-Those that were using listeners, such as ``on_message`` inside a cog will now have to explicitly mark them as such using the :meth:`.commands.Cog.listener` decorator.
+Those that were using listeners, such as ``on_message`` inside a cog will now have to explicitly mark them as such using the :meth:`.discord.Cog.listener` decorator.
 
-Along with that, cogs have gained the ability to have custom names through specifying it in the class definition line. More options can be found in the metaclass that facilitates all this, :class:`.commands.CogMeta`.
+Along with that, cogs have gained the ability to have custom names through specifying it in the class definition line. More options can be found in the metaclass that facilitates all this, :class:`.discord.CogMeta`.
 
 An example cog with every special method registered and a custom name is as follows:
 
 .. code-block:: python3
 
-    class MyCog(commands.Cog, name='Example Cog'):
+    class MyCog(discord.Cog, name='Example Cog'):
         def cog_unload(self):
             print('cleanup goes here')
 
@@ -1057,7 +1057,7 @@ An example cog with every special method registered and a custom name is as foll
         async def cog_after_invoke(self, ctx):
             print('cog local after: {0.command.qualified_name}'.format(ctx))
 
-        @commands.Cog.listener()
+        @discord.Cog.listener()
         async def on_message(self, message):
             pass
 
@@ -1112,7 +1112,7 @@ The special cog method for these is :meth:`.Cog.cog_before_invoke` and :meth:`.C
 
 .. code-block:: python3
 
-    class MyCog(commands.Cog):
+    class MyCog(discord.Cog):
         async def cog_before_invoke(self, ctx):
             ctx.secret_cog_data = 'foo'
 

@@ -288,7 +288,7 @@ to handle it, which defaults to print a traceback and ignoring the exception.
 
         It will not be received by :meth:`Client.wait_for`, or, if used,
         :ref:`ext_commands_api_bot` listeners such as
-        :meth:`~ext.commands.Bot.listen` or :meth:`~ext.commands.Cog.listener`.
+        :meth:`~ext.commands.Bot.listen` or :meth:`~discord.Cog.listener`.
 
     :param event: The name of the event that raised the exception.
     :type event: :class:`str`

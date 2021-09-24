@@ -2252,7 +2252,7 @@ def before_invoke(coro) -> Callable[[T], T]:
         async def who(ctx): # Output: <User> used who at <Time>
             await ctx.send('i am a bot')
 
-        class What(commands.Cog):
+        class What(discord.Cog):
 
             @commands.before_invoke(record_usage)
             @commands.command()
