@@ -28,7 +28,7 @@ from typing import Any, Callable, Coroutine, TYPE_CHECKING, TypeVar, Union
 
 if TYPE_CHECKING:
     from .context import Context
-    from .cog import Cog
+    from discord.cog import Cog
     from .errors import CommandError
 
 T = TypeVar('T')
