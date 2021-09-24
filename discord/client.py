@@ -657,7 +657,7 @@ class Client:
 
         await self.connect(reconnect=reconnect)
 
-    def run(self, *args: Any, **kwargs: Any) -> None:
+    def run(self, token: str, *, reconnect: bool = True) -> None:
         """A blocking call that abstracts away the event loop
         initialisation from you.
 
@@ -691,7 +691,7 @@ class Client:
 
         async def runner():
             try:
-                await self.start(*args, **kwargs)
+                await self.start(token, reconnect=reconnect)
             finally:
                 if not self.is_closed():
                     await self.close()
