@@ -12,7 +12,7 @@ class MyBot(commands.Bot):
         print('------')
 
 # setting `guild_ids` in development is better when possible because
-# bulk overwriting global commands has a 1 hour delay
+# registering global commands has a 1 hour delay
 class Hello(discord.SlashCommand, guild_ids=[123]):
     """Say hello!"""
 

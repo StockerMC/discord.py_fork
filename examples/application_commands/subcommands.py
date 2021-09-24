@@ -11,7 +11,7 @@ class MyClient(discord.Client):
         print('------')
 
 # setting `guild_ids` in development is better when possible because
-# bulk overwriting global commands has a 1 hour delay
+# registering global commands has a 1 hour delay
 class Show(discord.SlashCommand, guild_ids=[123]):
     """Get or edit permissions for a user or a role in the current channel"""
 

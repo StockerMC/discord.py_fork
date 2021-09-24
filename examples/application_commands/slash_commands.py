@@ -12,7 +12,7 @@ class MyClient(discord.Client):
         print('------')
 
 # setting `guild_ids` in development is better when possible because
-# bulk overwriting global commands has a 1 hour delay
+# registering global commands has a 1 hour delay
 class Avatar(discord.SlashCommand, guild_ids=[123]):
     """Get the avatar of the provided user or yourself"""
 

@@ -11,7 +11,7 @@ class MyClient(discord.Client):
         print('------')
 
 # setting `guild_ids` in development is better when possible because
-# bulk overwriting global commands has a 1 hour delay
+# registering global commands has a 1 hour delay
 class Info(discord.UserCommand, guild_ids=[123]):
     async def callback(self, response: discord.UserCommandResponse):
         # the target for a UserCommand is the user who the command was used on
