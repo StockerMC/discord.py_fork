@@ -51,7 +51,6 @@ from .errors import *
 from .cooldowns import Cooldown, BucketType, CooldownMapping, MaxConcurrency, DynamicCooldownMapping
 from .converter import run_converters, get_converter, Greedy
 from ._types import _BaseCommand
-from .cog import Cog
 from .context import Context
 
 
@@ -99,7 +98,7 @@ __all__ = (
 MISSING: Any = discord.utils.MISSING
 
 T = TypeVar('T')
-CogT = TypeVar('CogT', bound='Cog')
+CogT = TypeVar('CogT', bound='discord.Cog')
 CommandT = TypeVar('CommandT', bound='Command')
 ContextT = TypeVar('ContextT', bound='Context')
 # CHT = TypeVar('CHT', bound='Check')
@@ -522,7 +521,7 @@ class Command(_BaseCommand, Generic[CogT, P, T]):
 
         try:
             if cog is not None:
-                local = Cog._get_overridden_method(cog.cog_command_error)
+                local = discord.Cog._get_overridden_method(cog.cog_command_error)
                 if local is not None:
                     wrapped = wrap_callback(local)
                     await wrapped(ctx, error)
@@ -763,7 +762,7 @@ class Command(_BaseCommand, Generic[CogT, P, T]):
 
         # call the cog local hook if applicable:
         if cog is not None:
-            hook = Cog._get_overridden_method(cog.cog_before_invoke)
+            hook = discord.Cog._get_overridden_method(cog.cog_before_invoke)
             if hook is not None:
                 await hook(ctx)
 
@@ -783,7 +782,7 @@ class Command(_BaseCommand, Generic[CogT, P, T]):
 
         # call the cog local hook if applicable:
         if cog is not None:
-            hook = Cog._get_overridden_method(cog.cog_after_invoke)
+            hook = discord.Cog._get_overridden_method(cog.cog_after_invoke)
             if hook is not None:
                 await hook(ctx)
 
@@ -1110,7 +1109,7 @@ class Command(_BaseCommand, Generic[CogT, P, T]):
 
             cog = self.cog
             if cog is not None:
-                local_check = Cog._get_overridden_method(cog.cog_check)
+                local_check = discord.Cog._get_overridden_method(cog.cog_check)
                 if local_check is not None:
                     ret = await discord.utils.maybe_coroutine(local_check, ctx)
                     if not ret:

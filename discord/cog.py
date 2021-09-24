@@ -24,22 +24,26 @@ DEALINGS IN THE SOFTWARE.
 from __future__ import annotations
 
 import inspect
-import discord.utils
-import discord.application_commands
+from .utils import MISSING
+from .client import Client
 
 from typing import Any, Callable, ClassVar, Dict, Generator, List, Optional, TYPE_CHECKING, Tuple, TypeVar, Type, Union
 
-from ._types import _BaseCommand
-
 if TYPE_CHECKING:
-    from .bot import BotBase
-    from .context import Context
-    from .core import Command
+    from .ext.commands.context import Context
+    from .ext.commands.core import Command
+    from .ext.commands.bot import Bot
+
+    from .application_commands import (
+        SlashCommand,
+        MessageCommand,
+        UserCommand,
+    )
 
     ApplicationCommand = Union[
-        discord.application_commands.SlashCommand,
-        discord.application_commands.MessageCommand,
-        discord.application_commands.UserCommand
+        SlashCommand,
+        MessageCommand,
+        UserCommand
     ]
     ApplicationCommandKey = Tuple[str, int, Optional['ApplicationCommandKey']]  # name, type, parent
 
@@ -51,7 +55,6 @@ __all__ = (
 CogT = TypeVar('CogT', bound='Cog')
 FuncT = TypeVar('FuncT', bound=Callable[..., Any])
 
-MISSING: Any = discord.utils.MISSING
 
 class CogMeta(type):
     """A metaclass for defining a cog.
@@ -142,6 +145,9 @@ class CogMeta(type):
                 is_static_method = isinstance(value, staticmethod)
                 if is_static_method:
                     value = value.__func__
+
+                from .ext.commands._types import _BaseCommand # circular import
+
                 if isinstance(value, _BaseCommand):
                     if is_static_method:
                         raise TypeError(f'Command in method {base}.{elem!r} must not be staticmethod.')
@@ -263,7 +269,7 @@ class Cog(metaclass=CogMeta):
         Union[:class:`.Command`, :class:`.Group`]
             A command or group from the cog.
         """
-        from .core import GroupMixin
+        from .ext.commands.core import GroupMixin
         for command in self.__cog_commands__:
             if command.parent is None:
                 yield command
@@ -432,63 +438,93 @@ class Cog(metaclass=CogMeta):
         """
         pass
 
-    def _inject(self: CogT, bot: BotBase) -> CogT:
+    def _inject(self: CogT, client: Union[Client, Bot]) -> CogT:
         cls = self.__class__
+        client_no_commands = "Client doesn't support ext.commands commands. Instead, use ext.commands.Bot."
+
+        # circular import
+        from .ext.commands.bot import Bot
 
         # realistically, the only thing that can cause loading errors
         # is essentially just the command loading, which raises if there are
         # duplicates. When this condition is met, we want to undo all what
         # we've added so far for some form of atomic loading.
         for index, command in enumerate(self.__cog_commands__):
+            if not isinstance(client, Bot):
+                raise TypeError(client_no_commands)
+
             command.cog = self
             if command.parent is None:
                 try:
-                    bot.add_command(command)
+                    client.add_command(command)
                 except Exception as e:
                     # undo our additions
                     for to_undo in self.__cog_commands__[:index]:
                         if to_undo.parent is None:
-                            bot.remove_command(to_undo.name)
+                            client.remove_command(to_undo.name)
                     raise e
 
         # check if we're overriding the default
         if cls.bot_check is not Cog.bot_check:
-            bot.add_check(self.bot_check)
+            if not isinstance(client, Bot):
+                raise TypeError(client_no_commands)
+
+            client.add_check(self.bot_check)
 
         if cls.bot_check_once is not Cog.bot_check_once:
-            bot.add_check(self.bot_check_once, call_once=True)
+            if not isinstance(client, Bot):
+                raise TypeError(client_no_commands)
+
+            client.add_check(self.bot_check_once, call_once=True)
 
         # while Bot.add_listener can raise if it's not a coroutine,
         # this precondition is already met by the listener decorator
         # already, thus this should never raise.
         # Outside of, memory errors and the like...
         for name, method_name in self.__cog_listeners__:
-            bot.add_listener(getattr(self, method_name), name)
+            client.add_listener(getattr(self, method_name), name)
 
         for command in self.__cog_application_commands__.values():
-            bot.add_application_command(command)  # type: ignore
+            client.add_application_command(command)  # type: ignore
 
         return self
 
-    def _eject(self, bot: BotBase) -> None:
+    def _eject(self, client: Union[Client, Bot]) -> None:
         cls = self.__class__
 
+        # circular import
+        from .ext.commands.bot import Bot
+
         try:
-            for command in self.__cog_commands__:
+            client_no_commands = "Client doesn't support ext.commands commands. Instead, use ext.commands.Bot."
+            commands = self.__cog_commands__
+            application_commands = self.__cog_application_commands__
+
+            if commands and not isinstance(client, Bot):
+                raise TypeError("Client doesn't support ext.commands commands. Instead, use ext.commands.Bot.")
+
+            for command in commands:
                 if command.parent is None:
-                    bot.remove_command(command.name)
+                    # client will be a Bot 
+                    client.remove_command(command.name)  # type: ignore
 
             for _, method_name in self.__cog_listeners__:
-                bot.remove_listener(getattr(self, method_name))
+                client.remove_listener(getattr(self, method_name))
 
             if cls.bot_check is not Cog.bot_check:
-                bot.remove_check(self.bot_check)
+                if not isinstance(client, Bot):
+                    raise TypeError(client_no_commands)
+
+                client.remove_check(self.bot_check)
 
             if cls.bot_check_once is not Cog.bot_check_once:
-                bot.remove_check(self.bot_check_once, call_once=True)
+                if not isinstance(client, Bot):
+                    raise TypeError(client_no_commands)
 
-            for command in self.__cog_application_commands__.values():
-                bot.T(command)  # type: ignore
+                client.remove_check(self.bot_check_once, call_once=True)
+
+            for command in application_commands.values():
+                client.remove_application_command(command)
         finally:
             try:
                 self.cog_unload()
