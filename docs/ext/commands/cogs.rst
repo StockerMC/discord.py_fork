@@ -30,16 +30,16 @@ This example cog defines a ``Greetings`` category for your commands, with a sing
             self._last_member = None
 
         @commands.Cog.listener()
-        async def on_member_join(self, member):
+        async def on_member_join(self, member: discord.Member):
             channel = member.guild.system_channel
             if channel is not None:
                 await channel.send(f'Welcome {member.mention}.')
 
         @commands.command()
-        async def hello(self, ctx, *, member: discord.Member = None):
+        async def hello(self, ctx: commands.Context, *, member: discord.Member = None):
             """Says hello"""
             member = member or ctx.author
-            if self._last_member is None or self._last_member.id != member.id:
+            if self._last_member is None or self._last_member != member:
                 await ctx.send(f'Hello {member.name}~')
             else:
                 await ctx.send(f'Hello {member.name}... This feels familiar.')
