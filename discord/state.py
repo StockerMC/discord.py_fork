@@ -1402,13 +1402,12 @@ class ConnectionState:
         channel, guild = self._get_guild_channel(data)
         if channel is not None:
             member = None
-            user_id = utils._get_as_snowflake(data, 'user_id')
+            user_id = int(data['guild_id'])
             if isinstance(channel, DMChannel):
                 member = channel.recipient
 
             elif isinstance(channel, (Thread, TextChannel)) and guild is not None:
-                # user_id won't be None
-                member = guild.get_member(user_id)  # type: ignore
+                member = guild.get_member(user_id)
 
                 if member is None:
                     member_data = data.get('member')
@@ -1418,9 +1417,12 @@ class ConnectionState:
             elif isinstance(channel, GroupChannel):
                 member = utils.find(lambda x: x.id == user_id, channel.recipients)
 
+            timestamp = datetime.datetime.fromtimestamp(data.get('timestamp'), tz=datetime.timezone.utc)
             if member is not None:
-                timestamp = datetime.datetime.fromtimestamp(data.get('timestamp'), tz=datetime.timezone.utc)
                 self.dispatch('typing', channel, member, timestamp)
+            else:
+                # channel will be the correct type
+                self.dispatch('raw_typing', RawTypingEvent(data, channel, timestamp))  # type: ignore
 
     def _get_reaction_user(self, channel: MessageableChannel, user_id: int) -> Optional[Union[User, Member]]:
         if isinstance(channel, TextChannel):

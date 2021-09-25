@@ -817,6 +817,19 @@ to handle it, which defaults to print a traceback and ignoring the exception.
     :param payload: The raw event payload data.
     :type payload: :class:`RawIntegrationDeleteEvent`
 
+.. function:: on_raw_typing(payload)
+
+    Called when someone begins typing a message. Unlike :func:`on_typing`,
+    this is called when the member or user typing wasn't found. This
+    usually happens when a user types in a DM.
+
+    This requires :attr:`Intents.typing` to be enabled.
+
+    .. versionadded:: 2.0
+
+    :param payload: The raw event payload data.
+    :type payload: :class:`RawTypingEvent`
+
 .. function:: on_webhooks_update(channel)
 
     Called whenever a webhook is created, modified, or removed from a guild channel.
@@ -4001,6 +4014,14 @@ RawIntegrationDeleteEvent
 .. attributetable:: RawIntegrationDeleteEvent
 
 .. autoclass:: RawIntegrationDeleteEvent()
+    :members:
+
+RawTypingEvent
+~~~~~~~~~~~~~~~
+
+.. attributetable:: RawTypingEvent
+
+.. autoclass:: RawTypingEvent()
     :members:
 
 PartialWebhookGuild
