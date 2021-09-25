@@ -595,18 +595,6 @@ class BaseApplicationCommand:
         '__application_command_type__': 'type',
     }
 
-    __slots__ = (
-        '__application_command_options__',
-        '__application_command_name__',
-        '__application_command_description__',
-        '__application_command_type__',
-        '__application_command_parent__',
-        '__application_command_default_permission__',
-        '__application_command_guild_ids__',
-        '__application_command_global_command__',
-        '__application_command_subcommands__',
-    )
-
     def __init_subclass__(
         cls: Type[BaseApplicationCommand],
         *,
