@@ -1,6 +1,10 @@
 discord.py
 ==========
 
+.. image:: https://discord.com/api/guilds/888552315848622100/embed.png
+   :target: https://discord.gg/tEbbhbuvP8
+   :alt: Discord server invite
+
 Version: 2.0.0
 
 Minimum python version: 3.8
