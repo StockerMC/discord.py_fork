@@ -371,7 +371,7 @@ to handle it, which defaults to print a traceback and ignoring the exception.
     Called when someone begins typing a message.
 
     The ``channel`` parameter can be a :class:`abc.Messageable` instance.
-    Which could either be :class:`TextChannel`, :class:`GroupChannel`, or
+    Which could either be :class:`TextChannel`, :class:`Thread`, :class:`GroupChannel`, or
     :class:`DMChannel`.
 
     If the ``channel`` is a :class:`TextChannel` then the ``user`` parameter
