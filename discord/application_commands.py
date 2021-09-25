@@ -439,7 +439,7 @@ def flatten(original_cls: Type[Any], original_attr: str) -> Callable[[Type[BaseA
             # slotted members are implemented as member_descriptors in Type.__dict__
             if not hasattr(value, '__annotations__'):
                 getter = attrgetter(f'{original_attr}.{attr}')
-                setattr(cls, attr, property(getter, doc=f'Equivalent to :attr:`{original_cls}.{attr}`'))
+                setattr(cls, attr, property(getter, doc=f'Equivalent to :attr:`{original_cls.__name__}.{attr}`'))
             else:
                 # Technically, this can also use attrgetter
                 # However I'm not sure how I feel about "functions" returning properties
@@ -506,6 +506,8 @@ class BaseApplicationCommandResponse:
 class SlashCommandResponse(BaseApplicationCommandResponse):
     """A class that represents the response from a slash command.
 
+    .. versionadded:: 2.0
+
     Attributes
     -----------
     interaction: :class:`Interaction`
@@ -524,6 +526,8 @@ class SlashCommandResponse(BaseApplicationCommandResponse):
 class MessageCommandResponse(BaseApplicationCommandResponse):
     """A class that represents the response from a message command.
 
+    .. versionadded:: 2.0
+
     Attributes
     -----------
     interaction: :class:`Interaction`
@@ -541,6 +545,8 @@ class MessageCommandResponse(BaseApplicationCommandResponse):
 
 class UserCommandResponse(BaseApplicationCommandResponse):
     """A class that represents the response from a message command.
+
+    .. versionadded:: 2.0
 
     Attributes
     -----------
@@ -824,7 +830,10 @@ class BaseApplicationCommand:
 # TODO add examples and docstrings
 
 class SlashCommand(BaseApplicationCommand, command_type=ApplicationCommandType.slash):
-    """Represents a Discord slash command."""
+    """Represents a Discord slash command.
+
+    .. versionadded:: 2.0    
+    """
     
     __application_command_repr_attrs__: Dict[str, str] = {  # actual key: key to display
         '__application_command_name__': 'name',
@@ -960,7 +969,10 @@ class SlashCommand(BaseApplicationCommand, command_type=ApplicationCommandType.s
         return cls.__application_command_options__.pop(name, None)
 
 class MessageCommand(BaseApplicationCommand, command_type=ApplicationCommandType.message):
-    """Represents a Discord message command."""
+    """Represents a Discord message command.
+
+    .. versionadded:: 2.0
+    """
 
     async def callback(self, response: MessageCommandResponse) -> None:
         """|coro|
@@ -1020,7 +1032,10 @@ class MessageCommand(BaseApplicationCommand, command_type=ApplicationCommandType
 
 
 class UserCommand(BaseApplicationCommand, command_type=ApplicationCommandType.user):
-    """Represents a Discord user command."""
+    """Represents a Discord user command.
+
+    .. versionadded:: 2.0
+    """
 
     async def callback(self, response: UserCommandResponse) -> None:
         """|coro|
