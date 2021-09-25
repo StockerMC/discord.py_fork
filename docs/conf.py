@@ -159,7 +159,7 @@ html_experimental_html5_writer = True
 html_theme = 'basic'
 
 html_context = {
-  'discord_invite': 'https://discord.gg/r3sSKJJ',
+  'discord_invite': 'https://discord.gg/tEbbhbuvP8',
   'discord_extensions': [
     ('discord.ext.commands', 'ext/commands'),
     ('discord.ext.tasks', 'ext/tasks'),
@@ -167,10 +167,10 @@ html_context = {
 }
 
 resource_links = {
-  'discord': 'https://discord.gg/r3sSKJJ',
-  'issues': 'https://github.com/Rapptz/discord.py/issues',
-  'discussions': 'https://github.com/Rapptz/discord.py/discussions',
-  'examples': f'https://github.com/Rapptz/discord.py/tree/{branch}/examples',
+  'discord': 'https://discord.gg/tEbbhbuvP8',
+  'issues': 'https://github.com/StockerMC/discord.py/issues',
+  'discussions': 'https://github.com/StockerMC/discord.py/discussions',
+  'examples': f'https://github.com/StockerMC/discord.py/tree/{branch}/examples',
 }
 
 # Theme options are theme-specific and customize the look and feel of a theme
