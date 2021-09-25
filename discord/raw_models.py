@@ -73,7 +73,12 @@ class RawMessageDeleteEvent(_RawReprMixin):
         The cached message, if found in the internal message cache.
     """
 
-    __slots__ = ('message_id', 'channel_id', 'guild_id', 'cached_message')
+    __slots__ = (
+        'message_id',
+        'channel_id',
+        'guild_id',
+        'cached_message',
+    )
 
     def __init__(self, data: MessageDeleteEvent) -> None:
         self.message_id: int = int(data['id'])
@@ -100,7 +105,12 @@ class RawBulkMessageDeleteEvent(_RawReprMixin):
         The cached messages, if found in the internal message cache.
     """
 
-    __slots__ = ('message_ids', 'channel_id', 'guild_id', 'cached_messages')
+    __slots__ = (
+        'message_ids',
+        'channel_id',
+        'guild_id',
+        'cached_messages',
+    )
 
     def __init__(self, data: BulkMessageDeleteEvent) -> None:
         self.message_ids: Set[int] = {int(x) for x in data.get('ids', [])}
@@ -136,7 +146,13 @@ class RawMessageUpdateEvent(_RawReprMixin):
         it is modified by the data in :attr:`RawMessageUpdateEvent.data`.
     """
 
-    __slots__ = ('message_id', 'channel_id', 'guild_id', 'data', 'cached_message')
+    __slots__ = (
+        'message_id',
+        'channel_id',
+        'guild_id',
+        'data',
+        'cached_message',
+    )
 
     def __init__(self, data: MessageUpdateEvent) -> None:
         self.message_id: int = int(data['id'])
@@ -179,8 +195,15 @@ class RawReactionActionEvent(_RawReprMixin):
         .. versionadded:: 1.3
     """
 
-    __slots__ = ('message_id', 'user_id', 'channel_id', 'guild_id', 'emoji',
-                 'event_type', 'member')
+    __slots__ = (
+        'message_id',
+        'user_id',
+        'channel_id',
+        'guild_id',
+        'emoji',
+        'event_type',
+        'member',
+    )
 
     def __init__(self, data: ReactionActionEvent, emoji: PartialEmoji, event_type: str) -> None:
         self.message_id: int = int(data['message_id'])
@@ -209,7 +232,11 @@ class RawReactionClearEvent(_RawReprMixin):
         The guild ID where the reactions got cleared.
     """
 
-    __slots__ = ('message_id', 'channel_id', 'guild_id')
+    __slots__ = (
+        'message_id',
+        'channel_id',
+        'guild_id',
+    )
 
     def __init__(self, data: ReactionClearEvent) -> None:
         self.message_id: int = int(data['message_id'])
@@ -238,7 +265,12 @@ class RawReactionClearEmojiEvent(_RawReprMixin):
         The custom or unicode emoji being removed.
     """
 
-    __slots__ = ('message_id', 'channel_id', 'guild_id', 'emoji')
+    __slots__ = (
+        'message_id',
+        'channel_id',
+        'guild_id',
+        'emoji',
+    )
 
     def __init__(self, data: ReactionClearEmojiEvent, emoji: PartialEmoji) -> None:
         self.emoji: PartialEmoji = emoji
@@ -266,7 +298,11 @@ class RawIntegrationDeleteEvent(_RawReprMixin):
         The guild ID where the integration got deleted.
     """
 
-    __slots__ = ('integration_id', 'application_id', 'guild_id')
+    __slots__ = (
+        'integration_id',
+        'application_id',
+        'guild_id'
+    )
 
     def __init__(self, data: IntegrationDeleteEvent) -> None:
         self.integration_id: int = int(data['id'])
