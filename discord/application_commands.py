@@ -604,19 +604,19 @@ class BaseApplicationCommand:
         name: Optional[str] = None,
         description: str = MISSING,
         parent: Optional[Type[BaseApplicationCommand]] = None,  # make this SlashCommand?
-        command_type: ApplicationCommandType = MISSING,
+        type: ApplicationCommandType = MISSING,
         default_permission: bool = True,
         guild_ids: List[int] = [],
         global_command: bool = MISSING,
         group: bool = False,
     ) -> None:
-        if command_type is MISSING:
-            command_type = _traverse_mro_for_attr(cls, '__application_command_type__')
+        if type is MISSING:
+            type = _traverse_mro_for_attr(cls, '__application_command_type__')
 
         if name is None:
             name = cls.__name__
 
-        if command_type is ApplicationCommandType.slash:
+        if type is ApplicationCommandType.slash:
             name = name.lower()
 
         if description is MISSING:
@@ -628,11 +628,11 @@ class BaseApplicationCommand:
             if parent.__application_command_type__ is not ApplicationCommandType.slash:
                 raise TypeError(f'parent must derive from SlashCommand not {parent.__name__}')
 
-            if command_type is not ApplicationCommandType.slash:
+            if type is not ApplicationCommandType.slash:
                 raise TypeError('only slash commands can have parents')
 
-        if command_type is not MISSING and not isinstance(command_type, ApplicationCommandType):
-            raise TypeError(f'command_type must be an ApplicationCommandType member not {command_type.__class__.__name__}') # is member the right word here
+        if type is not MISSING and not isinstance(type, ApplicationCommandType):
+            raise TypeError(f'type must be an ApplicationCommandType member not {type.__class__.__name__}') # is member the right word here
 
         # inspired/copied from FlagsMeta
         try:
@@ -665,7 +665,7 @@ class BaseApplicationCommand:
         cls.__application_command_description__ = description
         # it gets set as an instance later
         cls.__application_command_parent__ = parent  # type: ignore
-        cls.__application_command_type__ = command_type
+        cls.__application_command_type__ = type
         cls.__application_command_default_permission__ = bool(default_permission)
         cls.__application_command_guild_ids__ = guild_ids
         if global_command is MISSING:
@@ -842,7 +842,7 @@ class BaseApplicationCommand:
 
 # TODO add examples and docstrings
 
-class SlashCommand(BaseApplicationCommand, command_type=ApplicationCommandType.slash):
+class SlashCommand(BaseApplicationCommand, type=ApplicationCommandType.slash):
     """Represents a Discord slash command.
 
     .. versionadded:: 2.0    
@@ -981,7 +981,7 @@ class SlashCommand(BaseApplicationCommand, command_type=ApplicationCommandType.s
         """
         return cls.__application_command_options__.pop(name, None)
 
-class MessageCommand(BaseApplicationCommand, command_type=ApplicationCommandType.message):
+class MessageCommand(BaseApplicationCommand, type=ApplicationCommandType.message):
     """Represents a Discord message command.
 
     .. versionadded:: 2.0
@@ -1044,7 +1044,7 @@ class MessageCommand(BaseApplicationCommand, command_type=ApplicationCommandType
         pass
 
 
-class UserCommand(BaseApplicationCommand, command_type=ApplicationCommandType.user):
+class UserCommand(BaseApplicationCommand, type=ApplicationCommandType.user):
     """Represents a Discord user command.
 
     .. versionadded:: 2.0
