@@ -30,7 +30,7 @@ from typing import TYPE_CHECKING, Type, Any, Dict, TypeVar, List, Optional, Unio
 
 from operator import attrgetter
 from .enums import ApplicationCommandType, ApplicationCommandOptionType, InteractionType
-from .utils import resolve_annotation, MISSING, copy_doc
+from .utils import resolve_annotation, MISSING, copy_doc, async_all
 from .member import Member
 from .user import User
 from .role import Role
@@ -733,6 +733,11 @@ class BaseApplicationCommand:
 
     async def _scheduled_task(self, response: BaseApplicationCommandResponse, client: Client) -> None:
         try:
+            # the response type is correct
+            global_allow = await async_all(f(response) for f in client._application_command_checks)  # type: ignore
+            if not global_allow:
+                return
+
             allow = await self.command_check(response)
             if not allow:
                 return

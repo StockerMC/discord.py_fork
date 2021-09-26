@@ -90,7 +90,10 @@ if TYPE_CHECKING:
     from .voice_client import VoiceProtocol
     from .cog import Cog
 
+    T = TypeVar('T')
+
     ApplicationCommand = Union[SlashCommand, MessageCommand, UserCommand]
+    Check = Callable[[Union[SlashCommandResponse, UserCommandResponse, MessageCommandResponse]], Union[T, Coroutine[Any, Any, T]]]
     ApplicationCommandKey = Tuple[str, int, Optional['ApplicationCommandKey']]  # name, type, parent
 
 __all__ = (
@@ -241,6 +244,7 @@ class Client:
         self._listeners: Dict[str, List[Tuple[asyncio.Future, Callable[..., bool]]]] = {}
         self.shard_id: Optional[int] = options.get('shard_id')
         self.shard_count: Optional[int] = options.get('shard_count')
+        self.extra_events: Dict[str, List[CoroFunc]] = {}
 
         connector: Optional[aiohttp.BaseConnector] = options.pop('connector', None)
         proxy: Optional[str] = options.pop('proxy', None)
@@ -264,9 +268,9 @@ class Client:
         self._connection._get_websocket = self._get_websocket
         self._connection._get_client = lambda: self
         self._application_commands: Dict[ApplicationCommandKey, ApplicationCommand] = {}
+        self._application_command_checks: List[Check] = []
         self.__extensions: Dict[str, types.ModuleType] = {}
         self.__cogs: Dict[str, Cog] = {}
-        self.extra_events: Dict[str, List[CoroFunc]] = {}
 
         if VoiceClient.warn_nacl:
             VoiceClient.warn_nacl = False
@@ -2212,3 +2216,48 @@ class Client:
                 parent.__application_command_subcommands__[name] = subcommand()
 
             subcommands.extend(subcommand.__application_command_subcommands__.items())
+
+    def add_application_command_check(self, func: Check) -> None:
+        """Adds a global check to the bot.
+
+        This is the non-decorator interface to :meth:`command_check`
+        and :meth:`.check_once`.
+
+        Parameters
+        -----------
+        func
+            The function that was used as a global check.
+            This function can either be a regular function or a coroutine.
+        """
+
+        self._application_command_checks.append(func)
+
+    def application_command_check(self, func: T) -> T:
+        r"""A decorator that adds a global application command check to the bot.
+
+        A global check is similar to a :func:`.check` that is applied
+        on a per command basis except it is run before any command checks
+        have been verified and applies to every command the bot has.
+
+        .. note::
+
+            This function can either be a regular function or a coroutine.
+
+        Similar to a command :meth:`command_check`\, this takes a single parameter\,
+        which is the response of the application command. The type of it can be
+        :class:`SlashCommandResponse`\, :class:`MessageCommandResponse` or
+        :class:`UserCommandResponse`.
+
+        Example
+        ---------
+
+        .. code-block:: python3
+
+            @client.application_command_check
+            async def check_commands(response):
+                return await client.is_owner(response.user)
+
+        """
+        # T was used instead of Check to ensure the type matches on return
+        self.add_application_command_check(func)  # type: ignore
+        return func
