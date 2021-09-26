@@ -664,10 +664,10 @@ class Client:
         """
         await self.login(token)
 
-        if self.application_id is None:
-            raise TypeError('application_id must be passed to the client if you are registering application commands.')
-
         if self.application_commands:
+            if self.application_id is None:
+                raise TypeError('application_id must be passed to the client if you are registering application commands.')
+
             guild_payloads = collections.defaultdict(list)
             global_payload = []
             for command in self._application_commands.values():
