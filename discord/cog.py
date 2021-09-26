@@ -25,6 +25,7 @@ from __future__ import annotations
 
 import inspect
 from .utils import MISSING
+from ._types import _BaseCommand
 
 from typing import Any, Callable, ClassVar, Dict, Generator, List, Optional, TYPE_CHECKING, Tuple, TypeVar, Type, Union
 
@@ -148,8 +149,6 @@ class CogMeta(type):
                 is_static_method = isinstance(value, staticmethod)
                 if is_static_method:
                     value = value.__func__
-
-                from ._types import _BaseCommand  # circular import
 
                 if isinstance(value, _BaseCommand):
                     if is_static_method:
@@ -400,6 +399,26 @@ class Cog(metaclass=CogMeta):
         return True
 
     @_cog_special_method
+    async def client_application_command_check(self, response: Union[SlashCommandResponse, MessageCommandResponse, UserCommandResponse]) -> bool:
+        """A special method that registers as a :meth:`.Client.application_command_check`
+        check.
+
+        This function **must** be a coroutine and must take a sole parameter,
+        ``response``, to represent the response of the application command.
+        """
+        return True
+
+    @_cog_special_method
+    async def cog_application_command_check(self, response: Union[SlashCommandResponse, MessageCommandResponse, UserCommandResponse]) -> bool:
+        """A special method that registers as a :meth:`command_check` for every
+        application command inside this cog.
+
+        This function **must** be a coroutine and must take a sole parameter,
+        ``response``, to represent the response of the application command.
+        """
+        return True
+
+    @_cog_special_method
     async def cog_command_error(self, ctx: Context, error: Exception) -> None:
         """A special method that is called whenever an error
         is dispatched in a command inside this cog.
@@ -505,6 +524,9 @@ class Cog(metaclass=CogMeta):
                 raise TypeError(client_no_commands)
 
             client.add_check(self.bot_check_once, call_once=True)
+
+        if cls.client_application_command_check is not Cog.client_application_command_check:
+            client.add_application_command_check(self.client_application_command_check)
 
         # while Bot.add_listener can raise if it's not a coroutine,
         # this precondition is already met by the listener decorator

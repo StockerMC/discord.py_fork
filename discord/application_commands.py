@@ -732,34 +732,42 @@ class BaseApplicationCommand:
         )
 
     async def _scheduled_task(self, response: BaseApplicationCommandResponse, client: Client) -> None:
+        from .cog import Cog  # circular import
+        cog = self._cog
         try:
-            # the response type is correct
-            global_allow = await async_all(f(response) for f in client._application_command_checks)  # type: ignore
-            if not global_allow:
-                return
-
-            allow = await self.command_check(response)
-            if not allow:
-                return
-
             if isinstance(response, SlashCommandResponse):
                 for option in self.__application_command_options__.values():
                     if not option.required and option.default is not None and getattr(response.options, option.name, None) is None:
                         resolved_default = await option.default.default(response)
                         setattr(response.options, option.name, resolved_default)
 
+            # the response type is correct
+            global_allow = await async_all(f(response) for f in client._application_command_checks)  # type: ignore
+            if not global_allow:
+                return
+
+            if cog is not None:
+                cog_check = Cog._get_overridden_method(cog.cog_application_command_check)
+                if cog_check is not None:
+                    # the response type is correct
+                    cog_allow = await cog_check(response)  # type: ignore
+                    if not cog_allow:
+                        return
+
+            allow = await self.command_check(response)
+            if not allow:
+                return
+
             await self.callback(response)
             if not response.response._responded:
                 await response.defer()
         except Exception as e:
             try:
-                cog = self._cog
                 if cog is not None:
-                    from .cog import Cog  # circular import
-
-                    local = Cog._get_overridden_method(cog.cog_application_command_error)
-                    if local is not None:
-                        await local(response, e)  # type: ignore
+                    cog_error_handler = Cog._get_overridden_method(cog.cog_application_command_error)
+                    if cog_error_handler is not None:
+                        # the response type is correct
+                        await cog_error_handler(response, e)  # type: ignore
             finally:
                 client.dispatch('application_command_error', response, e)
                 await self.on_error(response, e)
