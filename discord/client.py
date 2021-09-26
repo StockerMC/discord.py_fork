@@ -94,7 +94,7 @@ if TYPE_CHECKING:
     T = TypeVar('T')
 
     ApplicationCommand = Union[SlashCommand, MessageCommand, UserCommand]
-    Check = Callable[[Union[SlashCommandResponse, UserCommandResponse, MessageCommandResponse]], Union[T, Coroutine[Any, Any, T]]]
+    Check = Callable[[Union[SlashCommandResponse, UserCommandResponse, MessageCommandResponse]], Union[bool, Coroutine[Any, Any, bool]]]
     ApplicationCommandKey = Tuple[str, int, Optional['ApplicationCommandKey']]  # name, type, parent
 
 __all__ = (
