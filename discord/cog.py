@@ -25,7 +25,6 @@ from __future__ import annotations
 
 import inspect
 from .utils import MISSING
-from .client import Client
 
 from typing import Any, Callable, ClassVar, Dict, Generator, List, Optional, TYPE_CHECKING, Tuple, TypeVar, Type, Union
 
@@ -33,6 +32,7 @@ if TYPE_CHECKING:
     from .ext.commands.context import Context
     from .ext.commands.core import Command
     from .ext.commands.bot import Bot
+    from .client import Client
 
     from .application_commands import (
         SlashCommand,
@@ -149,7 +149,7 @@ class CogMeta(type):
                 if is_static_method:
                     value = value.__func__
 
-                from .ext.commands._types import _BaseCommand # circular import
+                from ._types import _BaseCommand  # circular import
 
                 if isinstance(value, _BaseCommand):
                     if is_static_method:

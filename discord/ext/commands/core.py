@@ -46,11 +46,11 @@ import inspect
 import datetime
 
 import discord
+import discord._types
 
 from .errors import *
 from .cooldowns import Cooldown, BucketType, CooldownMapping, MaxConcurrency, DynamicCooldownMapping
 from .converter import run_converters, get_converter, Greedy
-from ._types import _BaseCommand
 from .context import Context
 
 
@@ -201,7 +201,7 @@ class _CaseInsensitiveDict(dict):
     def __setitem__(self, k, v):
         super().__setitem__(k.casefold(), v)
 
-class Command(_BaseCommand, Generic[CogT, P, T]):
+class Command(discord._types._BaseCommand, Generic[CogT, P, T]):
     r"""A class that implements the protocol for a bot text command.
 
     These are not created manually, instead they are created via the
@@ -366,7 +366,7 @@ class Command(_BaseCommand, Generic[CogT, P, T]):
 
         # bandaid for the fact that sometimes parent can be the bot instance
         parent = kwargs.get('parent')
-        self.parent: Optional[GroupMixin] = parent if isinstance(parent, _BaseCommand) else None  # type: ignore
+        self.parent: Optional[GroupMixin] = parent if isinstance(parent, discord._types._BaseCommand) else None  # type: ignore
 
         self._before_invoke: Optional[Hook] = None
         try:
