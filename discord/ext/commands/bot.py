@@ -286,10 +286,10 @@ class BotBase(GroupMixin):
         # type-checker doesn't distinguish between functions and methods
         return await discord.utils.async_all(f(ctx) for f in data)  # type: ignore
 
-    async def is_owner(self, user: discord.User) -> bool:
+    async def is_owner(self, user: discord.abc.Snowflake) -> bool:
         """|coro|
 
-        Checks if a :class:`~discord.User` or :class:`~discord.Member` is the owner of
+        Checks if a :class:`~discord.abc.Snowflake` is the owner of
         this bot.
 
         If an :attr:`owner_id` is not set, it is fetched automatically
@@ -301,7 +301,7 @@ class BotBase(GroupMixin):
 
         Parameters
         -----------
-        user: :class:`.abc.User`
+        user: :class:`.abc.Snowflake`
             The user to check for.
 
         Returns
