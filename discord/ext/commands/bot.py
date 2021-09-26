@@ -125,15 +125,7 @@ class BotBase(GroupMixin):
         self._after_invoke: Optional[CoroFunc] = None
         self._help_command: Optional[HelpCommand] = None
         self.description: str = inspect.cleandoc(description) if description else ''
-        self.owner_id: Optional[int] = options.get('owner_id')
-        self.owner_ids: Optional[collections.abc.Collection[int]] = options.get('owner_ids', set())
         self.strip_after_prefix: bool = options.get('strip_after_prefix', False)
-
-        if self.owner_id and self.owner_ids:
-            raise TypeError('Both owner_id and owner_ids are set.')
-
-        if self.owner_ids and not isinstance(self.owner_ids, collections.abc.Collection):
-            raise TypeError(f'owner_ids must be a collection not {self.owner_ids.__class__!r}')
 
         if help_command is MISSING:
             self._help_command = DefaultHelpCommand()
@@ -285,44 +277,6 @@ class BotBase(GroupMixin):
 
         # type-checker doesn't distinguish between functions and methods
         return await discord.utils.async_all(f(ctx) for f in data)  # type: ignore
-
-    async def is_owner(self, user: discord.abc.Snowflake) -> bool:
-        """|coro|
-
-        Checks if a :class:`~discord.abc.Snowflake` is the owner of
-        this bot.
-
-        If an :attr:`owner_id` is not set, it is fetched automatically
-        through the use of :meth:`~.Bot.application_info`.
-
-        .. versionchanged:: 1.3
-            The function also checks if the application is team-owned if
-            :attr:`owner_ids` is not set.
-
-        Parameters
-        -----------
-        user: :class:`.abc.Snowflake`
-            The user to check for.
-
-        Returns
-        --------
-        :class:`bool`
-            Whether the user is the owner.
-        """
-
-        if self.owner_id:
-            return user.id == self.owner_id
-        elif self.owner_ids:
-            return user.id in self.owner_ids
-        else:
-
-            app = await self.application_info()  # type: ignore
-            if app.team:
-                self.owner_ids = ids = {m.id for m in app.team.members}
-                return user.id in ids
-            else:
-                self.owner_id = owner_id = app.owner.id
-                return user.id == owner_id
 
     def before_invoke(self, coro: CFT) -> CFT:
         """A decorator that registers a coroutine as a pre-invoke hook.

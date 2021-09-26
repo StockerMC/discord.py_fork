@@ -30,6 +30,7 @@ import signal
 import sys
 import traceback
 import collections
+import collections.abc
 import types
 import importlib.util
 
@@ -244,7 +245,15 @@ class Client:
         self._listeners: Dict[str, List[Tuple[asyncio.Future, Callable[..., bool]]]] = {}
         self.shard_id: Optional[int] = options.get('shard_id')
         self.shard_count: Optional[int] = options.get('shard_count')
+        self.owner_id: Optional[int] = options.get('owner_id')
+        self.owner_ids: Optional[collections.abc.Collection[int]] = options.get('owner_ids', set())
         self.extra_events: Dict[str, List[CoroFunc]] = {}
+
+        if self.owner_id and self.owner_ids:
+            raise TypeError('Both owner_id and owner_ids are set.')
+
+        if self.owner_ids and not isinstance(self.owner_ids, collections.abc.Collection):
+            raise TypeError(f'owner_ids must be a collection not {self.owner_ids.__class__!r}')
 
         connector: Optional[aiohttp.BaseConnector] = options.pop('connector', None)
         proxy: Optional[str] = options.pop('proxy', None)
@@ -1725,6 +1734,44 @@ class Client:
         .. versionadded:: 2.0
         """
         return self._connection.persistent_views
+
+    async def is_owner(self, user: Snowflake) -> bool:
+        """|coro|
+
+        Checks if a :class:`~discord.abc.Snowflake` is the owner of
+        this bot.
+
+        If an :attr:`owner_id` is not set, it is fetched automatically
+        through the use of :meth:`~.Bot.application_info`.
+
+        .. versionchanged:: 1.3
+            The function also checks if the application is team-owned if
+            :attr:`owner_ids` is not set.
+
+        Parameters
+        -----------
+        user: :class:`.abc.Snowflake`
+            The user to check for.
+
+        Returns
+        --------
+        :class:`bool`
+            Whether the user is the owner.
+        """
+
+        if self.owner_id:
+            return user.id == self.owner_id
+        elif self.owner_ids:
+            return user.id in self.owner_ids
+        else:
+
+            app = await self.application_info()  # type: ignore
+            if app.team:
+                self.owner_ids = ids = {m.id for m in app.team.members}
+                return user.id in ids
+            else:
+                self.owner_id = owner_id = app.owner.id
+                return user.id == owner_id
 
     # listener registration
 
