@@ -310,7 +310,7 @@ to handle it, which defaults to print a traceback and ignoring the exception.
 
     .. versionadded:: 2.0
 
-    :param response: The command's response.
+    :param response: The response for the application command.
     :type response: Union[:class:`SlashCommandResponse`, :class:`MessageCommandResponse`, :class:`UserCommandResponse`]
     :param error: The error that was raised.
     :type error: :class:`Exception`
