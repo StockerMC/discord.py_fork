@@ -91,7 +91,6 @@ if TYPE_CHECKING:
     from .cog import Cog
 
     ApplicationCommand = Union[SlashCommand, MessageCommand, UserCommand]
-    ApplicationCommandResponse = Union[SlashCommandResponse, MessageCommandResponse, UserCommandResponse]
     ApplicationCommandKey = Tuple[str, int, Optional['ApplicationCommandKey']]  # name, type, parent
 
 __all__ = (
@@ -451,7 +450,7 @@ class Client:
         print(f'Ignoring exception in {event_method}', file=sys.stderr)
         traceback.print_exc()
 
-    async def on_application_command_error(self, response: ApplicationCommandResponse, exception: Exception) -> None:
+    async def on_application_command_error(self, response: Union[SlashCommandResponse, MessageCommandResponse, UserCommandResponse], exception: Exception) -> None:
         """|coro|
 
         The default application command error handler provided by the client.

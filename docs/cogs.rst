@@ -115,6 +115,7 @@ They are as follows:
 - :meth:`.Cog.cog_unload`
 - :meth:`.Cog.cog_check`
 - :meth:`.Cog.cog_command_error`
+- :meth:`.Cog.cog_application_command_error`
 - :meth:`.Cog.cog_before_invoke`
 - :meth:`.Cog.cog_after_invoke`
 - :meth:`.Cog.bot_check`
