@@ -29,7 +29,7 @@ import inspect
 import itertools
 import sys
 from operator import attrgetter
-from typing import Any, Dict, List, Literal, Optional, TYPE_CHECKING, Tuple, Type, TypeVar, Union, overload
+from typing import Any, Dict, List, Literal, Optional, TYPE_CHECKING, Tuple, Type, TypeVar, Union, Callable, Coroutine
 
 import discord.abc
 
@@ -42,7 +42,6 @@ from .permissions import Permissions
 from .enums import Status, try_enum
 from .colour import Colour
 from .object import Object
-from .errors import InvalidArgument
 
 __all__ = (
     'VoiceState',
@@ -280,7 +279,7 @@ class Member(discord.abc.Messageable, _UserTag):
         default_avatar: Asset
         avatar: Optional[Asset]
         dm_channel: Optional[DMChannel]
-        create_dm = User.create_dm
+        create_dm: Callable[[], Coroutine[Any, Any, DMChannel]]
         mutual_guilds: List[Guild]
         public_flags: PublicUserFlags
         banner: Optional[Asset]
