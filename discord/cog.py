@@ -38,6 +38,9 @@ if TYPE_CHECKING:
         SlashCommand,
         MessageCommand,
         UserCommand,
+        SlashCommandResponse,
+        MessageCommandResponse,
+        UserCommandResponse
     )
 
     ApplicationCommand = Union[
@@ -333,11 +336,18 @@ class Cog(metaclass=CogMeta):
         return decorator
 
     def has_error_handler(self) -> bool:
-        """:class:`bool`: Checks whether the cog has an error handler.
+        """:class:`bool`: Checks whether the cog has a command error handler.
 
         .. versionadded:: 1.7
         """
         return not hasattr(self.cog_command_error.__func__, '__cog_special_method__')
+
+    def has_application_command_error_handler(self) -> bool:
+        """:class:`bool`: Checks whether the cog has an application command error handler.
+        
+        .. versionadded:: 2.0
+        """
+        return not hasattr(self.cog_application_command_error.__func__, '__cog_special_method__')
 
     def add_application_command(self, application_command: ApplicationCommand) -> None:
         self.__cog_application_commands__[application_command._get_key()] = application_command
@@ -392,7 +402,7 @@ class Cog(metaclass=CogMeta):
     @_cog_special_method
     async def cog_command_error(self, ctx: Context, error: Exception) -> None:
         """A special method that is called whenever an error
-        is dispatched inside this cog.
+        is dispatched in a command inside this cog.
 
         This is similar to :func:`.on_command_error` except only applying
         to the commands inside this cog.
@@ -405,6 +415,25 @@ class Cog(metaclass=CogMeta):
             The invocation context where the error happened.
         error: :class:`CommandError`
             The error that happened.
+        """
+        pass
+
+    @_cog_special_method
+    async def cog_application_command_error(self, response: Union[SlashCommandResponse, MessageCommandResponse, UserCommandResponse], error: Exception) -> None:
+        """A special method that is called whenever an error
+        is dispatched inside an application command inside this cog.
+
+        This is similar to :func:`.on_application_command_error` except only applying
+        to the application commands inside this cog.
+
+        This **must** be a coroutine.
+
+        Parameters
+        -----------
+        response: Union[:class:`SlashCommandResponse`, :class:`MessageCommandResponse`, :class:`UserCommandResponse`]
+            The response for the application command.
+        error: :class:`Exception`
+            The error that was raised.
         """
         pass
 
@@ -485,6 +514,7 @@ class Cog(metaclass=CogMeta):
             client.add_listener(getattr(self, method_name), name)
 
         for command in self.__cog_application_commands__.values():
+            command._cog = self
             client.add_application_command(command)  # type: ignore
 
         return self

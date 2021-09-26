@@ -26,11 +26,11 @@ from __future__ import annotations
 
 import inspect
 import sys
-from typing import TYPE_CHECKING, Type, Any, Dict, TypeVar, List, Optional, Union, ClassVar, Tuple, Iterator, Callable
+from typing import TYPE_CHECKING, Type, Any, Dict, TypeVar, List, Optional, Union, ClassVar, Tuple, Callable
 
 from operator import attrgetter
 from .enums import ApplicationCommandType, ApplicationCommandOptionType, InteractionType
-from .utils import resolve_annotation, MISSING, _get_as_snowflake, copy_doc
+from .utils import resolve_annotation, MISSING, copy_doc
 from .member import Member
 from .user import User
 from .role import Role
@@ -54,6 +54,7 @@ if TYPE_CHECKING:
     from .webhook import Webhook
     from .permissions import Permissions
     from .client import Client
+    from .cog import Cog
 
     T = TypeVar('T')
     ValidOptionTypes = Union[
@@ -595,6 +596,8 @@ class BaseApplicationCommand:
         '__application_command_type__': 'type',
     }
 
+    _cog: Optional[Cog] = None
+
     def __init_subclass__(
         cls: Type[BaseApplicationCommand],
         *,
@@ -744,8 +747,17 @@ class BaseApplicationCommand:
             if not response.response._responded:
                 await response.defer()
         except Exception as e:
-            client.dispatch('application_command_error', response, e)
-            await self.on_error(response, e)
+            try:
+                cog = self._cog
+                if cog is not None:
+                    from .cog import Cog  # circular import
+
+                    local = Cog._get_overridden_method(cog.cog_application_command_error)
+                    if local is not None:
+                        await local(response, e)  # type: ignore
+            finally:
+                client.dispatch('application_command_error', response, e)
+                await self.on_error(response, e)
 
     @classmethod
     def set_name(cls, name: str) -> None:
