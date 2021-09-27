@@ -48,8 +48,10 @@ if TYPE_CHECKING:
         IntegrationType,
         IntegrationApplication as IntegrationApplicationPayload,
     )
+
     from .guild import Guild
     from .role import Role
+    from .state import ConnectionState
 
 
 class IntegrationAccount:
@@ -65,7 +67,10 @@ class IntegrationAccount:
         The account name.
     """
 
-    __slots__ = ('id', 'name')
+    __slots__ = (
+        'id',
+        'name',
+    )
 
     def __init__(self, data: IntegrationAccountPayload) -> None:
         self.id: str = data['id']
@@ -110,11 +115,11 @@ class Integration:
     )
 
     def __init__(self, *, data: IntegrationPayload, guild: Guild) -> None:
-        self.guild = guild
-        self._state = guild._state
+        self.guild: Guild = guild
+        self._state: ConnectionState = guild._state
         self._from_data(data)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<{self.__class__.__name__} id={self.id} name={self.name!r}>"
 
     def _from_data(self, data: IntegrationPayload) -> None:
@@ -124,7 +129,7 @@ class Integration:
         self.account: IntegrationAccount = IntegrationAccount(data['account'])
 
         user = data.get('user')
-        self.user = User(state=self._state, data=user) if user else None
+        self.user: Optional[User] = User(state=self._state, data=user) if user else None
         self.enabled: bool = data['enabled']
 
     async def delete(self, *, reason: Optional[str] = None) -> None:

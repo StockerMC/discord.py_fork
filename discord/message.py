@@ -459,7 +459,7 @@ class MessageReference:
         return f'<MessageReference message_id={self.message_id!r} channel_id={self.channel_id!r} guild_id={self.guild_id!r}>'
 
     def to_dict(self) -> MessageReferencePayload:
-        result: MessageReferencePayload = {'message_id': self.message_id} if self.message_id is not None else {}
+        result: MessageReferencePayload = {'message_id': self.message_id} if self.message_id is not None else {}  # type: ignore
         result['channel_id'] = self.channel_id
         if self.guild_id is not None:
             result['guild_id'] = self.guild_id
@@ -470,7 +470,7 @@ class MessageReference:
     to_message_reference_dict = to_dict
 
 
-def flatten_handlers(cls):
+def flatten_handlers(cls: Type[Message]) -> Type[Message]:
     prefix = len('_handle_')
     handlers = [
         (key[prefix:], value)

@@ -77,33 +77,40 @@ if TYPE_CHECKING:
     from ..channel import TextChannel
     from ..abc import Snowflake
     from ..ui.view import View
+
+    from types import TracebackType
     import datetime
 
     WT = TypeVar('WT', bound='Webhook')
+    ADLT = TypeVar('ADLT', bound='AsyncDeferredLock')
 
 MISSING = utils.MISSING
 
 
 class AsyncDeferredLock:
-    def __init__(self, lock: asyncio.Lock):
-        self.lock = lock
+    def __init__(self, lock: asyncio.Lock) -> None:
+        self.lock: asyncio.Lock = lock
         self.delta: Optional[float] = None
 
-    async def __aenter__(self):
+    async def __aenter__(self: ADLT) -> ADLT:
         await self.lock.acquire()
         return self
 
     def delay_by(self, delta: float) -> None:
         self.delta = delta
 
-    async def __aexit__(self, type, value, traceback):
+    async def __aexit__(self,
+        exc_type: Optional[Type[BaseException]],
+        exc_value: Optional[BaseException],
+        traceback: Optional[TracebackType],
+    ) -> None:
         if self.delta:
             await asyncio.sleep(self.delta)
         self.lock.release()
 
 
 class AsyncWebhookAdapter:
-    def __init__(self):
+    def __init__(self) -> None:
         self._locks: Dict[Any, asyncio.Lock] = {}
 
     async def request(

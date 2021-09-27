@@ -566,9 +566,8 @@ class ConnectionState:
             except KeyError:
                 pass
             else:
-                self.application_id = utils._get_as_snowflake(application, 'id')
-                # flags will always be present here
-                self.application_flags = ApplicationFlags._from_value(application['flags'])  # type: ignore
+                self.application_id = int(application['id'])
+                self.application_flags: ApplicationFlags = ApplicationFlags._from_value(application['flags'])
 
         for guild_data in data['guilds']:
             self._add_guild_from_data(guild_data)

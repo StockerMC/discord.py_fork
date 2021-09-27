@@ -73,13 +73,17 @@ LT = TypeVar('LT', bound='Loop')
 
 
 class SleepHandle:
-    __slots__ = ('future', 'loop', 'handle')
+    __slots__ = (
+        'future',
+        'loop',
+        'handle',
+    )
 
     def __init__(self, dt: datetime.datetime, *, loop: asyncio.AbstractEventLoop) -> None:
-        self.loop = loop
-        self.future = future = loop.create_future()
+        self.loop: asyncio.AbstractEventLoop = loop
+        self.future: asyncio.Future = loop.create_future()
         relative_delta = discord.utils.compute_timedelta(dt)
-        self.handle = loop.call_later(relative_delta, future.set_result, True)
+        self.handle: asyncio.TimerHandle = loop.call_later(relative_delta, self.future.set_result, True)
 
     def recalculate(self, dt: datetime.datetime) -> None:
         self.handle.cancel()
@@ -129,18 +133,18 @@ class Loop(Generic[C, P, T]):
         )
 
         self._before_loop: Optional[Callable[P, Coroutine[Any, Any, Any]]] = None
-        self._after_loop = None
-        self._is_being_cancelled = False
-        self._has_failed = False
-        self._stop_next_iteration = False
+        self._after_loop: Optional[Callable[P, Coroutine[Any, Any, Any]]] = None
+        self._is_being_cancelled: bool = False
+        self._has_failed: bool = False
+        self._stop_next_iteration: bool = False
 
         if self.count is not None and self.count <= 0:
             raise ValueError('count must be greater than 0 or None.')
 
         self.change_interval(seconds=seconds, minutes=minutes, hours=hours, time=time)
-        self._last_iteration_failed = False
+        self._last_iteration_failed: bool = False
         self._last_iteration: datetime.datetime = MISSING
-        self._next_iteration = None
+        self._next_iteration: Optional[datetime.datetime] = None
 
         if not inspect.iscoroutinefunction(self.coro):
             raise TypeError(f'Expected coroutine function, not {type(self.coro).__name__!r}.')

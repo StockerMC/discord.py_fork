@@ -350,10 +350,10 @@ class FFmpegOpusAudio(FFmpegAudio):
         bitrate: int = 128,
         codec: Optional[str] = None,
         executable: str = 'ffmpeg',
-        pipe=False,
-        stderr=None,
-        before_options=None,
-        options=None,
+        pipe: bool = False,
+        stderr: Optional[IO[str]] = None,
+        before_options: Optional[str] = None,
+        options: Optional[str] = None,
     ) -> None:
 
         args = []
@@ -423,7 +423,7 @@ class FFmpegOpusAudio(FFmpegAudio):
         ------------
         source
             Identical to the ``source`` parameter for the constructor.
-        method: Optional[Union[:class:`str`, Callable[:class:`str`, :class:`str`]]]
+        method: Optional[Union[:class:`str`, Callable[[:class:`str`, :class:`str`], Tuple[Optional[:class:`str`], Optional[:class:`int`]]]]]
             The probing method used to determine bitrate and codec information. As a string, valid
             values are ``native`` to use ffprobe (or avprobe) and ``fallback`` to use ffmpeg
             (or avconv).  As a callable, it must take two string arguments, ``source`` and
@@ -634,7 +634,7 @@ class AudioPlayer(threading.Thread):
             raise TypeError('Expected a callable for the "after" parameter.')
 
     def _do_run(self) -> None:
-        self.loops = 0
+        self.loops: int = 0
         self._start = time.perf_counter()
 
         # getattr lookup speed ups
