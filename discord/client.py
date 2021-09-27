@@ -150,8 +150,7 @@ class Client:
     Parameters
     -----------
     application_id: :class:`int`
-        The client's application ID. This is must be passed if you are
-        registering application commands.
+        The client's application ID.
     max_messages: Optional[:class:`int`]
         The maximum number of messages to store in the internal message cache.
         This defaults to ``1000``. Passing in ``None`` disables the message cache.
@@ -678,8 +677,10 @@ class Client:
         await self.login(token)
 
         if self.application_commands:
-            if self.application_id is None:
-                raise TypeError('application_id must be passed to the client if you are registering application commands.')
+            application_id = self.application_id
+            if application_id is None:
+                application_info = await self.application_info()
+                application_id = application_info.id
 
             guild_payloads = collections.defaultdict(list)
             global_payload = []

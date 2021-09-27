@@ -3,9 +3,7 @@ from discord.ext import commands
 
 class MyBot(commands.Bot):
     def __init__(self):
-        # setting the application_id kwarg is required when
-        # registering application commands
-        super().__init__(command_prefix=commands.when_mentioned_or('$'), application_id=123)
+        super().__init__(command_prefix=commands.when_mentioned_or('$'))
 
     async def on_ready(self):
         print(f'Logged in as {self.user} (ID: {self.user.id})')
