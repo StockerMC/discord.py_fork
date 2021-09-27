@@ -76,7 +76,11 @@ class WidgetChannel:
     position: :class:`int`
         The channel's position
     """
-    __slots__ = ('id', 'name', 'position')
+    __slots__ = (
+        'id',
+        'name',
+        'position',
+    )
 
     def __init__(self, id: int, name: str, position: int) -> None:
         self.id: int = id
@@ -147,9 +151,20 @@ class WidgetMember(BaseUser):
     connected_channel: Optional[:class:`WidgetChannel`]
         Which channel the member is connected to.
     """
-    __slots__ = ('name', 'status', 'nick', 'avatar', 'discriminator',
-                 'id', 'bot', 'activity', 'deafened', 'suppress', 'muted',
-                 'connected_channel')
+    __slots__ = (
+        'name',
+        'status',
+        'nick',
+        'avatar',
+        'discriminator',
+        'id',
+        'bot',
+        'activity',
+        'deafened',
+        'suppress',
+        'muted',
+        'connected_channel',
+    )
 
     if TYPE_CHECKING:
         activity: Optional[Union[BaseActivity, Spotify]]
@@ -227,7 +242,14 @@ class Widget:
             retrieved is capped.
 
     """
-    __slots__ = ('_state', 'channels', '_invite', 'id', 'members', 'name')
+    __slots__ = (
+        '_state',
+        'channels',
+        '_invite',
+        'id',
+        'members',
+        'name',
+    )
 
     def __init__(self, *, state: ConnectionState, data: WidgetPayload) -> None:
         self._state = state
