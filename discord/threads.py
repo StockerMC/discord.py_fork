@@ -56,6 +56,7 @@ if TYPE_CHECKING:
     from .permissions import Permissions
     from .state import ConnectionState
 
+    import datetime
 
 class Thread(Messageable, Hashable):
     """Represents a Discord thread.
@@ -773,28 +774,28 @@ class ThreadMember(Hashable):
         'parent',
     )
 
-    def __init__(self, parent: Thread, data: ThreadMemberPayload):
-        self.parent = parent
-        self._state = parent._state
+    def __init__(self, parent: Thread, data: ThreadMemberPayload) -> None:
+        self.parent: Thread = parent
+        self._state: ConnectionState = parent._state
         self._from_data(data)
 
     def __repr__(self) -> str:
         return f'<ThreadMember id={self.id} thread_id={self.thread_id} joined_at={self.joined_at!r}>'
 
-    def _from_data(self, data: ThreadMemberPayload):
+    def _from_data(self, data: ThreadMemberPayload) -> None:
         try:
-            self.id = int(data['user_id'])
+            self.id: int = int(data['user_id'])
         except KeyError:
-            assert self._state.self_id is not None
-            self.id = self._state.self_id
+            # self_id won't be None here
+            self.id: int = self._state.self_id  # type: ignore
 
         try:
-            self.thread_id = int(data['id'])
+            self.thread_id: int = int(data['id'])
         except KeyError:
-            self.thread_id = self.parent.id
+            self.thread_id: int = self.parent.id
 
-        self.joined_at = parse_time(data['join_timestamp'])
-        self.flags = data['flags']
+        self.joined_at: datetime.datetime = parse_time(data['join_timestamp'])
+        self.flags: int = data['flags']
 
     @property
     def thread(self) -> Thread:

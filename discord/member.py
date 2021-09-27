@@ -157,7 +157,7 @@ class VoiceState:
         return f'<{self.__class__.__name__} {inner}>'
 
 
-def flatten_user(cls):
+def flatten_user(cls) -> Type[Member]:
     for attr, value in itertools.chain(BaseUser.__dict__.items(), User.__dict__.items()):
         # ignore private/special methods
         if attr.startswith('_'):

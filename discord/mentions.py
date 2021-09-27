@@ -23,25 +23,27 @@ DEALINGS IN THE SOFTWARE.
 """
 
 from __future__ import annotations
-from typing import Type, TypeVar, Union, List, TYPE_CHECKING, Any, Union
+from typing import Type, TypeVar, Union, List, TYPE_CHECKING, Any, Union, Literal
 
 __all__ = (
     'AllowedMentions',
 )
 
 if TYPE_CHECKING:
+    from typing_extensions import TypeGuard
+
     from .types.message import AllowedMentions as AllowedMentionsPayload
     from .abc import Snowflake
 
 
 class _FakeBool:
-    def __repr__(self):
+    def __repr__(self) -> str:
         return 'True'
 
-    def __eq__(self, other):
+    def __eq__(self, other: Any) -> TypeGuard[Literal[True]]:
         return other is True
 
-    def __bool__(self):
+    def __bool__(self) -> Literal[True]:
         return True
 
 
@@ -80,7 +82,12 @@ class AllowedMentions:
         .. versionadded:: 1.6
     """
 
-    __slots__ = ('everyone', 'users', 'roles', 'replied_user')
+    __slots__ = (
+        'everyone',
+        'users',
+        'roles',
+        'replied_user'
+    )
 
     def __init__(
         self,
@@ -90,10 +97,10 @@ class AllowedMentions:
         roles: Union[bool, List[Snowflake]] = default,
         replied_user: bool = default,
     ):
-        self.everyone = everyone
-        self.users = users
-        self.roles = roles
-        self.replied_user = replied_user
+        self.everyone: bool = everyone
+        self.users: Union[bool, List[Snowflake]] = users
+        self.roles: Union[bool, List[Snowflake]] = roles
+        self.replied_user: bool = replied_user
 
     @classmethod
     def all(cls: Type[A]) -> A:
