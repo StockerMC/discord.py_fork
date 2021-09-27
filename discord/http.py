@@ -25,7 +25,6 @@ DEALINGS IN THE SOFTWARE.
 from __future__ import annotations
 
 import asyncio
-import json
 import logging
 import sys
 from typing import (
@@ -42,6 +41,8 @@ from typing import (
     Type,
     TypeVar,
     Union,
+    Literal,
+    overload,
 )
 from urllib.parse import quote as _uriquote
 import weakref
@@ -841,6 +842,76 @@ class HTTPClient:
     ) -> Response[None]:
         r = Route('PATCH', '/guilds/{guild_id}/channels', guild_id=guild_id)
         return self.request(r, json=data, reason=reason)
+
+    @overload
+    def create_channel(
+        self,
+        guild_id: Snowflake,
+        channel_type: Literal[0],
+        *,
+        reason: Optional[str] = None,
+        **options: Any,
+    ) -> Response[channel.TextChannel]: ...
+
+    @overload
+    def create_channel(
+        self,
+        guild_id: Snowflake,
+        channel_type: Literal[2],
+        *,
+        reason: Optional[str] = None,
+        **options: Any,
+    ) -> Response[channel.VoiceChannel]: ...
+
+    @overload
+    def create_channel(
+        self,
+        guild_id: Snowflake,
+        channel_type: Literal[4],
+        *,
+        reason: Optional[str] = None,
+        **options: Any,
+    ) -> Response[channel.CategoryChannel]: ...
+
+    @overload
+    def create_channel(
+        self,
+        guild_id: Snowflake,
+        channel_type: Literal[5],
+        *,
+        reason: Optional[str] = None,
+        **options: Any,
+    ) -> Response[channel.NewsChannel]: ...
+
+    @overload
+    def create_channel(
+        self,
+        guild_id: Snowflake,
+        channel_type: Literal[6],
+        *,
+        reason: Optional[str] = None,
+        **options: Any,
+    ) -> Response[channel.StoreChannel]: ...
+
+    @overload
+    def create_channel(
+        self,
+        guild_id: Snowflake,
+        channel_type: Literal[10, 11, 12],
+        *,
+        reason: Optional[str] = None,
+        **options: Any,
+    ) -> Response[channel.ThreadChannel]: ...
+
+    @overload
+    def create_channel(
+        self,
+        guild_id: Snowflake,
+        channel_type: Literal[13],
+        *,
+        reason: Optional[str] = None,
+        **options: Any,
+    ) -> Response[channel.StageChannel]: ...
 
     def create_channel(
         self,
