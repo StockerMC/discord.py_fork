@@ -127,9 +127,12 @@ def get_signature_parameters(function: Callable[..., Any], globalns: Dict[str, A
     params = {}
     cache: Dict[str, Any] = {}
     eval_annotation = discord.utils.evaluate_annotation
-    for name, parameter in signature.parameters.items():
+    for i, (name, parameter) in enumerate(signature.parameters.items()):
         annotation = parameter.annotation
-        if annotation is parameter.empty:
+        # the second condition was added to prevent the unnecessary
+        # evaluation of the first parameter of a command, which should be
+        # the invocation context (e.g. `ctx`)
+        if annotation is parameter.empty or i == 0:
             params[name] = parameter
             continue
         if annotation is None:
