@@ -250,6 +250,17 @@ class Asset(AssetMixin):
             animated=animated
         )
 
+    @classmethod
+    def _from_role_icon(cls: Type[AT], state: ConnectionState, role_id: int, role_hash: str) -> AT:
+        animated = role_hash.startswith('a_')
+        format = 'gif' if animated else 'png'
+        return cls(
+            state,
+            url=f'{cls.BASE}/role-icons/{role_id}/{role_hash}.{format}?size=512',
+            key=role_hash,
+            animated=animated
+        )
+
     def __str__(self) -> str:
         return self._url
 

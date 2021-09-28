@@ -48,6 +48,7 @@ from . import utils, abc
 from .role import Role
 from .member import Member, VoiceState
 from .emoji import Emoji
+from .partial_emoji import PartialEmoji
 from .errors import InvalidData
 from .permissions import PermissionOverwrite
 from .colour import Colour
@@ -230,6 +231,7 @@ class Guild(Hashable):
         - ``PARTNERED``: Guild is a partnered server.
         - ``PREVIEW_ENABLED``: Guild can be viewed before being accepted via Membership Screening.
         - ``PRIVATE_THREADS``: Guild has access to create private threads.
+        - ``ROLE_ICONS``: Guild has access to to set role icons.
         - ``SEVEN_DAY_THREAD_ARCHIVE``: Guild has access to the seven day archive time for threads.
         - ``THREE_DAY_THREAD_ARCHIVE``: Guild has access to the three day archive time for threads.
         - ``TICKETED_EVENTS_ENABLED``: Guild has enabled ticketed events.
@@ -2487,6 +2489,8 @@ class Guild(Hashable):
         colour: Union[Colour, int] = ...,
         hoist: bool = ...,
         mentionable: bool = ...,
+        icon: bytes = ...,
+        emoji: Union[str, PartialEmoji] = ...,
     ) -> Role:
         ...
 
@@ -2500,6 +2504,8 @@ class Guild(Hashable):
         color: Union[Colour, int] = ...,
         hoist: bool = ...,
         mentionable: bool = ...,
+        icon: bytes = ...,
+        emoji: Union[str, PartialEmoji] = ...,
     ) -> Role:
         ...
 
@@ -2513,6 +2519,8 @@ class Guild(Hashable):
         hoist: bool = MISSING,
         mentionable: bool = MISSING,
         reason: Optional[str] = None,
+        icon: bytes = MISSING,
+        emoji: Union[str, PartialEmoji] = MISSING,
     ) -> Role:
         """|coro|
 
@@ -2543,6 +2551,13 @@ class Guild(Hashable):
             Defaults to ``False``.
         reason: Optional[:class:`str`]
             The reason for creating this role. Shows up on the audit log.
+        icon: :class:`bytes`
+            The icon for the role.
+            This is only available to guilds that contain ``ROLE_ICONS`` in :attr:`Guild.features`.
+            Defaults to no icon.
+        emoji: Union[:class:`str`, :class:`PartialEmoji`]
+            The unicode emoji for the role.
+            Defaults to no emoji.
 
         Raises
         -------
@@ -2550,8 +2565,6 @@ class Guild(Hashable):
             You do not have permissions to create the role.
         HTTPException
             Creating the role failed.
-        InvalidArgument
-            An invalid keyword argument was given.
 
         Returns
         --------
@@ -2578,6 +2591,12 @@ class Guild(Hashable):
 
         if name is not MISSING:
             fields['name'] = name
+
+        if icon is not MISSING:
+            fields['icon'] = utils._bytes_to_base64_data(icon)
+
+        if emoji is not MISSING:
+            fields['unicode_emoji'] = str(emoji)
 
         data = await self._state.http.create_role(self.id, reason=reason, **fields)
         role = Role(guild=self, data=data, state=self._state)

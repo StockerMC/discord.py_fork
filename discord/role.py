@@ -23,12 +23,13 @@ DEALINGS IN THE SOFTWARE.
 """
 
 from __future__ import annotations
-from typing import Any, Dict, List, Optional, TypeVar, Union, overload, TYPE_CHECKING
+from typing import Any, Dict, List, Optional, TypeVar, Union, TYPE_CHECKING
 
 from .permissions import Permissions
 from .errors import InvalidArgument
 from .colour import Colour
 from .mixins import Hashable
+from .asset import Asset
 from .utils import snowflake_time, _get_as_snowflake, MISSING
 
 __all__ = (
@@ -170,6 +171,8 @@ class Role(Hashable):
         Indicates if the role can be mentioned by users.
     tags: Optional[:class:`RoleTags`]
         The role tags associated with this role.
+    emoji: Optional[:class:`str`]
+        The unicode emoji for the role.
     """
 
     __slots__ = (
@@ -183,6 +186,8 @@ class Role(Hashable):
         'hoist',
         'guild',
         'tags',
+        'emoji',
+        '_icon',
         '_state',
     )
 
@@ -234,7 +239,7 @@ class Role(Hashable):
             return NotImplemented
         return not r
 
-    def _update(self, data: RolePayload):
+    def _update(self, data: RolePayload) -> None:
         self.name: str = data['name']
         self._permissions: int = int(data.get('permissions', 0))
         self.position: int = data.get('position', 0)
@@ -242,6 +247,8 @@ class Role(Hashable):
         self.hoist: bool = data.get('hoist', False)
         self.managed: bool = data.get('managed', False)
         self.mentionable: bool = data.get('mentionable', False)
+        self._icon: Optional[str] = data.get('icon')
+        self.emoji: Optional[str] = data.get('unicode_emoji')
         self.tags: Optional[RoleTags]
 
         try:
@@ -316,6 +323,13 @@ class Role(Hashable):
 
         role_id = self.id
         return [member for member in all_members if member._roles.has(role_id)]
+
+    @property
+    def icon(self) -> Optional[Asset]:
+        """Optional[:class:`Asset`]: Returns the role's icon asset, if available."""
+        if self._icon is None:
+            return None
+        return Asset._from_role_icon(self._state, self.id, self._icon)
 
     async def _move(self, position: int, reason: Optional[str]) -> None:
         if position <= 0:
