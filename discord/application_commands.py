@@ -754,7 +754,8 @@ class BaseApplicationCommand:
 
         return None
 
-    def _verify_data(self, application_command_data: ApplicationCommandInteractionData, guild_id: Optional[int]) -> Optional[BaseApplicationCommand]:
+    def _get_used_command(self, application_command_data: ApplicationCommandInteractionData, guild_id: Optional[int]) -> Optional[BaseApplicationCommand]:
+        # check if the guild id is correct (if it's not a global command)
         if not self.__application_command_global_command__ and guild_id is not None and guild_id not in self.__application_command_guild_ids__:
             return None
 
