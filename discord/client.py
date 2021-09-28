@@ -1949,7 +1949,7 @@ class Client:
         Returns
         -------
         Optional[:class:`.Cog`]
-             The cog that was removed. ``None`` if not found.
+            The cog that was removed. ``None`` if not found.
         """
 
         cog = self.__cogs.pop(name, None)
@@ -2220,6 +2220,7 @@ class Client:
         """
         return list(self._application_commands.values())
 
+    # TODO: change/refactor this
     def get_application_commands(
         self,
         name: str,
@@ -2237,18 +2238,18 @@ class Client:
             (command.__application_command_global_command__ is global_command if global_command is not None else True)
         ]
 
-    def remove_application_command(self, application_command: Union[ApplicationCommand, Type[ApplicationCommand]]) -> Optional[ApplicationCommand]:
-        """
-        
-        """
-        if not hasattr(application_command, '__discord_application_command__'):
-            raise TypeError('application_command must derive from SlashCommand, MessageCommand, or UserCommand')
-
-        return self._application_commands.pop(application_command._get_key(), None)
-
     def add_application_command(self, application_command: ApplicationCommand) -> None:
-        """
-        
+        """Adds an application command to the bot to be registered when the bot logs in.
+
+        Parameters
+        -----------
+        application_command: Union[:class:`SlashCommand`, :class:`MessageCommand`, :class:`UserCommand`]
+            The application command to add.
+
+        Raises
+        ------
+        TypeError
+            The application command passed is not an application command instance.
         """
         if not isinstance(application_command, _valid_application_command_types):
             raise TypeError(f'application_command must derive from SlashCommand, MessageCommand, or UserCommand')
@@ -2272,11 +2273,37 @@ class Client:
 
             subcommands.extend(subcommand.__application_command_subcommands__.items())
 
-    def add_application_command_check(self, func: Check) -> None:
-        """Adds a global check to the bot.
+    def remove_application_command(self, application_command: Union[ApplicationCommand, Type[ApplicationCommand]]) -> Optional[ApplicationCommand]:
+        """Adds an application command to the bot to be registered when the bot logs in.
 
-        This is the non-decorator interface to :meth:`command_check`
-        and :meth:`.check_once`.
+        Parameters
+        -----------
+        application_command: Union[
+            Union[:class:`SlashCommand`, :class:`MessageCommand`, :class:`UserCommand`],
+            Type[Union[:class:`SlashCommand`, :class:`MessageCommand`, :class:`UserCommand`]]
+        ]
+            The application command to remove.
+
+        Raises
+        ------
+        TypeError
+            The application command passed is not an application command.
+
+        Returns
+        -------
+        Optional[Union[:class:`SlashCommand`, :class:`MessageCommand`, :class:`UserCommand`]]
+            The application command that was removed. ``None`` if not found.
+        """
+
+        if not hasattr(application_command, '__discord_application_command__'):
+            raise TypeError('application_command must derive from SlashCommand, MessageCommand, or UserCommand')
+
+        return self._application_commands.pop(application_command._get_key(), None)
+
+    def add_application_command_check(self, func: Check) -> None:
+        """Adds a global application command check to the bot.
+
+        This is the non-decorator interface to :meth:`command_check`.
 
         Parameters
         -----------
@@ -2290,9 +2317,9 @@ class Client:
     def application_command_check(self, func: T) -> T:
         r"""A decorator that adds a global application command check to the bot.
 
-        A global check is similar to a :func:`.check` that is applied
+        A global check is similar to :meth:`command_check` that is applied
         on a per command basis except it is run before any command checks
-        have been verified and applies to every command the bot has.
+        have been run and applies to every command the bot has.
 
         .. note::
 
