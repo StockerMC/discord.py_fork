@@ -29,6 +29,7 @@ import logging
 import signal
 import sys
 import traceback
+import inspect
 import collections
 import collections.abc
 import types
@@ -70,7 +71,6 @@ from .application_commands import (
     SlashCommand,
     MessageCommand,
     UserCommand,
-    BaseApplicationCommand,
     SlashCommandResponse,
     MessageCommandResponse,
     UserCommandResponse
@@ -246,6 +246,7 @@ class Client:
         self.shard_count: Optional[int] = options.get('shard_count')
         self.owner_id: Optional[int] = options.get('owner_id')
         self.owner_ids: Optional[collections.abc.Collection[int]] = options.get('owner_ids', set())
+        self.application_command_guild_ids: Optional[List[int]] = options.get('application_command_guild_ids')
         self.extra_events: Dict[str, List[CoroFunc]] = {}
 
         if self.owner_id and self.owner_ids:
@@ -2252,15 +2253,21 @@ class Client:
         if not isinstance(application_command, _valid_application_command_types):
             raise TypeError(f'application_command must derive from SlashCommand, MessageCommand, or UserCommand')
 
+        if not application_command.__application_command_guild_ids__ and self.application_command_guild_ids is not None:
+            application_command.__application_command_guild_ids__ = self.application_command_guild_ids
+
         self._application_commands[application_command._get_key()] = application_command
         subcommands = list(application_command.__application_command_subcommands__.items())
         while subcommands:
             name, subcommand = subcommands.pop(0)
             parent = subcommand.__application_command_parent__
-            parent = parent() if not isinstance(parent, BaseApplicationCommand) else parent
+            parent = parent() if inspect.isclass(parent) else parent
             subcommand.__application_command_parent__ = parent
 
-            if not isinstance(subcommand, BaseApplicationCommand):
+            if not subcommand.__application_command_guild_ids__ and self.application_command_guild_ids is not None:
+                subcommand.__application_command_guild_ids__ = self.application_command_guild_ids
+
+            if inspect.isclass(subcommand):
                 parent.__application_command_subcommands__[name] = subcommand()
 
             subcommands.extend(subcommand.__application_command_subcommands__.items())

@@ -634,7 +634,7 @@ class BaseApplicationCommand:
         __application_command_type__: ClassVar[ApplicationCommandType]
         __application_command_parent__: Union[Type[BaseApplicationCommand], BaseApplicationCommand]
         __application_command_default_permission__: ClassVar[bool]
-        __application_command_guild_ids__: ClassVar[List[int]]
+        __application_command_guild_ids__: List[int]
         __application_command_global_command__: ClassVar[bool]
         __application_command_group_command__: ClassVar[bool]
         __application_command_subcommands__: ClassVar[Dict[str, Union[BaseApplicationCommand]]]
