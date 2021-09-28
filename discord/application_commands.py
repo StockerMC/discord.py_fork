@@ -26,7 +26,7 @@ from __future__ import annotations
 
 import inspect
 import sys
-from typing import TYPE_CHECKING, Type, Any, Dict, TypeVar, List, Optional, Union, ClassVar, Tuple, Callable
+from typing import TYPE_CHECKING, Type, Any, Dict, TypeVar, List, Optional, Union, ClassVar, Tuple, Callable, Protocol, Coroutine
 
 from operator import attrgetter
 from .enums import ApplicationCommandType, ApplicationCommandOptionType, InteractionType
@@ -35,7 +35,7 @@ from .member import Member
 from .user import User
 from .role import Role
 from .message import Message
-from .interactions import Interaction, InteractionResponse
+from .interactions import Interaction, InteractionResponse, InteractionMessage
 from .object import Object
 from .guild import Guild
 from .channel import TextChannel, StageChannel, VoiceChannel, CategoryChannel, StoreChannel, Thread, PartialMessageable
@@ -57,6 +57,7 @@ if TYPE_CHECKING:
     from .cog import Cog
 
     T = TypeVar('T')
+    Coro = Coroutine[Any, Any, T]
     ValidOptionTypes = Union[
         Type[str],
         Type[int],
@@ -74,6 +75,55 @@ if TYPE_CHECKING:
     InteractionChannel = Union[
         VoiceChannel, StageChannel, TextChannel, CategoryChannel, StoreChannel, Thread, PartialMessageable
     ]
+
+    # these protocols are to help typehint the inherited methods from Interaction/InteractionResponse
+    # for BaseApplicationCommandResponse
+
+    from .embeds import Embed
+    from .file import File
+    from .ui.view import View
+    from .mentions import AllowedMentions
+    from .message import Attachment
+
+    class EditOriginalMessage(Protocol):
+        async def __call__(
+            self,
+            *,
+            content: Optional[str] = MISSING,
+            embeds: List[Embed] = MISSING,
+            embed: Optional[Embed] = MISSING,
+            file: File = MISSING,
+            files: List[File] = MISSING,
+            view: Optional[View] = MISSING,
+            allowed_mentions: Optional[AllowedMentions] = None,
+        ) -> InteractionMessage: ...
+
+    class SendMessage(Protocol):
+        async def __call__(
+            self,
+            content: Optional[Any] = None,
+            *,
+            embed: Embed = MISSING,
+            embeds: List[Embed] = MISSING,
+            view: View = MISSING,
+            tts: bool = False,
+            ephemeral: bool = False,
+        ) -> None: ...
+
+    class Defer(Protocol):
+        async def __call__(self, *, ephemeral: bool = False) -> None: ...
+
+    class EditMessage(Protocol):
+        async def edit_message(
+            self,
+            *,
+            content: Optional[Any] = MISSING,
+            embed: Optional[Embed] = MISSING,
+            embeds: List[Embed] = MISSING,
+            attachments: List[Attachment] = MISSING,
+            view: Optional[View] = MISSING,
+        ) -> None: ...
+
 
 __all__ = (
     'SlashCommand',
@@ -494,14 +544,14 @@ class BaseApplicationCommandResponse:
         response: InteractionResponse
         followup: Webhook
         # interaction/interaction response methods
-        original_message = Interaction.original_message
-        edit_original_message = Interaction.edit_original_message
-        delete_original_message = Interaction.delete_original_message
-        is_done = InteractionResponse.is_done
-        defer = InteractionResponse.defer
-        pong = InteractionResponse.pong
-        send_message = InteractionResponse.send_message
-        edit_message = InteractionResponse.edit_message
+        original_message: Callable[[], Coro[InteractionMessage]]
+        edit_original_message: EditOriginalMessage
+        delete_original_message: Callable[[], Coro[None]]
+        is_done: Callable[[], bool]
+        defer: Defer
+        pong: Callable[[], Coro[None]]
+        send_message: SendMessage
+        edit_message: EditMessage
 
 
 class SlashCommandResponse(BaseApplicationCommandResponse):
