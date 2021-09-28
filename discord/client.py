@@ -2225,24 +2225,6 @@ class Client:
         """
         return list(self._application_commands.values())
 
-    # TODO: change/refactor this
-    def get_application_commands(
-        self,
-        name: str,
-        type: Optional[ApplicationCommandType] = None,
-        global_command: Optional[bool] = None
-    ) -> List[ApplicationCommand]:
-        """
-        
-        """
-        ## USE COMMAND._get_key
-        return [
-            command for command in self._application_commands.values()
-            if command.__application_command_name__ == name and
-            (command.__application_command_type__ == type if type is not None else True) and
-            (command.__application_command_global_command__ is global_command if global_command is not None else True)
-        ]
-
     def add_application_command(self, application_command: ApplicationCommand) -> None:
         """Adds an application command to the bot to be registered when the bot logs in.
 
