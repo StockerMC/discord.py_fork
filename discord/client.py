@@ -94,7 +94,11 @@ if TYPE_CHECKING:
     T = TypeVar('T')
 
     ApplicationCommand = Union[SlashCommand, MessageCommand, UserCommand]
-    Check = Callable[[Union[SlashCommandResponse, UserCommandResponse, MessageCommandResponse]], Union[bool, Coroutine[Any, Any, bool]]]
+    Check = Union[
+        Callable[[SlashCommandResponse], Union[bool, Coroutine[Any, Any, bool]]],
+        Callable[[UserCommandResponse], Union[bool, Coroutine[Any, Any, bool]]],
+        Callable[[MessageCommandResponse], Union[bool, Coroutine[Any, Any, bool]]],
+    ]
     ApplicationCommandKey = Tuple[str, int, Optional['ApplicationCommandKey']]  # name, type, parent
 
 __all__ = (
@@ -680,6 +684,7 @@ class Client:
         if self.application_commands:
             application_id = self.application_id
             if application_id is None:
+                # TODO cache this
                 application_info = await self.application_info()
                 application_id = application_info.id
 
