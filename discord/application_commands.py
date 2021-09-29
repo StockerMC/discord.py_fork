@@ -26,10 +26,10 @@ from __future__ import annotations
 
 import inspect
 import sys
-from typing import TYPE_CHECKING, Type, Any, Dict, TypeVar, List, Optional, Union, ClassVar, Tuple, Callable, Protocol, Coroutine
+from typing import TYPE_CHECKING, Type, Any, Dict, TypeVar, List, Optional, Union, ClassVar, Tuple, Callable, Protocol, Coroutine, Final
 
 from operator import attrgetter
-from .enums import ApplicationCommandType, ApplicationCommandOptionType, InteractionType
+from .enums import ApplicationCommandType, ApplicationCommandOptionType, InteractionType, ChannelType
 from .utils import resolve_annotation, MISSING, copy_doc, async_all
 from .member import Member
 from .user import User
@@ -39,6 +39,7 @@ from .interactions import Interaction, InteractionResponse, InteractionMessage
 from .object import Object
 from .guild import Guild
 from .channel import TextChannel, StageChannel, VoiceChannel, CategoryChannel, StoreChannel, Thread, PartialMessageable
+from .abc import GuildChannel
 
 if TYPE_CHECKING:
     from .types.interactions import (
@@ -58,6 +59,14 @@ if TYPE_CHECKING:
 
     T = TypeVar('T')
     Coro = Coroutine[Any, Any, T]
+    ChannelTypes = Union[
+        Type[TextChannel],
+        Type[VoiceChannel],
+        Type[StageChannel],
+        Type[CategoryChannel],
+        Type[Thread],
+        Type[GuildChannel],
+    ]
     ValidOptionTypes = Union[
         Type[str],
         Type[int],
@@ -65,10 +74,8 @@ if TYPE_CHECKING:
         Type[Member],
         Type[User],
         Type[Role],
-        Type[TextChannel],
-        Type[StageChannel],
-        Type[VoiceChannel],
-        Type[CategoryChannel]
+        ChannelTypes,
+        Type[GuildChannel],
     ]
     ACOT = TypeVar('ACOT', bound=Union[ApplicationCommandOptionType, ValidOptionTypes])
     ApplicationCommandKey = Tuple[str, int, Optional['ApplicationCommandKey']]  # name, type, parent
@@ -139,7 +146,7 @@ __all__ = (
 )
 
 
-OPTION_TYPE_MAPPING: Dict[Union[ValidOptionTypes], ApplicationCommandOptionType] = {
+OPTION_TYPE_MAPPING: Final[Dict[Union[ValidOptionTypes], ApplicationCommandOptionType]] = {
     str: ApplicationCommandOptionType.string,
     int: ApplicationCommandOptionType.integer,
     float: ApplicationCommandOptionType.number,
@@ -149,7 +156,16 @@ OPTION_TYPE_MAPPING: Dict[Union[ValidOptionTypes], ApplicationCommandOptionType]
     Role: ApplicationCommandOptionType.role,
 }
 
-for channel_type in [TextChannel, StageChannel, VoiceChannel, CategoryChannel]:
+CHANNEL_TO_CHANNEL_TYPE: Final[Dict[ChannelTypes, Optional[ChannelType]]] = {
+    TextChannel: ChannelType.text,
+    VoiceChannel: ChannelType.voice,
+    StageChannel: ChannelType.stage_voice,
+    CategoryChannel: ChannelType.category,
+    Thread: ChannelType.public_thread,  # is public_thread correct?
+    GuildChannel: None,
+}
+
+for channel_type in CHANNEL_TO_CHANNEL_TYPE.keys():
     OPTION_TYPE_MAPPING[channel_type] = ApplicationCommandOptionType.channel
 
 def _resolve_option_type(option: Union[ValidOptionTypes, ApplicationCommandOptionType]) -> ApplicationCommandOptionType:
@@ -167,13 +183,21 @@ class ApplicationCommandOptionDefault:
     """Used for creating defaults for a :class:`ApplicationCommandOption` when it's accessed with
     it's relevant :class:`ApplicationCommandOptions` instance.
 
-    :meth:`default` must be should be overridden by subclasses.
+    Classes that derive from this should override the :meth:`~.ApplicationCommandOptionDefault.default`
+    method to handle its default logic. This method must be a :ref:`coroutine <coroutine>`.
     """
+
+    __discord_application_command_option_default__: ClassVar[bool] = True
 
     async def default(self, response: SlashCommandResponse) -> Any:
         """|coro|
 
-        
+        The method to override to handle default logic.
+
+        Parameters
+        -----------
+        response: :class:`SlashCommandResponse`
+            The response of the slash command used.
         """
         raise NotImplementedError('Derived classes need to implement this.')
 
@@ -225,6 +249,7 @@ class ApplicationCommandOption:
         The default for the option, if any.
 
         This is for when the option is accessed with it's relevant :class:`ApplicationCommandOptions` instance.
+    channel_types: 
     """
 
     __slots__= (
@@ -235,6 +260,7 @@ class ApplicationCommandOption:
         'choices',
         'options',
         'default',
+        'channel_types',
     )
 
     def __init__(
@@ -247,6 +273,7 @@ class ApplicationCommandOption:
         choices: Optional[List[ApplicationCommandOptionChoice]] = None,
         options: Optional[List[ApplicationCommandOption]] = None,
         default: Optional[ApplicationCommandOptionDefault] = None,
+        channel_types: List[ChannelType] = [],
     ) -> None:
         self.type: ApplicationCommandOptionType = type
         self.name: str = name
@@ -255,6 +282,7 @@ class ApplicationCommandOption:
         self.choices: Optional[List[ApplicationCommandOptionChoice]] = choices
         self.options: Optional[List[ApplicationCommandOption]] = options
         self.default: Optional[ApplicationCommandOptionDefault] = default
+        self.channel_types: List[ChannelType] = channel_types
 
     def __repr__(self) -> str:
         return f'<{self.__class__.__name__} type={self.type!r} name={self.name!r} description={self.description!r} required={self.required!r}>'
@@ -275,6 +303,9 @@ class ApplicationCommandOption:
         if self.options is not None:
             ret['options'] = [option.to_dict() for option in self.options]
 
+        if self.channel_types is not None:
+            ret['channel_types'] = [type.value for type in self.channel_types]
+
         return ret
 
 
@@ -291,6 +322,10 @@ def application_command_option(
 
     To avoid type checker errors when using this with typehints,
     the return type is ``Any``.        
+
+    .. note::
+
+        If the type is a channel, 
 
     .. versionadded:: 2.0
 
@@ -327,9 +362,10 @@ def application_command_option(
                 raise TypeError(f'choices must only contain ApplicationCommandOptionChoice instances, not {choice.__class__.__name__}')
 
     if default is not None:
+        if not hasattr(default, '__discord_application_command_option__default'):
+            raise TypeError('default must derive from ApplicationCommandOptionDefault')
+
         if inspect.isclass(default):
-            if not issubclass(default, ApplicationCommandOptionDefault):
-                raise TypeError('default must derive from ApplicationCommandOptionDefault')
 
             default = default()
 
@@ -363,23 +399,23 @@ def _get_options(
             origin = getattr(annotation, '__origin__', None)
 
             if origin is Union:
-                args = list(annotation.__args__)
-                if len(args) > 2:
-                    raise TypeError("Union typehint can't have more than 2 types.")
-
-                try:
-                    args.remove(type(None))
-                except ValueError:
-                    raise TypeError('None must be a type in a Union typehint.') from None
-                else:
+                args = annotation.__args__
+                if type(None) in args:
                     attr.required = False
 
-                annotation = args[0]
+                for arg in args:
+                    channel_type = CHANNEL_TO_CHANNEL_TYPE.get(arg)
+                    if channel_type is not None:
+                        attr.channel_types.append(channel_type)
 
             resolved_option_type = _resolve_option_type(annotation)
 
             if attr.type is MISSING:
                 attr.type = resolved_option_type
+
+                channel_type = CHANNEL_TO_CHANNEL_TYPE.get(annotation)
+                if channel_type is not None:
+                    attr.channel_types.append(channel_type)
 
         if attr.name is MISSING:
             attr.name = attr_name
@@ -632,12 +668,12 @@ class BaseApplicationCommand:
         __application_command_name__: ClassVar[str]
         __application_command_description__: ClassVar[str]
         __application_command_type__: ClassVar[ApplicationCommandType]
-        __application_command_parent__: Union[Type[BaseApplicationCommand], BaseApplicationCommand]
         __application_command_default_permission__: ClassVar[bool]
-        __application_command_guild_ids__: List[int]
-        __application_command_global_command__: ClassVar[bool]
         __application_command_group_command__: ClassVar[bool]
         __application_command_subcommands__: ClassVar[Dict[str, Union[BaseApplicationCommand]]]
+        __application_command_parent__: Union[Type[BaseApplicationCommand], BaseApplicationCommand]
+        __application_command_guild_ids__: List[int]
+        __application_command_global_command__: bool
 
     __discord_application_command__: ClassVar[bool] = True
 
