@@ -698,11 +698,12 @@ class Client:
                 if command.__application_command_global_command__:
                     global_payload.append(command_payload)
 
+            if global_payload:
+                print(global_payload)
+                await self.http.bulk_upsert_global_commands(self.application_id, global_payload) # type: ignore
+
             for guild_id, commands in guild_payloads.items():
                 await self.http.bulk_upsert_guild_commands(self.application_id, guild_id, commands)  # type: ignore
-
-            if global_payload:
-                await self.http.bulk_upsert_global_commands(self.application_id, global_payload) # type: ignore
 
         await self.connect(reconnect=reconnect)
 
@@ -2243,6 +2244,7 @@ class Client:
 
         if not application_command.__application_command_guild_ids__ and self.application_command_guild_ids is not None:
             application_command.__application_command_guild_ids__ = self.application_command_guild_ids
+            application_command.__application_command_global_command__ = False
 
         self._application_commands[application_command._get_key()] = application_command
         subcommands = list(application_command.__application_command_subcommands__.items())
@@ -2251,9 +2253,6 @@ class Client:
             parent = subcommand.__application_command_parent__
             parent = parent() if inspect.isclass(parent) else parent
             subcommand.__application_command_parent__ = parent
-
-            if not subcommand.__application_command_guild_ids__ and self.application_command_guild_ids is not None:
-                subcommand.__application_command_guild_ids__ = self.application_command_guild_ids
 
             if inspect.isclass(subcommand):
                 parent.__application_command_subcommands__[name] = subcommand()
