@@ -549,16 +549,12 @@ class Cog(metaclass=CogMeta):
 
         try:
             client_no_commands = "Client doesn't support ext.commands commands."
-            commands = self.__cog_commands__
             application_commands = self.__cog_application_commands__
 
-            if commands and not isinstance(client, Bot):
-                raise TypeError(client_no_commands)
-
-            for command in commands:
-                if command.parent is None:
-                    # client will be a Bot 
-                    client.remove_command(command.name)  # type: ignore
+            if isinstance(client, Bot):
+                for command in self.__cog_commands__:
+                    if command.parent is None:
+                        client.remove_command(command.name)
 
             for _, method_name in self.__cog_listeners__:
                 client.remove_listener(getattr(self, method_name))
