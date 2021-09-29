@@ -684,9 +684,13 @@ class Client:
         if self.application_commands:
             application_id = self.application_id
             if application_id is None:
-                # TODO cache this
-                application_info = await self.application_info()
-                application_id = application_info.id
+                app = await self.application_info()
+                # cache the information from application_info
+                self._connection.application_id = application_id = app.id
+                if app.team:
+                    self.owner_ids = {m.id for m in app.team.members}
+                else:
+                    self.owner_id = app.owner.id
 
             guild_payloads = collections.defaultdict(list)
             global_payload = []
