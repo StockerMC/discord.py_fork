@@ -700,10 +700,10 @@ class Client:
 
             if global_payload:
                 print(global_payload)
-                await self.http.bulk_upsert_global_commands(self.application_id, global_payload) # type: ignore
+                await self.http.bulk_upsert_global_commands(application_id, global_payload) # type: ignore
 
             for guild_id, commands in guild_payloads.items():
-                await self.http.bulk_upsert_guild_commands(self.application_id, guild_id, commands)  # type: ignore
+                await self.http.bulk_upsert_guild_commands(application_id, guild_id, commands)  # type: ignore
 
         await self.connect(reconnect=reconnect)
 
