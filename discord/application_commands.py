@@ -769,6 +769,9 @@ class BaseApplicationCommand:
         attrs = ' '.join([f'{display_key}={getattr(self, key)!r}' for key, display_key in self.__application_command_repr_attrs__.items()])
         return f'<{self.__class__.__name__} {attrs}>'
 
+    def __str__(self) -> str:
+        return self.__application_command_name__
+
     @classmethod
     def _get_key(cls) -> ApplicationCommandKey:
         return (
