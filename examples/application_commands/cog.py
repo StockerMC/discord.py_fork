@@ -31,7 +31,7 @@ class Fun(discord.Cog):
 
     @commands.command()
     async def hello(self, ctx: commands.Context):
-        await ctx.send(f'Hello {ctx.author.name}!', mention_author=True)
+        await ctx.send(f'Hello {ctx.author.name}!')
         self.last_user = ctx.author
 
 bot = MyBot()
