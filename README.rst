@@ -142,3 +142,8 @@ Slash Command Example
     client.run('token')
 
 You can find more examples in the examples directory.
+
+Links
+------
+
+- `Official Discord Server <https://discord.gg/tEbbhbuvP8>`_
