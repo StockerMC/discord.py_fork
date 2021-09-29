@@ -488,7 +488,7 @@ class Cog(metaclass=CogMeta):
 
     def _inject(self: CogT, client: Union[Client, Bot]) -> CogT:
         cls = self.__class__
-        client_no_commands = "Client doesn't support ext.commands commands. Instead, use ext.commands.Bot."
+        client_no_commands = "Client doesn't support ext.commands commands."
 
         # circular import
         from .ext.commands.bot import Bot
@@ -548,12 +548,12 @@ class Cog(metaclass=CogMeta):
         from .ext.commands.bot import Bot
 
         try:
-            client_no_commands = "Client doesn't support ext.commands commands. Instead, use ext.commands.Bot."
+            client_no_commands = "Client doesn't support ext.commands commands."
             commands = self.__cog_commands__
             application_commands = self.__cog_application_commands__
 
             if commands and not isinstance(client, Bot):
-                raise TypeError("Client doesn't support ext.commands commands. Instead, use ext.commands.Bot.")
+                raise TypeError(client_no_commands)
 
             for command in commands:
                 if command.parent is None:
