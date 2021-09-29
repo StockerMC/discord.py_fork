@@ -699,7 +699,6 @@ class Client:
                     global_payload.append(command_payload)
 
             if global_payload:
-                print(global_payload)
                 await self.http.bulk_upsert_global_commands(application_id, global_payload) # type: ignore
 
             for guild_id, commands in guild_payloads.items():
