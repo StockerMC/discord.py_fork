@@ -83,7 +83,6 @@ if TYPE_CHECKING:
     from .types.guild import Guild as GuildPayload
     from .types.message import Message as MessagePayload
 
-    T = TypeVar('T')
     CS = TypeVar('CS', bound='ConnectionState')
     Channel = Union[GuildChannel, VocalGuildChannel, PrivateChannel]
 
@@ -139,7 +138,7 @@ class ChunkRequest:
 _log = logging.getLogger(__name__)
 
 
-async def logging_coroutine(coroutine: Coroutine[Any, Any, T], *, info: str) -> Optional[T]:
+async def logging_coroutine(coroutine: Coroutine[Any, Any, Any], *, info: str) -> None:
     try:
         await coroutine
     except Exception:
@@ -149,7 +148,7 @@ async def logging_coroutine(coroutine: Coroutine[Any, Any, T], *, info: str) -> 
 class ConnectionState:
     if TYPE_CHECKING:
         _get_websocket: Callable[..., DiscordWebSocket]
-        _get_client: Callable[..., Client]
+        _get_client: Callable[[], Client]
         _parsers: Dict[str, Callable[[Dict[str, Any]], None]]
 
     def __init__(
