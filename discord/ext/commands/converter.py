@@ -109,7 +109,7 @@ class Converter(Protocol[T_co]):
     method to do its conversion logic. This method must be a :ref:`coroutine <coroutine>`.
     """
 
-    async def convert(self, ctx: Context, argument: str) -> T_co:
+    async def convert(self, ctx: Context[Any], argument: str) -> T_co:
         """|coro|
 
         The method to override to do conversion logic.
@@ -157,7 +157,7 @@ class ObjectConverter(IDConverter[discord.Object]):
     2. Lookup by member, role, or channel mention.
     """
 
-    async def convert(self, ctx: Context, argument: str) -> discord.Object:
+    async def convert(self, ctx: Context[Any], argument: str) -> discord.Object:
         match = self._get_id_match(argument) or re.match(r'<(?:@(?:!|&)?|#)([0-9]{15,20})>$', argument)
 
         if match is None:
@@ -221,7 +221,7 @@ class MemberConverter(IDConverter[discord.Member]):
             return None
         return members[0]
 
-    async def convert(self, ctx: Context, argument: str) -> discord.Member:
+    async def convert(self, ctx: Context[Any], argument: str) -> discord.Member:
         bot = ctx.bot
         match = self._get_id_match(argument) or re.match(r'<@!?([0-9]{15,20})>$', argument)
         guild = ctx.guild
@@ -252,7 +252,7 @@ class MemberConverter(IDConverter[discord.Member]):
             if not result:
                 raise MemberNotFound(argument)
 
-        return result
+        return result  # type: ignore
 
 
 class UserConverter(IDConverter[discord.User]):
@@ -275,7 +275,7 @@ class UserConverter(IDConverter[discord.User]):
         and it's not available in cache.
     """
 
-    async def convert(self, ctx: Context, argument: str) -> discord.User:
+    async def convert(self, ctx: Context[Any], argument: str) -> discord.User:
         match = self._get_id_match(argument) or re.match(r'<@!?([0-9]{15,20})>$', argument)
         result = None
         state = ctx._state
@@ -289,7 +289,7 @@ class UserConverter(IDConverter[discord.User]):
                 except discord.HTTPException:
                     raise UserNotFound(argument) from None
 
-            return result
+            return result  # type: ignore
 
         arg = argument
 
@@ -329,7 +329,7 @@ class PartialMessageConverter(Converter[discord.PartialMessage]):
     """
 
     @staticmethod
-    def _get_id_matches(ctx, argument):
+    def _get_id_matches(ctx: Context[Any], argument: str) -> Tuple[Optional[int], int, Optional[int]]:
         id_regex = re.compile(r'(?:(?P<channel_id>[0-9]{15,20})-)?(?P<message_id>[0-9]{15,20})$')
         link_regex = re.compile(
             r'https?://(?:(ptb|canary|www)\.)?discord(?:app)?\.com/channels/'
@@ -352,21 +352,21 @@ class PartialMessageConverter(Converter[discord.PartialMessage]):
         return guild_id, message_id, channel_id
 
     @staticmethod
-    def _resolve_channel(ctx, guild_id, channel_id) -> Optional[PartialMessageableChannel]:
+    def _resolve_channel(ctx: Context[Any], guild_id: Optional[int], channel_id: Optional[int]) -> Optional[PartialMessageableChannel]:
         if guild_id is not None:
             guild = ctx.bot.get_guild(guild_id)
             if guild is not None and channel_id is not None:
-                return guild._resolve_channel(channel_id)  # type: ignore
+                return guild._resolve_channel(channel_id)
             else:
                 return None
         else:
-            return ctx.bot.get_channel(channel_id) if channel_id else ctx.channel
+            return ctx.bot.get_channel(channel_id) if channel_id else ctx.channel  # type: ignore
 
-    async def convert(self, ctx: Context, argument: str) -> discord.PartialMessage:
+    async def convert(self, ctx: Context[Any], argument: str) -> discord.PartialMessage:
         guild_id, message_id, channel_id = self._get_id_matches(ctx, argument)
         channel = self._resolve_channel(ctx, guild_id, channel_id)
         if not channel:
-            raise ChannelNotFound(channel_id)
+            raise ChannelNotFound(channel_id)  # type: ignore
         return discord.PartialMessage(channel=channel, id=message_id)
 
 
@@ -385,20 +385,20 @@ class MessageConverter(IDConverter[discord.Message]):
          Raise :exc:`.ChannelNotFound`, :exc:`.MessageNotFound` or :exc:`.ChannelNotReadable` instead of generic :exc:`.BadArgument`
     """
 
-    async def convert(self, ctx: Context, argument: str) -> discord.Message:
+    async def convert(self, ctx: Context[Any], argument: str) -> discord.Message:
         guild_id, message_id, channel_id = PartialMessageConverter._get_id_matches(ctx, argument)
         message = ctx.bot._connection._get_message(message_id)
         if message:
             return message
         channel = PartialMessageConverter._resolve_channel(ctx, guild_id, channel_id)
         if not channel:
-            raise ChannelNotFound(channel_id)
+            raise ChannelNotFound(channel_id)  # type: ignore
         try:
             return await channel.fetch_message(message_id)
         except discord.NotFound:
             raise MessageNotFound(argument)
         except discord.Forbidden:
-            raise ChannelNotReadable(channel)
+            raise ChannelNotReadable(channel)  # type: ignore
 
 
 class GuildChannelConverter(IDConverter[discord.abc.GuildChannel]):
@@ -416,11 +416,11 @@ class GuildChannelConverter(IDConverter[discord.abc.GuildChannel]):
     .. versionadded:: 2.0
     """
 
-    async def convert(self, ctx: Context, argument: str) -> discord.abc.GuildChannel:
+    async def convert(self, ctx: Context[Any], argument: str) -> discord.abc.GuildChannel:
         return self._resolve_channel(ctx, argument, 'channels', discord.abc.GuildChannel)
 
     @staticmethod
-    def _resolve_channel(ctx: Context, argument: str, attribute: str, type: Type[CT]) -> CT:
+    def _resolve_channel(ctx: Context[Any], argument: str, attribute: str, type: Type[CT]) -> CT:
         bot = ctx.bot
 
         match = IDConverter._get_id_match(argument) or re.match(r'<#([0-9]{15,20})>$', argument)
@@ -441,7 +441,7 @@ class GuildChannelConverter(IDConverter[discord.abc.GuildChannel]):
         else:
             channel_id = int(match.group(1))
             if guild:
-                result = guild.get_channel(channel_id)
+                result = guild.get_channel(channel_id)  # type: ignore
             else:
                 result = _get_from_guilds(bot, 'get_channel', channel_id)
 
@@ -451,7 +451,7 @@ class GuildChannelConverter(IDConverter[discord.abc.GuildChannel]):
         return result
 
     @staticmethod
-    def _resolve_thread(ctx: Context, argument: str, attribute: str, type: Type[TT]) -> TT:
+    def _resolve_thread(ctx: Context[Any], argument: str, attribute: str, type: Type[TT]) -> TT:
         bot = ctx.bot
 
         match = IDConverter._get_id_match(argument) or re.match(r'<#([0-9]{15,20})>$', argument)
@@ -466,7 +466,7 @@ class GuildChannelConverter(IDConverter[discord.abc.GuildChannel]):
         else:
             thread_id = int(match.group(1))
             if guild:
-                result = guild.get_thread(thread_id)
+                result = guild.get_thread(thread_id)  # type: ignore
 
         if not result or not isinstance(result, type):
             raise ThreadNotFound(argument)
@@ -490,7 +490,7 @@ class TextChannelConverter(IDConverter[discord.TextChannel]):
          Raise :exc:`.ChannelNotFound` instead of generic :exc:`.BadArgument`
     """
 
-    async def convert(self, ctx: Context, argument: str) -> discord.TextChannel:
+    async def convert(self, ctx: Context[Any], argument: str) -> discord.TextChannel:
         return GuildChannelConverter._resolve_channel(ctx, argument, 'text_channels', discord.TextChannel)
 
 
@@ -510,7 +510,7 @@ class VoiceChannelConverter(IDConverter[discord.VoiceChannel]):
          Raise :exc:`.ChannelNotFound` instead of generic :exc:`.BadArgument`
     """
 
-    async def convert(self, ctx: Context, argument: str) -> discord.VoiceChannel:
+    async def convert(self, ctx: Context[Any], argument: str) -> discord.VoiceChannel:
         return GuildChannelConverter._resolve_channel(ctx, argument, 'voice_channels', discord.VoiceChannel)
 
 
@@ -529,7 +529,7 @@ class StageChannelConverter(IDConverter[discord.StageChannel]):
     3. Lookup by name
     """
 
-    async def convert(self, ctx: Context, argument: str) -> discord.StageChannel:
+    async def convert(self, ctx: Context[Any], argument: str) -> discord.StageChannel:
         return GuildChannelConverter._resolve_channel(ctx, argument, 'stage_channels', discord.StageChannel)
 
 
@@ -549,7 +549,7 @@ class CategoryChannelConverter(IDConverter[discord.CategoryChannel]):
          Raise :exc:`.ChannelNotFound` instead of generic :exc:`.BadArgument`
     """
 
-    async def convert(self, ctx: Context, argument: str) -> discord.CategoryChannel:
+    async def convert(self, ctx: Context[Any], argument: str) -> discord.CategoryChannel:
         return GuildChannelConverter._resolve_channel(ctx, argument, 'categories', discord.CategoryChannel)
 
 
@@ -568,7 +568,7 @@ class StoreChannelConverter(IDConverter[discord.StoreChannel]):
     .. versionadded:: 1.7
     """
 
-    async def convert(self, ctx: Context, argument: str) -> discord.StoreChannel:
+    async def convert(self, ctx: Context[Any], argument: str) -> discord.StoreChannel:
         return GuildChannelConverter._resolve_channel(ctx, argument, 'channels', discord.StoreChannel)
 
 
@@ -586,7 +586,7 @@ class ThreadConverter(IDConverter[discord.Thread]):
     .. versionadded: 2.0
     """
 
-    async def convert(self, ctx: Context, argument: str) -> discord.Thread:
+    async def convert(self, ctx: Context[Any], argument: str) -> discord.Thread:
         return GuildChannelConverter._resolve_thread(ctx, argument, 'threads', discord.Thread)
 
 
@@ -651,7 +651,7 @@ class ColourConverter(Converter[discord.Colour]):
         blue = self.parse_rgb_number(argument, match.group('b'))
         return discord.Color.from_rgb(red, green, blue)
 
-    async def convert(self, ctx: Context, argument: str) -> discord.Colour:
+    async def convert(self, ctx: Context[Any], argument: str) -> discord.Colour:
         if argument[0] == '#':
             return self.parse_hex_number(argument[1:])
 
@@ -692,7 +692,7 @@ class RoleConverter(IDConverter[discord.Role]):
          Raise :exc:`.RoleNotFound` instead of generic :exc:`.BadArgument`
     """
 
-    async def convert(self, ctx: Context, argument: str) -> discord.Role:
+    async def convert(self, ctx: Context[Any], argument: str) -> discord.Role:
         guild = ctx.guild
         if not guild:
             raise NoPrivateMessage()
@@ -711,7 +711,7 @@ class RoleConverter(IDConverter[discord.Role]):
 class GameConverter(Converter[discord.Game]):
     """Converts to :class:`~discord.Game`."""
 
-    async def convert(self, ctx: Context, argument: str) -> discord.Game:
+    async def convert(self, ctx: Context[Any], argument: str) -> discord.Game:
         return discord.Game(name=argument)
 
 
@@ -724,7 +724,7 @@ class InviteConverter(Converter[discord.Invite]):
          Raise :exc:`.BadInviteArgument` instead of generic :exc:`.BadArgument`
     """
 
-    async def convert(self, ctx: Context, argument: str) -> discord.Invite:
+    async def convert(self, ctx: Context[Any], argument: str) -> discord.Invite:
         try:
             invite = await ctx.bot.fetch_invite(argument)
             return invite
@@ -743,7 +743,7 @@ class GuildConverter(IDConverter[discord.Guild]):
     .. versionadded:: 1.7
     """
 
-    async def convert(self, ctx: Context, argument: str) -> discord.Guild:
+    async def convert(self, ctx: Context[Any], argument: str) -> discord.Guild:
         match = self._get_id_match(argument)
         result = None
 
@@ -775,7 +775,7 @@ class EmojiConverter(IDConverter[discord.Emoji]):
          Raise :exc:`.EmojiNotFound` instead of generic :exc:`.BadArgument`
     """
 
-    async def convert(self, ctx: Context, argument: str) -> discord.Emoji:
+    async def convert(self, ctx: Context[Any], argument: str) -> discord.Emoji:
         match = self._get_id_match(argument) or re.match(r'<a?:[a-zA-Z0-9\_]{1,32}:([0-9]{15,20})>$', argument)
         result = None
         bot = ctx.bot
@@ -809,7 +809,7 @@ class PartialEmojiConverter(Converter[discord.PartialEmoji]):
          Raise :exc:`.PartialEmojiConversionFailure` instead of generic :exc:`.BadArgument`
     """
 
-    async def convert(self, ctx: Context, argument: str) -> discord.PartialEmoji:
+    async def convert(self, ctx: Context[Any], argument: str) -> discord.PartialEmoji:
         match = re.match(r'<(a?):([a-zA-Z0-9\_]{1,32}):([0-9]{15,20})>$', argument)
 
         if match:
@@ -838,7 +838,7 @@ class GuildStickerConverter(IDConverter[discord.GuildSticker]):
     .. versionadded:: 2.0
     """
 
-    async def convert(self, ctx: Context, argument: str) -> discord.GuildSticker:
+    async def convert(self, ctx: Context[Any], argument: str) -> discord.GuildSticker:
         match = self._get_id_match(argument)
         result = None
         bot = ctx.bot
@@ -896,17 +896,17 @@ class clean_content(Converter[str]):
         self.escape_markdown = escape_markdown
         self.remove_markdown = remove_markdown
 
-    async def convert(self, ctx: Context, argument: str) -> str:
+    async def convert(self, ctx: Context[Any], argument: str) -> str:
         msg = ctx.message
 
         if ctx.guild:
 
-            def resolve_member(id: int) -> str:
-                m = _utils_get(msg.mentions, id=id) or ctx.guild.get_member(id)
+            def resolve_member(id: int) -> str:  # type: ignore
+                m = _utils_get(msg.mentions, id=id) or ctx.guild.get_member(id)  # type: ignore
                 return f'@{m.display_name if self.use_nicknames else m.name}' if m else '@deleted-user'
 
-            def resolve_role(id: int) -> str:
-                r = _utils_get(msg.role_mentions, id=id) or ctx.guild.get_role(id)
+            def resolve_role(id: int) -> str:  # type: ignore
+                r = _utils_get(msg.role_mentions, id=id) or ctx.guild.get_role(id)  # type: ignore
                 return f'@{r.name}' if r else '@deleted-role'
 
         else:
@@ -920,8 +920,8 @@ class clean_content(Converter[str]):
 
         if self.fix_channel_mentions and ctx.guild:
 
-            def resolve_channel(id: int) -> str:
-                c = ctx.guild.get_channel(id)
+            def resolve_channel(id: int) -> str:  # type: ignore
+                c = ctx.guild.get_channel(id)  # type: ignore
                 return f'#{c.name}' if c else '#deleted-channel'
 
         else:
@@ -997,7 +997,7 @@ class Greedy(List[T]):
             raise TypeError('Greedy[...] expects a type or a Converter instance.')
 
         if converter in (str, type(None)) or origin is Greedy:
-            raise TypeError(f'Greedy[{converter.__name__}] is invalid.')
+            raise TypeError(f'Greedy[{converter.__name__}] is invalid.')  # type: ignore
 
         if origin is Union and type(None) in args:
             raise TypeError(f'Greedy[{converter!r}] is invalid.')
@@ -1056,7 +1056,7 @@ CONVERTER_MAPPING: Dict[Type[Any], Any] = {
 }
 
 
-async def _actual_conversion(ctx: Context, converter, argument: str, param: inspect.Parameter):
+async def _actual_conversion(ctx: Context[Any], converter, argument: str, param: inspect.Parameter):
     if converter is bool:
         return _convert_to_bool(argument)
 
@@ -1073,9 +1073,9 @@ async def _actual_conversion(ctx: Context, converter, argument: str, param: insp
             if inspect.ismethod(converter.convert):
                 return await converter.convert(ctx, argument)
             else:
-                return await converter().convert(ctx, argument)
+                return await converter().convert(ctx, argument)  # type: ignore
         elif isinstance(converter, Converter):
-            return await converter.convert(ctx, argument)
+            return await converter.convert(ctx, argument)  # type: ignore
     except CommandError:
         raise
     except Exception as exc:
@@ -1094,7 +1094,7 @@ async def _actual_conversion(ctx: Context, converter, argument: str, param: insp
         raise BadArgument(f'Converting to "{name}" failed for parameter "{param.name}".') from exc
 
 
-async def run_converters(ctx: Context, converter, argument: str, param: inspect.Parameter):
+async def run_converters(ctx: Context[Any], converter, argument: str, param: inspect.Parameter):
     """|coro|
 
     Runs converters for a given converter, argument, and parameter.
