@@ -1067,12 +1067,12 @@ class DefaultHelpCommand(HelpCommand):
 
         await self.send_pages()
 
-    async def send_command_help(self, command):
+    async def send_command_help(self, command: Command) -> None:
         self.add_command_formatting(command)
         self.paginator.close_page()
         await self.send_pages()
 
-    async def send_group_help(self, group):
+    async def send_group_help(self, group: Group) -> None:
         self.add_command_formatting(group)
 
         filtered = await self.filter_commands(group.commands, sort=self.sort_commands)
@@ -1086,7 +1086,7 @@ class DefaultHelpCommand(HelpCommand):
 
         await self.send_pages()
 
-    async def send_cog_help(self, cog):
+    async def send_cog_help(self, cog: Cog) -> None:
         if cog.description:
             self.paginator.add_line(cog.description, empty=True)
 
