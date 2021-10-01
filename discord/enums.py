@@ -22,9 +22,11 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 """
 
+from __future__ import annotations
+
 import types
 from collections import namedtuple
-from typing import Any, ClassVar, Dict, List, Optional, TYPE_CHECKING, Type, TypeVar
+from typing import Any, ClassVar, Dict, List, Optional, TYPE_CHECKING, Type, TypeVar, Type, Tuple, NoReturn, Iterator, Mapping
 
 __all__ = (
     'Enum',
@@ -59,6 +61,9 @@ __all__ = (
 )
 
 
+EMT = TypeVar('EMT', bound='EnumMeta')
+
+
 def _create_value_cls(name, comparable):
     cls = namedtuple('_EnumValue_' + name, 'name value')
     cls.__repr__ = lambda self: f'<{name}.{self.name}: {self.value!r}>'  # type: ignore
@@ -81,7 +86,7 @@ class EnumMeta(type):
         _enum_member_map_: ClassVar[Dict[str, Any]]
         _enum_value_map_: ClassVar[Dict[Any, Any]]
 
-    def __new__(cls, name, bases, attrs, *, comparable: bool = False):
+    def __new__(cls: Type[EMT], name: str, bases: Tuple[Type, ...], attrs: Dict[str, Any], *, comparable: bool = False) -> EMT:
         value_mapping = {}
         member_mapping = {}
         member_names = []
@@ -119,38 +124,38 @@ class EnumMeta(type):
         value_cls._actual_enum_cls_ = actual_cls  # type: ignore
         return actual_cls
 
-    def __iter__(cls):
+    def __iter__(cls) -> Iterator[Any]:
         return (cls._enum_member_map_[name] for name in cls._enum_member_names_)
 
-    def __reversed__(cls):
+    def __reversed__(cls) -> Iterator[Any]:
         return (cls._enum_member_map_[name] for name in reversed(cls._enum_member_names_))
 
-    def __len__(cls):
+    def __len__(cls) -> int:
         return len(cls._enum_member_names_)
 
-    def __repr__(cls):
+    def __repr__(cls) -> str:
         return f'<enum {cls.__name__}>'
 
     @property
-    def __members__(cls):
+    def __members__(cls) -> Mapping[str, Any]:
         return types.MappingProxyType(cls._enum_member_map_)
 
-    def __call__(cls, value):
+    def __call__(cls, value: Any) -> Any:
         try:
             return cls._enum_value_map_[value]
         except (KeyError, TypeError):
             raise ValueError(f"{value!r} is not a valid {cls.__name__}")
 
-    def __getitem__(cls, key):
+    def __getitem__(cls, key: Any) -> Any:
         return cls._enum_member_map_[key]
 
-    def __setattr__(cls, name, value):
+    def __setattr__(cls, name: str, value: Any) -> NoReturn:
         raise TypeError('Enums are immutable.')
 
-    def __delattr__(cls, attr):
+    def __delattr__(cls, attr: str) -> NoReturn:
         raise TypeError('Enums are immutable')
 
-    def __instancecheck__(self, instance):
+    def __instancecheck__(self, instance: Any) -> bool:
         # isinstance(x, Y)
         # -> __instancecheck__(Y, x)
         try:
@@ -185,7 +190,7 @@ class ChannelType(Enum):
     private_thread = 12
     stage_voice = 13
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.name
 
 
@@ -240,7 +245,7 @@ class VoiceRegion(Enum):
     vip_us_west = 'vip-us-west'
     vip_amsterdam = 'vip-amsterdam'
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.value
 
 
@@ -250,10 +255,10 @@ class SpeakingState(Enum):
     soundshare = 2
     priority = 4
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.name
 
-    def __int__(self):
+    def __int__(self) -> int:
         return self.value
 
 
@@ -264,7 +269,7 @@ class VerificationLevel(Enum, comparable=True):
     high = 3
     highest = 4
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.name
 
 
@@ -273,7 +278,7 @@ class ContentFilter(Enum, comparable=True):
     no_role = 1
     all_members = 2
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.name
 
 
@@ -285,7 +290,7 @@ class Status(Enum):
     do_not_disturb = 'dnd'
     invisible = 'invisible'
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.value
 
 
@@ -297,7 +302,7 @@ class DefaultAvatar(Enum):
     orange = 3
     red = 4
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.name
 
 
@@ -474,7 +479,7 @@ class ActivityType(Enum):
     custom = 4
     competing = 5
 
-    def __int__(self):
+    def __int__(self) -> int:
         return self.value
 
 
@@ -545,7 +550,7 @@ class VideoQualityMode(Enum):
     auto = 1
     full = 2
 
-    def __int__(self):
+    def __int__(self) -> int:
         return self.value
 
 
@@ -554,7 +559,7 @@ class ComponentType(Enum):
     button = 2
     select = 3
 
-    def __int__(self):
+    def __int__(self) -> int:
         return self.value
 
 
@@ -573,7 +578,7 @@ class ButtonStyle(Enum):
     red = 4
     url = 5
 
-    def __int__(self):
+    def __int__(self) -> int:
         return self.value
 
 
@@ -595,7 +600,7 @@ class ApplicationCommandType(Enum):
     user = 2
     message = 3
 
-    def __int__(self):
+    def __int__(self) -> int:
         return self.value
 
 
@@ -611,7 +616,7 @@ class ApplicationCommandOptionType(Enum):
     mentionable = 9 # Includes users and roles
     number = 10 # Any double between -2^53 and 2^53
 
-    def __int__(self):
+    def __int__(self) -> int:
         return self.value
 
 
