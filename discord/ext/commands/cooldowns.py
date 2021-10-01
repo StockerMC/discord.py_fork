@@ -25,17 +25,20 @@ DEALINGS IN THE SOFTWARE.
 from __future__ import annotations
 
 
-from typing import Any, Callable, Deque, Dict, Optional, Type, TypeVar, TYPE_CHECKING
+from typing import Any, Callable, Deque, Dict, Optional, Type, TypeVar, TYPE_CHECKING, Generic, Union
 from discord.enums import Enum
 import time
 import asyncio
 from collections import deque
 
-from ...abc import PrivateChannel
+from discord.abc import PrivateChannel
 from .errors import MaxConcurrencyReached
 
 if TYPE_CHECKING:
-    from ...message import Message
+    from discord.message import Message
+
+    T = TypeVar('T')
+
 
 __all__ = (
     'BucketType',
@@ -45,7 +48,7 @@ __all__ = (
     'MaxConcurrency',
 )
 
-C = TypeVar('C', bound='CooldownMapping')
+T = TypeVar('T')
 MC = TypeVar('MC', bound='MaxConcurrency')
 
 class BucketType(Enum):
@@ -192,18 +195,18 @@ class Cooldown:
     def __repr__(self) -> str:
         return f'<Cooldown rate: {self.rate} per: {self.per} window: {self._window} tokens: {self._tokens}>'
 
-class CooldownMapping:
+class CooldownMapping(Generic[T]):
     def __init__(
         self,
         original: Optional[Cooldown],
-        type: Callable[[Message], Any],
+        type: Callable[[T], Any],
     ) -> None:
         if not callable(type):
             raise TypeError('Cooldown type must be a BucketType or callable')
 
         self._cache: Dict[Any, Cooldown] = {}
         self._cooldown: Optional[Cooldown] = original
-        self._type: Callable[[Message], Any] = type
+        self._type: Callable[[T], Any] = type
 
     def copy(self) -> CooldownMapping:
         ret = CooldownMapping(self._cooldown, self._type)
@@ -215,15 +218,15 @@ class CooldownMapping:
         return self._cooldown is not None
 
     @property
-    def type(self) -> Callable[[Message], Any]:
+    def type(self) -> Callable[[T], Any]:
         return self._type
 
     @classmethod
-    def from_cooldown(cls: Type[C], rate, per, type) -> C:
+    def from_cooldown(cls, rate: float, per: float, type: Callable[[T], Any]) -> CooldownMapping[T]:
         return cls(Cooldown(rate, per), type)
 
-    def _bucket_key(self, msg: Message) -> Any:
-        return self._type(msg)
+    def _bucket_key(self, arg: T) -> Any:
+        return self._type(arg)
 
     def _verify_cache_integrity(self, current: Optional[float] = None) -> None:
         # we want to delete all cache objects that haven't been used
@@ -234,17 +237,17 @@ class CooldownMapping:
         for k in dead_keys:
             del self._cache[k]
 
-    def create_bucket(self, message: Message) -> Cooldown:
+    def create_bucket(self, arg: T) -> Cooldown:
         return self._cooldown.copy()  # type: ignore
 
-    def get_bucket(self, message: Message, current: Optional[float] = None) -> Cooldown:
+    def get_bucket(self, arg: T, current: Optional[float] = None) -> Cooldown:
         if self._type is BucketType.default:
             return self._cooldown  # type: ignore
 
         self._verify_cache_integrity(current)
-        key = self._bucket_key(message)
+        key = self._bucket_key(arg)
         if key not in self._cache:
-            bucket = self.create_bucket(message)
+            bucket = self.create_bucket(arg)
             if bucket is not None:
                 self._cache[key] = bucket
         else:
@@ -252,19 +255,19 @@ class CooldownMapping:
 
         return bucket
 
-    def update_rate_limit(self, message: Message, current: Optional[float] = None) -> Optional[float]:
-        bucket = self.get_bucket(message, current)
+    def update_rate_limit(self, arg: T, current: Optional[float] = None) -> Optional[float]:
+        bucket = self.get_bucket(arg, current)
         return bucket.update_rate_limit(current)
 
-class DynamicCooldownMapping(CooldownMapping):
+class DynamicCooldownMapping(CooldownMapping, Generic[T]):
 
     def __init__(
         self,
-        factory: Callable[[Message], Cooldown],
-        type: Callable[[Message], Any]
+        factory: Callable[[T], Cooldown],
+        type: Callable[[T], Any]
     ) -> None:
         super().__init__(None, type)
-        self._factory: Callable[[Message], Cooldown] = factory
+        self._factory: Callable[[T], Cooldown] = factory
 
     def copy(self) -> DynamicCooldownMapping:
         ret = DynamicCooldownMapping(self._factory, self._type)
@@ -275,8 +278,8 @@ class DynamicCooldownMapping(CooldownMapping):
     def valid(self) -> bool:
         return True
 
-    def create_bucket(self, message: Message) -> Cooldown:
-        return self._factory(message)
+    def create_bucket(self, arg: T) -> Cooldown:
+        return self._factory(arg)
 
 class _Semaphore:
     """This class is a version of a semaphore.
