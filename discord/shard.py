@@ -41,7 +41,7 @@ from .errors import (
     PrivilegedIntentsRequired,
 )
 
-from .enums import Status
+from .enums import Status, Enum
 
 from typing import TYPE_CHECKING, Any, Callable, Tuple, Type, Optional, List, Dict, TypeVar
 
@@ -60,7 +60,7 @@ __all__ = (
 _log = logging.getLogger(__name__)
 
 
-class EventType:
+class EventType(Enum):
     close = 0
     reconnect = 1
     resume = 2
@@ -72,8 +72,8 @@ class EventType:
 class EventItem:
     __slots__ = ('type', 'shard', 'error')
 
-    def __init__(self, etype: int, shard: Optional['Shard'], error: Optional[Exception]) -> None:
-        self.type: int = etype
+    def __init__(self, etype: EventType, shard: Optional['Shard'], error: Optional[Exception]) -> None:
+        self.type: int = etype.value
         self.shard: Optional['Shard'] = shard
         self.error: Optional[Exception] = error
 
