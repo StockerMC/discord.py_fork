@@ -359,7 +359,7 @@ class BotIntegration(Integration):
 
     def _from_data(self, data: BotIntegrationPayload) -> None:
         super()._from_data(data)
-        self.application = IntegrationApplication(data=data['application'], state=self._state)
+        self.application: IntegrationApplication = IntegrationApplication(data=data['application'], state=self._state)
 
 
 def _integration_factory(value: str) -> Tuple[Type[Integration], str]:
