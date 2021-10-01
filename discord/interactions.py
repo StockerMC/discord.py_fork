@@ -63,6 +63,7 @@ if TYPE_CHECKING:
     from .ui.view import View
     from .channel import VoiceChannel, StageChannel, TextChannel, CategoryChannel, StoreChannel, PartialMessageable
     from .threads import Thread
+    from .client import Client
 
     InteractionChannel = Union[
         VoiceChannel, StageChannel, TextChannel, CategoryChannel, StoreChannel, Thread, PartialMessageable
@@ -100,6 +101,8 @@ class Interaction:
         for 15 minutes.
     data: :class:`dict`
         The raw interaction data.
+    client: :class:`Client`
+        The client of the executed interaction.
     """
 
     __slots__: Tuple[str, ...] = (
@@ -113,6 +116,7 @@ class Interaction:
         'user',
         'token',
         'version',
+        'client',
         '_permissions',
         '_state',
         '_session',
@@ -124,6 +128,7 @@ class Interaction:
 
     def __init__(self, *, data: InteractionPayload, state: ConnectionState):
         self._state: ConnectionState = state
+        self.client: Client = state._get_client()
         self._session: ClientSession = state.http._HTTPClient__session  # type: ignore
         self._original_message: Optional[InteractionMessage] = None
         self._from_data(data)
