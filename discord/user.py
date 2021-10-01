@@ -71,18 +71,6 @@ class BaseUser(_UserTag):
         '_state',
     )
 
-    if TYPE_CHECKING:
-        name: str
-        id: int
-        discriminator: str
-        bot: bool
-        system: bool
-        _state: ConnectionState
-        _avatar: Optional[str]
-        _banner: Optional[str]
-        _accent_colour: Optional[int]
-        _public_flags: int
-
     def __init__(self, *, state: ConnectionState, data: Union[UserPayload, PartialUserPayload]) -> None:
         self._state: ConnectionState = state
         self._update(data)
@@ -106,15 +94,15 @@ class BaseUser(_UserTag):
         return self.id >> 22
 
     def _update(self, data: Union[UserPayload, PartialUserPayload]) -> None:
-        self.name = data['username']
-        self.id = int(data['id'])
-        self.discriminator = data['discriminator']
-        self._avatar = data['avatar']
-        self._banner = data.get('banner', None)
-        self._accent_colour = data.get('accent_color', None)
-        self._public_flags = data.get('public_flags', 0)
-        self.bot = data.get('bot', False)
-        self.system = data.get('system', False)
+        self.name: str = data['username']
+        self.id: int = int(data['id'])
+        self.discriminator: str = data['discriminator']
+        self._avatar: Optional[str] = data['avatar']
+        self._banner: Optional[str] = data.get('banner', None)
+        self._accent_colour: Optional[int] = data.get('accent_color', None)
+        self._public_flags: int = data.get('public_flags', 0)
+        self.bot: bool = data.get('bot', False)
+        self.system: bool = data.get('system', False)
 
     @classmethod
     def _copy(cls: Type[BU], user: BU) -> BU:
