@@ -796,11 +796,12 @@ class DiscordVoiceWebSocket:
     async def _hook(self, *args: Any) -> Any:
         pass
 
-    async def send_as_json(self, data) -> None:
+    async def send_as_json(self, data: Any) -> None:
         log.debug('Sending voice websocket frame: %s.', data)
         await self.ws.send_str(utils._to_json(data))
 
-    send_heartbeat = send_as_json
+    async def send_heartbeat(self, data: Any) -> None:
+        return await self.send_as_json(data)
 
     async def resume(self) -> None:
         state = self._connection
