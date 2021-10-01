@@ -329,7 +329,7 @@ class PartialMessageConverter(Converter[discord.PartialMessage]):
     """
 
     @staticmethod
-    def _get_id_matches(ctx: Context[Any], argument: str) -> Tuple[Optional[int], int, Optional[int]]:
+    def _get_id_matches(ctx: Context[Any], argument: str) -> Tuple[Optional[int], int, int]:
         id_regex = re.compile(r'(?:(?P<channel_id>[0-9]{15,20})-)?(?P<message_id>[0-9]{15,20})$')
         link_regex = re.compile(
             r'https?://(?:(ptb|canary|www)\.)?discord(?:app)?\.com/channels/'
@@ -339,16 +339,22 @@ class PartialMessageConverter(Converter[discord.PartialMessage]):
         match = id_regex.match(argument) or link_regex.match(argument)
         if not match:
             raise MessageNotFound(argument)
+
         data = match.groupdict()
         channel_id = discord.utils._get_as_snowflake(data, 'channel_id')
         message_id = int(data['message_id'])
         guild_id = data.get('guild_id')
+
         if guild_id is None:
             guild_id = ctx.guild and ctx.guild.id
         elif guild_id == '@me':
             guild_id = None
         else:
             guild_id = int(guild_id)
+
+        if channel_id is None:
+            channel_id = ctx.channel.id
+
         return guild_id, message_id, channel_id
 
     @staticmethod
@@ -366,7 +372,7 @@ class PartialMessageConverter(Converter[discord.PartialMessage]):
         guild_id, message_id, channel_id = self._get_id_matches(ctx, argument)
         channel = self._resolve_channel(ctx, guild_id, channel_id)
         if not channel:
-            raise ChannelNotFound(channel_id)  # type: ignore
+            raise ChannelNotFound(str(channel_id))
         return discord.PartialMessage(channel=channel, id=message_id)
 
 
@@ -392,7 +398,7 @@ class MessageConverter(IDConverter[discord.Message]):
             return message
         channel = PartialMessageConverter._resolve_channel(ctx, guild_id, channel_id)
         if not channel:
-            raise ChannelNotFound(channel_id)  # type: ignore
+            raise ChannelNotFound(str(channel_id))
         try:
             return await channel.fetch_message(message_id)
         except discord.NotFound:
