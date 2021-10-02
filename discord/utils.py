@@ -509,6 +509,11 @@ def _parse_ratelimit_header(request: _RequestLike, *, use_clock: bool = False) -
     else:
         return float(reset_after)
 
+@overload
+async def maybe_coroutine(f: Callable[P, T], *args: P.args, **kwargs: P.kwargs) -> T: ...
+
+@overload
+async def maybe_coroutine(f: Callable[P, Awaitable[T]], *args: P.args, **kwargs: P.kwargs) -> T: ...
 
 async def maybe_coroutine(f, *args, **kwargs):
     value = f(*args, **kwargs)
