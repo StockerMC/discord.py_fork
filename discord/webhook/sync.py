@@ -575,7 +575,7 @@ class SyncWebhook(BaseWebhook):
         state: Optional[Union[ConnectionState, _WebhookState]] = None
     ) -> None:
         super().__init__(data, token, state)
-        self.session = session
+        self.session: Session = session
 
     def __repr__(self) -> str:
         return f'<Webhook id={self.id!r}>'

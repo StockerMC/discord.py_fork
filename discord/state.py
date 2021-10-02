@@ -1577,9 +1577,9 @@ class AutoShardedConnectionState(ConnectionState):
         if not hasattr(self, '_ready_state'):
             self._ready_state = asyncio.Queue()
 
-        self.user = user = ClientUser(state=self, data=data['user'])
+        self.user: ClientUser = ClientUser(state=self, data=data['user'])
         # self._users is a list of Users, we're setting a ClientUser
-        self._users[user.id] = user  # type: ignore
+        self._users[user.id] = self.user  # type: ignore
 
         if self.application_id is None:
             try:
@@ -1587,8 +1587,8 @@ class AutoShardedConnectionState(ConnectionState):
             except KeyError:
                 pass
             else:
-                self.application_id = utils._get_as_snowflake(application, 'id')
-                self.application_flags = ApplicationFlags._from_value(application['flags'])
+                self.application_id: Optional[int] = utils._get_as_snowflake(application, 'id')
+                self.application_flags: ApplicationFlags = ApplicationFlags._from_value(application['flags'])
 
         for guild_data in data['guilds']:
             self._add_guild_from_data(guild_data)
