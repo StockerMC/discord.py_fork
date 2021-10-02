@@ -59,7 +59,6 @@ from .stage_instance import StageInstance
 from .threads import Thread, ThreadMember
 from .sticker import GuildSticker
 from .application_commands import (
-    BaseApplicationCommand,
     SlashCommandResponse,
     MessageCommandResponse,
     UserCommandResponse,
@@ -724,7 +723,7 @@ class ConnectionState:
                 # TODO: default target to an `Object` if it wasn't resolved?
 
                 if application_command_type == 1:  # slash command
-                    command_options = list(command.__application_command_options__.values())
+                    command_options = list(used_command.__application_command_options__.values())
                     options = ApplicationCommandOptions(
                         guild_id=guild_id,
                         options=application_command_data.get('options'),
