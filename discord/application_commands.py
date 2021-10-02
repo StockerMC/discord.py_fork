@@ -275,7 +275,7 @@ class ApplicationCommandOption:
         required: bool = MISSING,
         choices: List[ApplicationCommandOptionChoice] = [],
         options: Optional[List[ApplicationCommandOption]] = None,
-        default: Optional[ApplicationCommandOptionDefault] = None,
+        default: Optional[Union[ApplicationCommandOptionDefault, Any]] = None,
         channel_types: List[ChannelType] = [],
     ) -> None:
         self.type: ApplicationCommandOptionType = type
@@ -284,7 +284,7 @@ class ApplicationCommandOption:
         self.required: bool = required
         self.choices: List[ApplicationCommandOptionChoice] = choices
         self.options: Optional[List[ApplicationCommandOption]] = options
-        self.default: Optional[ApplicationCommandOptionDefault] = default
+        self.default: Optional[Union[ApplicationCommandOptionDefault, Any]] = default
         self.channel_types: List[ChannelType] = channel_types
 
     def __repr__(self) -> str:
@@ -319,7 +319,7 @@ def application_command_option(
     type: Union[ApplicationCommandOptionType, ValidOptionTypes] = MISSING,
     required: bool = True,
     choices: List[ApplicationCommandOptionChoice] = [],
-    default: Optional[Union[ApplicationCommandOptionDefault, Type[ApplicationCommandOptionDefault]]] = None,
+    default: Optional[Union[ApplicationCommandOptionDefault, Type[ApplicationCommandOptionDefault], Any]] = None,
 ) -> Any:
     """Used for creating an option for an application command.
 
@@ -365,15 +365,8 @@ def application_command_option(
                 raise TypeError(f'choices must only contain ApplicationCommandOptionChoice instances, not {choice.__class__.__name__}')
 
     if default is not None:
-        if not hasattr(default, '__discord_application_command_option_default__'):
-            raise TypeError('default must derive from ApplicationCommandOptionDefault')
-
-        if inspect.isclass(default):
-
+        if hasattr(default, '__discord_application_command_option_default__') and inspect.isclass(default):
             default = default()
-
-        if not inspect.isclass(default) and not isinstance(default, ApplicationCommandOptionDefault):
-            raise TypeError('default must derive from ApplicationCommandOptionDefault')
 
     return ApplicationCommandOption(
         name=name,
@@ -865,9 +858,13 @@ class BaseApplicationCommand:
         try:
             if isinstance(response, SlashCommandResponse):
                 for option in self.__application_command_options__.values():
-                    if not option.required and option.default is not None and getattr(response.options, option.name, None) is None:
-                        resolved_default = await option.default.default(response)
-                        setattr(response.options, option.name, resolved_default)
+                    default = option.default
+                    # check if the option is optional, a default was set and that a value wasn't provided
+                    if not option.required and default is not None and getattr(response.options, option.name, None) is None:
+                        if isinstance(default, ApplicationCommandOptionDefault):
+                            default = await default.default(response)
+
+                        setattr(response.options, option.name, default)
 
             # the response type is correct
             global_allow = await async_all(f(response) for f in client._application_command_checks)  # type: ignore
