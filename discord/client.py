@@ -94,6 +94,8 @@ if TYPE_CHECKING:
     T = TypeVar('T')
 
     ApplicationCommand = Union[SlashCommand, MessageCommand, UserCommand]
+    AT = TypeVar('AT', bound=ApplicationCommand)
+
     Check = Union[
         Callable[[SlashCommandResponse], Union[bool, Coroutine[Any, Any, bool]]],
         Callable[[UserCommandResponse], Union[bool, Coroutine[Any, Any, bool]]],
@@ -2332,3 +2334,25 @@ class Client:
         # T was used instead of Check to ensure the type matches on return
         self.add_application_command_check(func)  # type: ignore
         return func
+
+    def application_command(self, cls: Type[AT]) -> Type[AT]:
+        r"""A decorator that adds an application command to the client.
+
+        The class being decorated must subclass :class:`SlashCommand`\, :class:`MessageCommand` or :class:`UserCommand`.
+
+        This decorator is a shortcut method to :meth:`add_application_command` that passes an instantiated version
+        of the decorated class.
+
+        .. note::
+
+            If you need to pass parameters to the ``__init__`` of the class\,
+            call :meth:`add_application_command` yourself.
+
+        Raises
+        ------
+        TypeError
+            The application command passed is not an application command instance.
+        """
+
+        self.add_application_command(cls())
+        return cls

@@ -40,12 +40,15 @@ Client
 
 .. autoclass:: Client
     :members:
-    :exclude-members: fetch_guilds, event, listen
+    :exclude-members: fetch_guilds, event, listen, application_command
 
     .. automethod:: Client.event()
         :decorator:
 
     .. automethod:: Client.listen()
+        :decorator:
+
+    .. automethod:: Client.application_command()
         :decorator:
 
     .. automethod:: Client.fetch_guilds
