@@ -689,9 +689,9 @@ class Client:
                 app = await self.application_info()
                 # cache the information from application_info
                 self._connection.application_id = application_id = app.id
-                if app.team:
+                if app.team and not self.owner_ids:
                     self.owner_ids = {m.id for m in app.team.members}
-                else:
+                elif not self.owner_id:
                     self.owner_id = app.owner.id
 
             guild_payloads = collections.defaultdict(list)
