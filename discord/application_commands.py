@@ -381,7 +381,7 @@ def _transform_literal_choices(
     attr_name: str,
     attr_type: ApplicationCommandOptionType,
     annotation: Any
-) -> Tuple[Union[Type[str], Type[int], Type[float]], List[ApplicationCommandOptionChoice]]:
+) -> Tuple[Type[Any], List[ApplicationCommandOptionChoice]]:
     annotation_type = MISSING
     choices: List[ApplicationCommandOptionChoice] = []
     for arg in annotation.__args__:
@@ -419,9 +419,10 @@ def _get_options(
             origin = getattr(annotation, '__origin__', None)
 
             if origin is Union:
-                args = annotation.__args__
+                args = list(annotation.__args__)
                 if type(None) in args:
                     attr.required = False
+                    args.remove(type(None))
 
                 for arg in args:
                     nested_origin = getattr(arg, '__origin__', None)
@@ -433,6 +434,8 @@ def _get_options(
                     channel_type = CHANNEL_TO_CHANNEL_TYPE.get(arg)
                     if channel_type is not None:
                         attr.channel_types.append(channel_type)
+
+                annotation = args[0]
 
             elif origin is Literal:
                 choices = _transform_literal_choices(attr_name, attr.type, annotation)
