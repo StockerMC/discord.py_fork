@@ -174,8 +174,6 @@ class ConnectionState:
         self._ready_task: Optional[asyncio.Task] = None
         self.application_id: Optional[int] = utils._get_as_snowflake(options, 'application_id')
         self.heartbeat_timeout: float = options.get('heartbeat_timeout', 60.0)
-        # command id: command
-        self.application_commands: Dict[str, BaseApplicationCommand] = {}
         self.guild_ready_timeout: float = options.get('guild_ready_timeout', 2.0)
         if self.guild_ready_timeout < 0:
             raise ValueError('guild_ready_timeout cannot be negative')
@@ -718,15 +716,10 @@ class ConnectionState:
             resolved_data = application_command_data.get('resolved')
             guild_id = utils._get_as_snowflake(data, 'guild_id')
             target_id = application_command_data.get('target_id')
-            command_id = application_command_data['id']
-            used_command = self.application_commands.get(command_id)
             for command in client._application_commands.values():
+                used_command = command._get_used_command(application_command_data, guild_id)
                 if used_command is None:
-                    used_command = command._get_used_command(application_command_data, guild_id)
-                    if used_command is None:
-                        continue
-
-                    self.application_commands[command_id] = used_command
+                    continue
 
                 # TODO: default target to an `Object` if it wasn't resolved?
 
