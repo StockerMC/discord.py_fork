@@ -30,5 +30,6 @@ class Roles(discord.SlashCommand, parent=Show):
         await response.send_message(embed=embed, ephemeral=True)
 
 client = MyClient()
+# we can't use the `client.application_command` decorator for parent commands
 client.add_application_command(Show())
 client.run('token')

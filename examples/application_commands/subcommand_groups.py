@@ -34,5 +34,6 @@ class Get(discord.SlashCommand, parent=User):
         await response.send_message(embed=embed, ephemeral=True)
 
 client = MyClient()
+# we can't use the `client.application_command` decorator for parent commands
 client.add_application_command(Permissions())
 client.run('token')

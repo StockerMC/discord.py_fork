@@ -13,8 +13,11 @@ class AuthorDefault(discord.ApplicationCommandOptionDefault):
     async def default(self, response: discord.SlashCommandResponse):
         return response.user
 
+client = MyClient()
+
 # setting `guild_ids` in development is better when possible because
 # registering global commands has a 1 hour delay
+@client.application_command
 class Avatar(discord.SlashCommand, guild_ids=[123]):
     """Get the avatar of the provided user or yourself"""
 
@@ -26,6 +29,4 @@ class Avatar(discord.SlashCommand, guild_ids=[123]):
         avatar = response.options.user.display_avatar.url
         await response.send_message(avatar, ephemeral=True)
 
-client = MyClient()
-client.add_application_command(Avatar())
 client.run('token')

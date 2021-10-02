@@ -8,8 +8,11 @@ class MyClient(discord.Client):
         print(f'Logged in as {self.user} (ID: {self.user.id})')
         print('------')
 
+client = MyClient()
+
 # setting `guild_ids` in development is better when possible because
 # registering global commands has a 1 hour delay
+@client.application_command
 class Info(discord.MessageCommand, guild_ids=[123]):
     async def callback(self, response: discord.MessageCommandResponse):
         # the target of a MessageCommand is the message the command was used on
@@ -18,6 +21,4 @@ class Info(discord.MessageCommand, guild_ids=[123]):
         author = response.target.author
         await response.send_message(f'Message by {author.mention}: {content}', ephemeral=True)
 
-client = MyClient()
-client.add_application_command(Info())
 client.run('token')
