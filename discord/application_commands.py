@@ -220,7 +220,7 @@ class ApplicationCommandOptionChoice:
         self.value: Union[str, int, float] = value
 
     def __repr__(self) -> str:
-        return f'<ApplicationCommandOption name={self.name!r} value={self.value!r}>'
+        return f'<ApplicationCommandOptionChoice name={self.name!r} value={self.value!r}>'
 
     def to_dict(self) -> ApplicationCommandOptionChoicePayload:
         return {
