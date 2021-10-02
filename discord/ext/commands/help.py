@@ -202,7 +202,7 @@ class _HelpCommandImpl(Command):
         self._original: HelpCommand = inject
         self._injected: HelpCommand = inject
 
-    async def prepare(self, ctx: Context) -> None:
+    async def prepare(self, ctx: Context[Any]) -> None:
         self._injected = injected = self._original.copy()
         injected.context = ctx
         self.callback = injected.command_callback
@@ -216,7 +216,7 @@ class _HelpCommandImpl(Command):
 
         await super().prepare(ctx)
 
-    async def _parse_arguments(self, ctx: Context) -> None:
+    async def _parse_arguments(self, ctx: Context[Any]) -> None:
         # Make the parser think we don't have a cog so it doesn't
         # inject the parameter into `ctx.args`.
         original_cog = self.cog
@@ -226,7 +226,7 @@ class _HelpCommandImpl(Command):
         finally:
             self.cog = original_cog
 
-    async def _on_error_cog_implementation(self, dummy: Cog, ctx: Context, error: CommandError) -> None:
+    async def _on_error_cog_implementation(self, dummy: Cog, ctx: Context[Any], error: CommandError) -> None:
         await self._injected.on_help_command_error(ctx, error)
 
     @property
@@ -341,7 +341,7 @@ class HelpCommand:
         self.command_attrs: Dict[str, Any] = command_attrs
         self.command_attrs.setdefault('name', 'help')
         self.command_attrs.setdefault('help', 'Shows this message')
-        self.context: Context = discord.utils.MISSING
+        self.context: Context[Any] = discord.utils.MISSING
         self._command_impl: _HelpCommandImpl = _HelpCommandImpl(self, **self.command_attrs)
 
     def copy(self: HCT) -> HCT:
@@ -657,7 +657,7 @@ class HelpCommand:
         await destination.send(error)
 
     @_not_overriden
-    async def on_help_command_error(self, ctx: Context, error: CommandError) -> None:
+    async def on_help_command_error(self, ctx: Context[Any], error: CommandError) -> None:
         """|coro|
 
         The help command's error handler, as specified by :ref:`ext_commands_error_handler`.
@@ -800,7 +800,7 @@ class HelpCommand:
         """
         return None
 
-    async def prepare_help_command(self, ctx: Context, command: Optional[str] = None) -> None:
+    async def prepare_help_command(self, ctx: Context[Any], command: Optional[str] = None) -> None:
         """|coro|
 
         A low level method that can be used to prepare the help command
@@ -824,7 +824,7 @@ class HelpCommand:
         """
         pass
 
-    async def command_callback(self, ctx: Context, *, command: Optional[str] = None) -> None:
+    async def command_callback(self, ctx: Context[Any], *, command: Optional[str] = None) -> None:
         """|coro|
 
         The actual implementation of the help command.
@@ -1033,7 +1033,7 @@ class DefaultHelpCommand(HelpCommand):
         else:
             return ctx.channel
 
-    async def prepare_help_command(self, ctx: Context, command: str) -> None:
+    async def prepare_help_command(self, ctx: Context[Any], command: str) -> None:
         self.paginator.clear()
         await super().prepare_help_command(ctx, command)
 
@@ -1285,7 +1285,7 @@ class MinimalHelpCommand(HelpCommand):
         else:
             return ctx.channel
 
-    async def prepare_help_command(self, ctx: Context, command: str) -> None:
+    async def prepare_help_command(self, ctx: Context[Any], command: str) -> None:
         self.paginator.clear()
         await super().prepare_help_command(ctx, command)
 
