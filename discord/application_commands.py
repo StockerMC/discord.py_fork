@@ -26,7 +26,23 @@ from __future__ import annotations
 
 import inspect
 import sys
-from typing import TYPE_CHECKING, Type, Any, Dict, TypeVar, List, Optional, Union, ClassVar, Tuple, Callable, Protocol, Coroutine, Final, Literal
+from typing import (
+    TYPE_CHECKING,
+    Type,
+    Any,
+    Dict,
+    TypeVar,
+    List,
+    Optional,
+    Union,
+    ClassVar,
+    Tuple,
+    Callable,
+    Protocol,
+    Coroutine,
+    Final,
+    Literal,
+)
 
 from operator import attrgetter
 from .enums import ApplicationCommandType, ApplicationCommandOptionType, InteractionType, ChannelType
