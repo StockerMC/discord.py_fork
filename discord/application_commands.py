@@ -26,7 +26,7 @@ from __future__ import annotations
 
 import inspect
 import sys
-from typing import TYPE_CHECKING, Type, Any, Dict, TypeVar, List, Optional, Union, ClassVar, Tuple, Callable, Protocol, Coroutine, Final
+from typing import TYPE_CHECKING, Type, Any, Dict, TypeVar, List, Optional, Union, ClassVar, Tuple, Callable, Protocol, Coroutine, Final, Literal
 
 from operator import attrgetter
 from .enums import ApplicationCommandType, ApplicationCommandOptionType, InteractionType, ChannelType
@@ -219,6 +219,9 @@ class ApplicationCommandOptionChoice:
         self.name: str = name
         self.value: Union[str, int, float] = value
 
+    def __repr__(self) -> str:
+        return f'<ApplicationCommandOption name={self.name!r} value={self.value!r}>'
+
     def to_dict(self) -> ApplicationCommandOptionChoicePayload:
         return {
             'name': self.name,
@@ -270,7 +273,7 @@ class ApplicationCommandOption:
         name: str,
         description: str,
         required: bool = MISSING,
-        choices: Optional[List[ApplicationCommandOptionChoice]] = None,
+        choices: List[ApplicationCommandOptionChoice] = [],
         options: Optional[List[ApplicationCommandOption]] = None,
         default: Optional[ApplicationCommandOptionDefault] = None,
         channel_types: List[ChannelType] = [],
@@ -279,7 +282,7 @@ class ApplicationCommandOption:
         self.name: str = name
         self.description: str = description
         self.required: bool = required
-        self.choices: Optional[List[ApplicationCommandOptionChoice]] = choices
+        self.choices: List[ApplicationCommandOptionChoice] = choices
         self.options: Optional[List[ApplicationCommandOption]] = options
         self.default: Optional[ApplicationCommandOptionDefault] = default
         self.channel_types: List[ChannelType] = channel_types
@@ -315,7 +318,7 @@ def application_command_option(
     name: str = MISSING,
     type: Union[ApplicationCommandOptionType, ValidOptionTypes] = MISSING,
     required: bool = True,
-    choices: Optional[List[ApplicationCommandOptionChoice]] = None,
+    choices: List[ApplicationCommandOptionChoice] = [],
     default: Optional[Union[ApplicationCommandOptionDefault, Type[ApplicationCommandOptionDefault]]] = None,
 ) -> Any:
     """Used for creating an option for an application command.
@@ -341,7 +344,7 @@ def application_command_option(
     required: :class:`bool`
         Whether the option is required or not.
         Defaults to ``True``.
-    choices: Optional[List[:class:`ApplicationCommandOptionChoice`]]
+    choices: List[:class:`ApplicationCommandOptionChoice`]
         The choices of the option.
     default: Optional[Union[:class:`ApplicationCommandOptionDefault`, Type[:class:`ApplicationCommandOptionDefault`]]]
         The default of the option for when it's accessed with it's relevant :class:`ApplicationCommandOptions` instance.
@@ -362,7 +365,7 @@ def application_command_option(
                 raise TypeError(f'choices must only contain ApplicationCommandOptionChoice instances, not {choice.__class__.__name__}')
 
     if default is not None:
-        if not hasattr(default, '__discord_application_command_option__default'):
+        if not hasattr(default, '__discord_application_command_option_default__'):
             raise TypeError('default must derive from ApplicationCommandOptionDefault')
 
         if inspect.isclass(default):
@@ -380,6 +383,30 @@ def application_command_option(
         choices=choices,
         default=default,
     )
+
+def _transform_literal_choices(
+    attr_name: str,
+    attr_type: ApplicationCommandOptionType,
+    annotation: Any
+) -> Tuple[Union[Type[str], Type[int], Type[float]], List[ApplicationCommandOptionChoice]]:
+    annotation_type = MISSING
+    choices: List[ApplicationCommandOptionChoice] = []
+    for arg in annotation.__args__:
+        arg_type = type(arg)
+        if arg_type not in (str, int, float):
+            raise TypeError(f'The choice of an option must be either a str, int or float not {type(arg_type)!r}.')
+
+        if annotation_type is not MISSING and arg_type is not annotation_type:
+            raise TypeError(f'The choices for the option {attr_name!r} must be the same type (str, int or float).')
+
+        if attr_type is not MISSING and arg_type is not annotation_type:
+            raise TypeError(f'The type of the choices of the option must be the same as the type of the option.')
+
+        annotation_type = arg_type
+        choices.append(ApplicationCommandOptionChoice(name=str(arg), value=arg))
+
+    return (annotation_type, choices)
+
 
 def _get_options(
     attr_namespace: Dict[str, Any],
@@ -404,9 +431,20 @@ def _get_options(
                     attr.required = False
 
                 for arg in args:
+                    nested_origin = getattr(arg, '__origin__', None)
+                    if nested_origin is Literal:
+                        choices = _transform_literal_choices(attr_name, attr.type, arg)
+                        annotation = choices[0]
+                        attr.choices.extend(choices[1])
+
                     channel_type = CHANNEL_TO_CHANNEL_TYPE.get(arg)
                     if channel_type is not None:
                         attr.channel_types.append(channel_type)
+
+            elif origin is Literal:
+                choices = _transform_literal_choices(attr_name, attr.type, annotation)
+                annotation = choices[0]
+                attr.choices.extend(choices[1])
 
             resolved_option_type = _resolve_option_type(annotation)
 
