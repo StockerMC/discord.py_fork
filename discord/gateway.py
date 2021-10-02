@@ -24,7 +24,22 @@ DEALINGS IN THE SOFTWARE.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, TypedDict, Any, Optional, List, TypeVar, Type, Dict, Callable, Coroutine, NamedTuple, Deque
+from typing import (
+    TYPE_CHECKING,
+    TypedDict,
+    Any,
+    Optional,
+    List,
+    TypeVar,
+    Type,
+    Dict,
+    Callable,
+    Coroutine,
+    NamedTuple,
+    Deque,
+    Final,
+    Literal,
+)
 
 import asyncio
 from collections import deque
@@ -79,7 +94,7 @@ class ReconnectWebSocket(Exception):
     def __init__(self, shard_id: Optional[int], *, resume: bool = True) -> None:
         self.shard_id: Optional[int] = shard_id
         self.resume: bool = resume
-        self.op = 'RESUME' if resume else 'IDENTIFY'
+        self.op: Literal['RESUME', 'IDENTIFY'] = 'RESUME' if resume else 'IDENTIFY'
 
 
 class WebSocketClosure(Exception):
@@ -141,7 +156,7 @@ class KeepAliveHandler(threading.Thread):
         ws = kwargs.pop('ws')
         interval = kwargs.pop('interval', None)
         shard_id = kwargs.pop('shard_id', None)
-        threading.Thread.__init__(self, *args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.ws: DiscordWebSocket = ws
         self._main_thread_id: int = ws.thread_id
         self.interval: Optional[float] = interval
@@ -223,9 +238,9 @@ class VoiceKeepAliveHandler(KeepAliveHandler):
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
         self.recent_ack_latencies: Deque[float] = deque(maxlen=20)
-        self.msg = 'Keeping shard ID %s voice websocket alive with timestamp %s.'
-        self.block_msg = 'Shard ID %s voice heartbeat blocked for more than %s seconds'
-        self.behind_msg = 'High socket latency, shard ID %s heartbeat is %.1fs behind'
+        self.msg: Final[str] = 'Keeping shard ID %s voice websocket alive with timestamp %s.'
+        self.block_msg: Final[str] = 'Shard ID %s voice heartbeat blocked for more than %s seconds'
+        self.behind_msg: Final[str] = 'High socket latency, shard ID %s heartbeat is %.1fs behind'
 
     def get_payload(self) -> Heartbeat:
         return {
