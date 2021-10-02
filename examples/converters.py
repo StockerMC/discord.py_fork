@@ -5,11 +5,6 @@ import typing
 import discord
 from discord.ext import commands
 
-import typing
-
-import discord
-from discord.ext import commands
-
 class MyBot(commands.Bot):
     def __init__(self):
         intents = discord.Intents.default()
