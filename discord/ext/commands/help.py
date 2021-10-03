@@ -47,7 +47,7 @@ if TYPE_CHECKING:
     import inspect
 
     HCT = TypeVar('HCT', bound='HelpCommand')
-    CommandMapping = Mapping[Optional[Cog], List[Command]]
+    CommandMapping = Mapping[Optional[Cog], List[Command[Any, Any, Any]]]
 
 __all__ = (
     'Paginator',
@@ -196,8 +196,8 @@ def _not_overriden(f):
     return f
 
 
-class _HelpCommandImpl(Command):
-    def __init__(self, inject: 'HelpCommand', *args: Any, **kwargs: Any) -> None:
+class _HelpCommandImpl(Command[Any, Any, Any]):
+    def __init__(self, inject: HelpCommand, *args: Any, **kwargs: Any) -> None:
         super().__init__(inject.command_callback, *args, **kwargs)
         self._original: HelpCommand = inject
         self._injected: HelpCommand = inject
@@ -417,7 +417,7 @@ class HelpCommand:
             return command_name
         return ctx.invoked_with
 
-    def get_command_signature(self, command: Command) -> str:
+    def get_command_signature(self, command: Command[Any, Any, Any]) -> str:
         """Retrieves the signature portion of the help page.
 
         Parameters
@@ -431,7 +431,7 @@ class HelpCommand:
             The signature for the command.
         """
 
-        parent: Optional[Group] = command.parent  # type: ignore
+        parent: Optional[Group[Any, Any, Any]] = command.parent  # type: ignore
         entries = []
         while parent is not None:
             if not parent.signature or parent.invoke_without_command:
@@ -515,7 +515,7 @@ class HelpCommand:
         """
         return f'No command called "{string}" found.'
 
-    def subcommand_not_found(self, command: Command, string: str) -> str:
+    def subcommand_not_found(self, command: Command[Any, Any, Any], string: str) -> str:
         """|maybecoro|
 
         A method called when a command did not have a subcommand requested in the help command.
@@ -545,7 +545,7 @@ class HelpCommand:
             return f'Command "{command.qualified_name}" has no subcommand named {string}'
         return f'Command "{command.qualified_name}" has no subcommands.'
 
-    async def filter_commands(self, commands: Iterable[Command], *, sort: bool = False, key: Optional[Callable[[Command], str]] = None):
+    async def filter_commands(self, commands: Iterable[Command[Any, Any, Any]], *, sort: bool = False, key: Optional[Callable[[Command[Any, Any, Any]], str]] = None):
         """|coro|
 
         Returns a filtered list of commands and optionally sorts them.
@@ -601,7 +601,7 @@ class HelpCommand:
             ret.sort(key=key)
         return ret
 
-    def get_max_size(self, commands: Sequence[Command]) -> int:
+    def get_max_size(self, commands: Sequence[Command[Any, Any, Any]]) -> int:
         """Returns the largest name length of the specified command list.
 
         Parameters
@@ -734,7 +734,7 @@ class HelpCommand:
         """
         return None
 
-    async def send_group_help(self, group: Group) -> None:
+    async def send_group_help(self, group: Group[Any, Any, Any]) -> None:
         """|coro|
 
         Handles the implementation of the group page in the help command.
@@ -762,7 +762,7 @@ class HelpCommand:
         """
         return None
 
-    async def send_command_help(self, command: Command) -> None:
+    async def send_command_help(self, command: Command[Any, Any, Any]) -> None:
         """|coro|
 
         Handles the implementation of the single command page in the help command.
@@ -959,7 +959,7 @@ class DefaultHelpCommand(HelpCommand):
             f"You can also type {self.context.clean_prefix}{command_name} category for more info on a category."
         )
 
-    def add_indented_commands(self, commands: Sequence[Command], *, heading: str, max_size: Optional[int] = None):
+    def add_indented_commands(self, commands: Sequence[Command[Any, Any, Any]], *, heading: str, max_size: Optional[int] = None):
         """Indents a list of commands after the specified heading.
 
         The formatting is added to the :attr:`paginator`.
@@ -1001,7 +1001,7 @@ class DefaultHelpCommand(HelpCommand):
         for page in self.paginator.pages:
             await destination.send(page)
 
-    def add_command_formatting(self, command: Command) -> None:
+    def add_command_formatting(self, command: Command[Any, Any, Any]) -> None:
         """A utility function to format the non-indented block of commands and groups.
 
         Parameters
@@ -1067,12 +1067,12 @@ class DefaultHelpCommand(HelpCommand):
 
         await self.send_pages()
 
-    async def send_command_help(self, command: Command) -> None:
+    async def send_command_help(self, command: Command[Any, Any, Any]) -> None:
         self.add_command_formatting(command)
         self.paginator.close_page()
         await self.send_pages()
 
-    async def send_group_help(self, group: Group) -> None:
+    async def send_group_help(self, group: Group[Any, Any, Any]) -> None:
         self.add_command_formatting(group)
 
         filtered = await self.filter_commands(group.commands, sort=self.sort_commands)
@@ -1180,7 +1180,7 @@ class MinimalHelpCommand(HelpCommand):
             f"You can also use `{self.context.clean_prefix}{command_name} [category]` for more info on a category."
         )
 
-    def get_command_signature(self, command: Command) -> str:
+    def get_command_signature(self, command: Command[Any, Any, Any]) -> str:
         return f'{self.context.clean_prefix}{command.qualified_name} {command.signature}'
 
     def get_ending_note(self) -> Optional[str]:
@@ -1195,7 +1195,7 @@ class MinimalHelpCommand(HelpCommand):
         """
         return None
 
-    def add_bot_commands_formatting(self, commands: Sequence[Command], heading: str) -> None:
+    def add_bot_commands_formatting(self, commands: Sequence[Command[Any, Any, Any]], heading: str) -> None:
         """Adds the minified bot heading with commands to the output.
 
         The formatting should be added to the :attr:`paginator`.
@@ -1216,7 +1216,7 @@ class MinimalHelpCommand(HelpCommand):
             self.paginator.add_line(f'__**{heading}**__')
             self.paginator.add_line(joined)
 
-    def add_subcommand_formatting(self, command: Command) -> None:
+    def add_subcommand_formatting(self, command: Command[Any, Any, Any]) -> None:
         """Adds formatting information on a subcommand.
 
         The formatting should be added to the :attr:`paginator`.
@@ -1249,7 +1249,7 @@ class MinimalHelpCommand(HelpCommand):
         """
         self.paginator.add_line(f'**{self.aliases_heading}** {", ".join(aliases)}', empty=True)
 
-    def add_command_formatting(self, command: Command) -> None:
+    def add_command_formatting(self, command: Command[Any, Any, Any]) -> None:
         """A utility function to format commands and groups.
 
         Parameters
@@ -1345,7 +1345,7 @@ class MinimalHelpCommand(HelpCommand):
 
         await self.send_pages()
 
-    async def send_group_help(self, group: Group) -> None:
+    async def send_group_help(self, group: Group[Any, Any, Any]) -> None:
         self.add_command_formatting(group)
 
         filtered = await self.filter_commands(group.commands, sort=self.sort_commands)
@@ -1365,7 +1365,7 @@ class MinimalHelpCommand(HelpCommand):
 
         await self.send_pages()
 
-    async def send_command_help(self, command: Command) -> None:
+    async def send_command_help(self, command: Command[Any, Any, Any]) -> None:
         self.add_command_formatting(command)
         self.paginator.close_page()
         await self.send_pages()
