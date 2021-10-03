@@ -346,7 +346,7 @@ class FlagsMeta(type):
         return type.__new__(cls, name, bases, attrs)
 
 
-async def tuple_convert_all(ctx: Context, argument: str, flag: Flag, converter: Any) -> Tuple[Any, ...]:
+async def tuple_convert_all(ctx: Context[Any], argument: str, flag: Flag, converter: Any) -> Tuple[Any, ...]:
     view = StringView(argument)
     results = []
     param: inspect.Parameter = ctx.current_parameter  # type: ignore
@@ -371,7 +371,7 @@ async def tuple_convert_all(ctx: Context, argument: str, flag: Flag, converter: 
     return tuple(results)
 
 
-async def tuple_convert_flag(ctx: Context, argument: str, flag: Flag, converters: Any) -> Tuple[Any, ...]:
+async def tuple_convert_flag(ctx: Context[Any], argument: str, flag: Flag, converters: Any) -> Tuple[Any, ...]:
     view = StringView(argument)
     results = []
     param: inspect.Parameter = ctx.current_parameter  # type: ignore
@@ -481,7 +481,7 @@ class FlagConverter(metaclass=FlagsMeta):
             yield (flag.name, getattr(self, flag.attribute))
 
     @classmethod
-    async def _construct_default(cls: Type[F], ctx: Context) -> F:
+    async def _construct_default(cls: Type[F], ctx: Context[Any]) -> F:
         self: F = cls.__new__(cls)
         flags = cls.__commands_flags__
         for flag in flags.values():
@@ -547,7 +547,7 @@ class FlagConverter(metaclass=FlagsMeta):
         return result
 
     @classmethod
-    async def convert(cls: Type[F], ctx: Context, argument: str) -> F:
+    async def convert(cls: Type[F], ctx: Context[Any], argument: str) -> F:
         """|coro|
 
         The method that actually converters an argument to the flag mapping.

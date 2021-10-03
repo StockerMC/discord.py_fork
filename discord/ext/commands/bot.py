@@ -134,7 +134,7 @@ class BotBase(GroupMixin):
 
     # internal helpers
 
-    async def on_command_error(self, context: Context, exception: errors.CommandError) -> None:
+    async def on_command_error(self, context: Context[Any], exception: errors.CommandError) -> None:
         """|coro|
 
         The default command error handler provided by the bot.
@@ -269,7 +269,7 @@ class BotBase(GroupMixin):
         self.add_check(func, call_once=True)
         return func
 
-    async def can_run(self, ctx: Context, *, call_once: bool = False) -> bool:
+    async def can_run(self, ctx: Context[Any], *, call_once: bool = False) -> bool:
         data = self._check_once if call_once else self._checks
 
         if len(data) == 0:
@@ -385,7 +385,8 @@ class BotBase(GroupMixin):
         """
         prefix = ret = self.command_prefix
         if callable(prefix):
-            ret = await discord.utils.maybe_coroutine(prefix, self, message)
+            # self will be a Bot or AutoShardedBot
+            ret = await discord.utils.maybe_coroutine(prefix, self, message)  # type: ignore
 
         if not isinstance(ret, str):
             try:
@@ -480,7 +481,7 @@ class BotBase(GroupMixin):
         ctx.command = self.all_commands.get(invoker)
         return ctx
 
-    async def invoke(self, ctx: Context) -> None:
+    async def invoke(self, ctx: Context[Any]) -> None:
         """|coro|
 
         Invokes the command given under the invocation context and
