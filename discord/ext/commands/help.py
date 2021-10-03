@@ -934,13 +934,13 @@ class DefaultHelpCommand(HelpCommand):
         paginator: Optional[Paginator] = None,
         **options: Any,
     ) -> None:
-        self.width = width
-        self.indent = indent
-        self.sort_commands = sort_commands
-        self.dm_help = dm_help
-        self.dm_help_threshold = dm_help_threshold
-        self.commands_heading = commands_heading
-        self.no_category = no_category
+        self.width: int = width
+        self.indent: int = indent
+        self.sort_commands: bool = sort_commands
+        self.dm_help: bool = dm_help
+        self.dm_help_threshold: int = dm_help_threshold
+        self.commands_heading: str = commands_heading
+        self.no_category: str = no_category
         self.paginator: Paginator = paginator or Paginator()
 
         super().__init__(**options)
