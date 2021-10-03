@@ -286,7 +286,7 @@ class VoiceClient(VoiceProtocol):
     # connection related
 
     async def on_voice_state_update(self, data: GuildVoiceStatePayload) -> None:
-        self.session_id = data['session_id']
+        self.session_id: str = data['session_id']
         channel_id = data['channel_id']
 
         if not self._handshaking or self._potentially_reconnecting:
@@ -307,14 +307,16 @@ class VoiceClient(VoiceProtocol):
             _log.info('Ignoring extraneous voice server update.')
             return
 
-        self.token = data.get('token')
-        self.server_id = int(data['guild_id'])
+        self.token: str = data.get('token')
+        self.server_id: int = int(data['guild_id'])
         endpoint = data.get('endpoint')
 
         if endpoint is None or self.token is None:
             _log.warning('Awaiting endpoint... This requires waiting. ' \
                         'If timeout occurred considering raising the timeout and reconnecting.')
             return
+
+        self.endpoint: str
 
         self.endpoint, _, _ = endpoint.rpartition(':')
         if self.endpoint.startswith('wss://'):

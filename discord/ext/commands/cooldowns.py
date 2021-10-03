@@ -208,7 +208,7 @@ class CooldownMapping(Generic[T]):
         self._cooldown: Optional[Cooldown] = original
         self._type: Callable[[T], Any] = type
 
-    def copy(self) -> CooldownMapping:
+    def copy(self) -> CooldownMapping[T]:
         ret = CooldownMapping(self._cooldown, self._type)
         ret._cache = self._cache.copy()
         return ret
@@ -269,7 +269,7 @@ class DynamicCooldownMapping(CooldownMapping, Generic[T]):
         super().__init__(None, type)
         self._factory: Callable[[T], Cooldown] = factory
 
-    def copy(self) -> DynamicCooldownMapping:
+    def copy(self) -> DynamicCooldownMapping[T]:
         ret = DynamicCooldownMapping(self._factory, self._type)
         ret._cache = self._cache.copy()
         return ret

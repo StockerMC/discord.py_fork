@@ -326,4 +326,4 @@ class Colour:
         return cls(0xFEE75C)
 
 
-Color = Colour
+Color: Type[Colour] = Colour

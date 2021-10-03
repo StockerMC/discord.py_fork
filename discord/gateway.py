@@ -252,7 +252,7 @@ class VoiceKeepAliveHandler(KeepAliveHandler):
         ack_time = time.perf_counter()
         self._last_ack = ack_time
         self._last_recv = ack_time
-        self.latency = ack_time - self._last_send
+        self.latency: float = ack_time - self._last_send
         self.recent_ack_latencies.append(self.latency)
 
 
@@ -830,7 +830,7 @@ class DiscordVoiceWebSocket:
         }
         await self.send_as_json(payload)
 
-    async def identify(self):
+    async def identify(self) -> None:
         state = self._connection
         payload = {
             'op': self.IDENTIFY,

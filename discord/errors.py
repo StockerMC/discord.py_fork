@@ -23,18 +23,19 @@ DEALINGS IN THE SOFTWARE.
 """
 
 from __future__ import annotations
+
 from typing import Dict, List, Optional, TYPE_CHECKING, Any, Tuple, Union
 
+from aiohttp import ClientResponse, ClientWebSocketResponse
+
+try:
+    from requests import Response
+
+    _ResponseType = Union[ClientResponse, Response]
+except ModuleNotFoundError:
+    _ResponseType = ClientResponse
+
 if TYPE_CHECKING:
-    from aiohttp import ClientResponse, ClientWebSocketResponse
-
-    try:
-        from requests import Response
-
-        _ResponseType = Union[ClientResponse, Response]
-    except ModuleNotFoundError:
-        _ResponseType = ClientResponse
-
     from .interactions import Interaction
 
 __all__ = (

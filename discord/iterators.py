@@ -542,7 +542,7 @@ class GuildIterator(_AsyncIterator['Guild']):
     -----------
     bot: :class:`discord.Client`
         The client to retrieve the guilds from.
-    limit: :class:`int`
+    limit: Optional[:class:`int`]
         Maximum number of guilds to retrieve.
     before: Optional[Union[:class:`abc.Snowflake`, :class:`datetime.datetime`]]
         Object before which all guilds must be.
@@ -553,7 +553,7 @@ class GuildIterator(_AsyncIterator['Guild']):
     def __init__(
         self,
         bot: Client,
-        limit: int,
+        limit: Optional[int],
         before: Optional[Union[Snowflake, datetime.datetime]] = None,
         after: Optional[Union[Snowflake, datetime.datetime]] = None,
     ):
@@ -564,7 +564,7 @@ class GuildIterator(_AsyncIterator['Guild']):
             after = Object(id=time_snowflake(after, high=True))
 
         self.bot: Client = bot
-        self.limit: int = limit
+        self.limit: Optional[int] = limit
         self.before: Optional[Snowflake] = before
         self.after: Optional[Snowflake] = after
 

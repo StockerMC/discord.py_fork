@@ -58,7 +58,6 @@ if TYPE_CHECKING:
     from typing_extensions import Concatenate, ParamSpec, TypeGuard
 
     from discord.message import Message
-    from .bot import Bot, AutoShardedBot
 
     from ._types import (
         Coro,
@@ -102,7 +101,6 @@ T = TypeVar('T')
 CogT = TypeVar('CogT', bound='discord.Cog')
 CommandT = TypeVar('CommandT', bound='Command')
 ContextT = TypeVar('ContextT', bound='Context')
-# CHT = TypeVar('CHT', bound='Check')
 GroupT = TypeVar('GroupT', bound='Group')
 HookT = TypeVar('HookT', bound='Hook')
 ErrorT = TypeVar('ErrorT', bound='Error')
@@ -149,9 +147,9 @@ def get_signature_parameters(function: Callable[..., Any], globalns: Dict[str, A
     return params
 
 
-def wrap_callback(coro):
+def wrap_callback(coro: Callable[P, Coro[T]]) -> Callable[P, Coro[Optional[T]]]:
     @functools.wraps(coro)
-    async def wrapped(*args, **kwargs):
+    async def wrapped(*args: P.args, **kwargs: P.kwargs) -> Optional[T]:
         try:
             ret = await coro(*args, **kwargs)
         except CommandError:
@@ -163,9 +161,9 @@ def wrap_callback(coro):
         return ret
     return wrapped
 
-def hooked_wrapped_callback(command, ctx, coro):
+def hooked_wrapped_callback(command: Command[Any, Any, Any], ctx: Context[Any], coro: Callable[P, Coro[T]]) -> Callable[P, Coro[Optional[T]]]:
     @functools.wraps(coro)
-    async def wrapped(*args, **kwargs):
+    async def wrapped(*args: P.args, **kwargs: P.kwargs) -> Optional[T]:
         try:
             ret = await coro(*args, **kwargs)
         except CommandError:
@@ -179,7 +177,7 @@ def hooked_wrapped_callback(command, ctx, coro):
             raise CommandInvokeError(exc) from exc
         finally:
             if command._max_concurrency is not None:
-                await command._max_concurrency.release(ctx)
+                await command._max_concurrency.release(ctx.message)
 
             await command.call_after_hooks(ctx)
         return ret
@@ -187,22 +185,34 @@ def hooked_wrapped_callback(command, ctx, coro):
 
 
 class _CaseInsensitiveDict(dict):
-    def __contains__(self, k):
+    def __contains__(self, k: str) -> bool:
         return super().__contains__(k.casefold())
 
-    def __delitem__(self, k):
+    def __delitem__(self, k: str) -> None:
         return super().__delitem__(k.casefold())
 
-    def __getitem__(self, k):
+    def __getitem__(self, k: str) -> Command[Any, Any, Any]:
         return super().__getitem__(k.casefold())
 
-    def get(self, k, default=None):
+    @overload
+    def get(self, k: str) -> Optional[Command[Any, Any, Any]]: ...
+
+    @overload
+    def get(self, k: str, default: T) -> Union[Command[Any, Any, Any], T]: ...
+
+    def get(self, k: str, default: Optional[T] = None) -> Union[Any, Optional[T]]:
         return super().get(k.casefold(), default)
 
-    def pop(self, k, default=None):
+    @overload
+    def pop(self, k: str) -> Optional[Command[Any, Any, Any]]: ...
+
+    @overload
+    def pop(self, k: str, default: T) -> Union[Command[Any, Any, Any], T]: ...
+
+    def pop(self, k: str, default: Optional[T] = None) -> Union[Command[Any, Any, Any], T]:
         return super().pop(k.casefold(), default)
 
-    def __setitem__(self, k, v):
+    def __setitem__(self, k: str, v: Command[Any, Any, Any]) -> None:
         super().__setitem__(k.casefold(), v)
 
 class Command(discord._types._BaseCommand, Generic[CogT, P, T]):
@@ -354,7 +364,7 @@ class Command(discord._types._BaseCommand, Generic[CogT, P, T]):
             buckets = cooldown
         else:
             raise TypeError("Cooldown must be a an instance of CooldownMapping or None.")
-        self._buckets: CooldownMapping = buckets
+        self._buckets: CooldownMapping[Message] = buckets
 
         try:
             max_concurrency = func.__commands_max_concurrency__
@@ -509,7 +519,7 @@ class Command(discord._types._BaseCommand, Generic[CogT, P, T]):
         else:
             return self.copy()
 
-    async def dispatch_error(self, ctx: Context[Any], error: Exception) -> None:
+    async def dispatch_error(self, ctx: Context[Any], error: CommandError) -> None:
         ctx.command_failed = True
         cog = self.cog
         try:
@@ -519,7 +529,7 @@ class Command(discord._types._BaseCommand, Generic[CogT, P, T]):
         else:
             injected = wrap_callback(coro)
             if cog is not None:
-                await injected(cog, ctx, error)
+                await injected(cog, ctx, error)  # type: ignore
             else:
                 await injected(ctx, error)
 

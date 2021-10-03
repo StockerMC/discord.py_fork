@@ -624,7 +624,7 @@ class ColourConverter(Converter[discord.Colour]):
 
     RGB_REGEX = re.compile(r'rgb\s*\((?P<r>[0-9]{1,3}%?)\s*,\s*(?P<g>[0-9]{1,3}%?)\s*,\s*(?P<b>[0-9]{1,3}%?)\s*\)')
 
-    def parse_hex_number(self, argument):
+    def parse_hex_number(self, argument: str) -> discord.Colour:
         arg = ''.join(i * 2 for i in argument) if len(argument) == 3 else argument
         try:
             value = int(arg, base=16)
@@ -635,7 +635,7 @@ class ColourConverter(Converter[discord.Colour]):
         else:
             return discord.Color(value=value)
 
-    def parse_rgb_number(self, argument, number):
+    def parse_rgb_number(self, argument: str, number: str) -> int:
         if number[-1] == '%':
             value = int(number[:-1])
             if not (0 <= value <= 100):
@@ -647,7 +647,7 @@ class ColourConverter(Converter[discord.Colour]):
             raise BadColourArgument(argument)
         return value
 
-    def parse_rgb(self, argument, *, regex=RGB_REGEX):
+    def parse_rgb(self, argument: str, *, regex: re.Pattern = RGB_REGEX) -> discord.Colour:
         match = regex.match(argument)
         if match is None:
             raise BadColourArgument(argument)
@@ -679,7 +679,7 @@ class ColourConverter(Converter[discord.Colour]):
         return method()
 
 
-ColorConverter = ColourConverter
+ColorConverter: Type[ColourConverter] = ColourConverter
 
 
 class RoleConverter(IDConverter[discord.Role]):
@@ -897,10 +897,10 @@ class clean_content(Converter[str]):
         escape_markdown: bool = False,
         remove_markdown: bool = False,
     ) -> None:
-        self.fix_channel_mentions = fix_channel_mentions
-        self.use_nicknames = use_nicknames
-        self.escape_markdown = escape_markdown
-        self.remove_markdown = remove_markdown
+        self.fix_channel_mentions: bool = fix_channel_mentions
+        self.use_nicknames: bool = use_nicknames
+        self.escape_markdown: bool = escape_markdown
+        self.remove_markdown: bool = remove_markdown
 
     async def convert(self, ctx: Context[Any], argument: str) -> str:
         msg = ctx.message
@@ -982,10 +982,10 @@ class Greedy(List[T]):
 
     __slots__ = ('converter',)
 
-    def __init__(self, *, converter: T):
-        self.converter = converter
+    def __init__(self, *, converter: T) -> None:
+        self.converter: T = converter
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         converter = getattr(self.converter, '__name__', repr(self.converter))
         return f'Greedy[{converter}]'
 
@@ -1034,7 +1034,7 @@ def get_converter(param: inspect.Parameter) -> Any:
 _GenericAlias = type(List[T])
 
 
-def is_generic_type(tp: Any, *, _GenericAlias: Type = _GenericAlias) -> bool:
+def is_generic_type(tp: Any, *, _GenericAlias: Type[Any] = _GenericAlias) -> bool:
     return isinstance(tp, type) and issubclass(tp, Generic) or isinstance(tp, _GenericAlias)  # type: ignore
 
 
@@ -1100,7 +1100,7 @@ async def _actual_conversion(ctx: Context[Any], converter, argument: str, param:
         raise BadArgument(f'Converting to "{name}" failed for parameter "{param.name}".') from exc
 
 
-async def run_converters(ctx: Context[Any], converter, argument: str, param: inspect.Parameter):
+async def run_converters(ctx: Context[Any], converter: Any, argument: str, param: inspect.Parameter) -> Any:
     """|coro|
 
     Runs converters for a given converter, argument, and parameter.
