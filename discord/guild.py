@@ -102,7 +102,7 @@ if TYPE_CHECKING:
     )
     from .types.voice import GuildVoiceState
     from .types.integration import IntegrationType
-    from .types.snowflake import SnowflakeList
+    from .types.snowflake import SnowflakeList, Snowflake as _Snowflake
     from .types.sticker import CreateGuildSticker
     from .types.template import CreateTemplate
     from .types import channel
@@ -346,8 +346,8 @@ class Guild(Hashable):
         for k in to_remove:
             del self._threads[k]
 
-    def _filter_threads(self, channel_ids: Set[int]) -> Dict[int, Thread]:
-        to_remove: Dict[int, Thread] = {k: t for k, t in self._threads.items() if t.parent_id in channel_ids}
+    def _filter_threads(self, channel_ids: Set[_Snowflake]) -> Dict[int, Thread]:
+        to_remove: Dict[int, Thread] = {int(k): t for k, t in self._threads.items() if t.parent_id in channel_ids}
         for k in to_remove:
             del self._threads[k]
         return to_remove

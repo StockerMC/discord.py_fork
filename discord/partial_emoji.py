@@ -97,10 +97,10 @@ class PartialEmoji(_EmojiTag, AssetMixin):
     if TYPE_CHECKING:
         id: Optional[int]
 
-    def __init__(self, *, name: str, animated: bool = False, id: Optional[int] = None):
-        self.animated = animated
-        self.name = name
-        self.id = id
+    def __init__(self, *, name: Optional[str], animated: bool = False, id: Optional[int] = None):
+        self.animated: bool = animated
+        self.name: Optional[str] = name
+        self.id: Optional[int] = id
         self._state: Optional[ConnectionState] = None
 
     @classmethod
@@ -159,7 +159,7 @@ class PartialEmoji(_EmojiTag, AssetMixin):
 
     @classmethod
     def with_state(
-        cls: Type[PE], state: ConnectionState, *, name: str, animated: bool = False, id: Optional[int] = None
+        cls: Type[PE], state: ConnectionState, *, name: Optional[str], animated: bool = False, id: Optional[int] = None
     ) -> PE:
         self = cls(name=name, animated=animated, id=id)
         self._state = state
@@ -167,7 +167,7 @@ class PartialEmoji(_EmojiTag, AssetMixin):
 
     def __str__(self) -> str:
         if self.id is None:
-            return self.name
+            return self.name  # type: ignore
         if self.animated:
             return f'<a:{self.name}:{self.id}>'
         return f'<:{self.name}:{self.id}>'
@@ -199,7 +199,7 @@ class PartialEmoji(_EmojiTag, AssetMixin):
 
     def _as_reaction(self) -> str:
         if self.id is None:
-            return self.name
+            return self.name  # type: ignore
         return f'{self.name}:{self.id}'
 
     @property

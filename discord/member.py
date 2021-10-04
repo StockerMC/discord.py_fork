@@ -59,7 +59,7 @@ if TYPE_CHECKING:
         Member as MemberPayload,
         UserWithMember as UserWithMemberPayload,
     )
-    from .types.user import User as UserPayload
+    from .types.user import User as UserPayload, PartialUser as PartialUserPayload
     from .types.voice import VoiceState as VoiceStatePayload
     from .types.guild import GuildVoiceState as GuildVoiceStatePayload
 
@@ -365,7 +365,7 @@ class Member(discord.abc.Messageable, _UserTag):
         ch = await self.create_dm()
         return ch
 
-    def _update(self, data: MemberPayload) -> None:
+    def _update(self, data: MemberWithUserPayload) -> None:
         # the nickname change is optional,
         # if it isn't in the payload then it didn't change
         try:
@@ -382,7 +382,7 @@ class Member(discord.abc.Messageable, _UserTag):
         self._roles = utils.SnowflakeList(map(int, data['roles']))
         self._avatar = data.get('avatar')
 
-    def _presence_update(self, data: PartialPresenceUpdate, user: UserPayload) -> Optional[Tuple[User, User]]:
+    def _presence_update(self, data: PartialPresenceUpdate, user: Union[UserPayload, PartialUserPayload]) -> Optional[Tuple[User, User]]:
         self.activities = tuple(create_activity(activity, self._state) for activity in data['activities'])
         self._client_status = {
             sys.intern(key): sys.intern(value) for key, value in data.get('client_status', {}).items()  # type: ignore
@@ -393,7 +393,7 @@ class Member(discord.abc.Messageable, _UserTag):
             return self._update_inner_user(user)
         return None
 
-    def _update_inner_user(self, user: UserPayload) -> Optional[Tuple[User, User]]:
+    def _update_inner_user(self, user: Union[UserPayload, PartialUserPayload]) -> Optional[Tuple[User, User]]:
         u = self._user
         original = (u.name, u._avatar, u.discriminator, u._public_flags)
         # These keys seem to always be available

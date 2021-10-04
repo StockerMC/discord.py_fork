@@ -55,7 +55,6 @@ if TYPE_CHECKING:
         MessageReference as MessageReferencePayload,
         MessageApplication as MessageApplicationPayload,
         MessageActivity as MessageActivityPayload,
-        Reaction as ReactionPayload,
     )
 
     from .types.components import Component as ComponentPayload
@@ -66,11 +65,11 @@ if TYPE_CHECKING:
     )
     from .types.user import User as UserPayload
     from .types.embed import Embed as EmbedPayload
-    from .abc import Snowflake
-    from .abc import GuildChannel, PartialMessageableChannel, MessageableChannel
+    from .types.events import MessageReactionActionEvent
+    from .abc import Snowflake, GuildChannel, PartialMessageableChannel, MessageableChannel
     from .components import Component
     from .state import ConnectionState
-    from .channel import TextChannel, GroupChannel, DMChannel, PartialMessageable
+    from .channel import TextChannel
     from .mentions import AllowedMentions
     from .user import User
     from .role import Role
@@ -737,7 +736,7 @@ class Message(Hashable):
 
         return reaction
 
-    def _remove_reaction(self, data: ReactionPayload, emoji: EmojiInputType, user_id: int) -> Reaction:
+    def _remove_reaction(self, data: MessageReactionActionEvent, emoji: EmojiInputType, user_id: int) -> Reaction:
         reaction = utils.find(lambda r: r.emoji == emoji, self.reactions)
 
         if reaction is None:

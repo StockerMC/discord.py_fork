@@ -36,6 +36,7 @@ class ThreadMember(TypedDict):
     user_id: Snowflake
     join_timestamp: str
     flags: int
+    guild_id: Snowflake
 
 
 class _ThreadMetadataOptional(TypedDict, total=False):

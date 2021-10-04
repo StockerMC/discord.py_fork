@@ -29,16 +29,16 @@ from typing import TYPE_CHECKING, Optional, Set, List, Union
 from .utils import _get_as_snowflake
 
 if TYPE_CHECKING:
-    from .types.raw_models import (
+    from .types.events import (
         MessageDeleteEvent,
         BulkMessageDeleteEvent,
-        ReactionActionEvent,
-        MessageUpdateEvent,
-        ReactionClearEvent,
-        ReactionClearEmojiEvent,
-        IntegrationDeleteEvent,
-        TypingEvent,
+        MessageReactionActionEvent,
+        MessageReactionRemoveAllEvent,
+        MessageReactionRemoveEmojiEvent,
+        GuildIntegrationDeleteEvent,
+        TypingStartEvent,
     )
+    from .types.message import Message as MessagePayload
 
     import datetime
     from .message import Message
@@ -154,10 +154,10 @@ class RawMessageUpdateEvent(_RawReprMixin):
         'cached_message',
     )
 
-    def __init__(self, data: MessageUpdateEvent) -> None:
+    def __init__(self, data: MessagePayload) -> None:
         self.message_id: int = int(data['id'])
         self.channel_id: int = int(data['channel_id'])
-        self.data: MessageUpdateEvent = data
+        self.data: MessagePayload = data
         self.cached_message: Optional[Message] = None
         self.guild_id: Optional[int] = _get_as_snowflake(data, 'guild_id')
 
@@ -201,7 +201,7 @@ class RawReactionActionEvent(_RawReprMixin):
         'member',
     )
 
-    def __init__(self, data: ReactionActionEvent, emoji: PartialEmoji, event_type: str) -> None:
+    def __init__(self, data: MessageReactionActionEvent, emoji: PartialEmoji, event_type: str) -> None:
         self.message_id: int = int(data['message_id'])
         self.channel_id: int = int(data['channel_id'])
         self.user_id: int = int(data['user_id'])
@@ -230,7 +230,7 @@ class RawReactionClearEvent(_RawReprMixin):
         'guild_id',
     )
 
-    def __init__(self, data: ReactionClearEvent) -> None:
+    def __init__(self, data: MessageReactionRemoveAllEvent) -> None:
         self.message_id: int = int(data['message_id'])
         self.channel_id: int = int(data['channel_id'])
         self.guild_id: Optional[int] = _get_as_snowflake(data, 'guild_id')
@@ -260,7 +260,7 @@ class RawReactionClearEmojiEvent(_RawReprMixin):
         'emoji',
     )
 
-    def __init__(self, data: ReactionClearEmojiEvent, emoji: PartialEmoji) -> None:
+    def __init__(self, data: MessageReactionRemoveEmojiEvent, emoji: PartialEmoji) -> None:
         self.emoji: PartialEmoji = emoji
         self.message_id: int = int(data['message_id'])
         self.channel_id: int = int(data['channel_id'])
@@ -288,7 +288,7 @@ class RawIntegrationDeleteEvent(_RawReprMixin):
         'guild_id'
     )
 
-    def __init__(self, data: IntegrationDeleteEvent) -> None:
+    def __init__(self, data: GuildIntegrationDeleteEvent) -> None:
         self.integration_id: int = int(data['id'])
         self.guild_id: int = int(data['guild_id'])
         self.application_id: Optional[int] = _get_as_snowflake(data, 'application_id')
@@ -320,7 +320,7 @@ class RawTypingEvent(_RawReprMixin):
         'when',
     )
 
-    def __init__(self, data: TypingEvent, channel: Union[TextChannel, Thread, GroupChannel, DMChannel], when: datetime.datetime) -> None:
+    def __init__(self, data: TypingStartEvent, channel: Union[TextChannel, Thread, GroupChannel, DMChannel], when: datetime.datetime) -> None:
         self.channel_id: int = int(data['channel_id'])
         self.user_id: int = int(data['user_id'])
         self.guild_id: Optional[int] = _get_as_snowflake(data, 'guild_id')

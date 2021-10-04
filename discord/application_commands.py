@@ -64,7 +64,8 @@ if TYPE_CHECKING:
         ApplicationCommandOption as ApplicationCommandOptionPayload,
         InteractionData,
         ApplicationCommandInteractionDataResolved,
-        ApplicationCommandInteractionData
+        ApplicationCommandInteractionData,
+        ApplicationCommandInteractionDataOption,
     )
 
     from .state import ConnectionState
@@ -490,7 +491,7 @@ class ApplicationCommandOptions:
         self,
         *,
         guild_id: Optional[int],
-        options: Optional[List[ApplicationCommandOptionPayload]],
+        options: Optional[List[ApplicationCommandInteractionDataOption]],
         resolved_data: Optional[ApplicationCommandInteractionDataResolved],
         state: ConnectionState,
         command_options: List[ApplicationCommandOption],
