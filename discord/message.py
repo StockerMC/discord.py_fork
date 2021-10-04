@@ -45,6 +45,7 @@ from typing import (
     Type,
     Protocol,
     Coroutine,
+    NoReturn,
 )
 
 from . import utils
@@ -1773,7 +1774,14 @@ class PartialMessage(Hashable):
 
     # Also needed for duck typing purposes
     # n.b. not exposed
-    pinned = property(None, lambda x, y: None)
+    if TYPE_CHECKING:
+        @property
+        def pinned(self) -> NoReturn: ...
+
+        @pinned.setter
+        def pinned(self, value: Any) -> None: ...
+    else:
+        pinned = property(None, lambda x, y: None)
 
     def __repr__(self) -> str:
         return f'<PartialMessage id={self.id} channel={self.channel!r}>'

@@ -25,7 +25,7 @@ DEALINGS IN THE SOFTWARE.
 from __future__ import annotations
 
 import datetime
-from typing import Any, Dict, Final, List, Mapping, Protocol, TYPE_CHECKING, Type, TypeVar, Union
+from typing import Any, Dict, Final, List, Mapping, Protocol, TYPE_CHECKING, Type, TypeVar, Union, Optional
 
 from . import utils
 from .colour import Colour
@@ -183,14 +183,14 @@ class Embed:
         type: EmbedType = 'rich',
         url: MaybeEmpty[Any] = EmptyEmbed,
         description: MaybeEmpty[Any] = EmptyEmbed,
-        timestamp: datetime.datetime = None,
+        timestamp: Optional[datetime.datetime] = None,
     ):
 
-        self.colour = colour if colour is not EmptyEmbed else color
-        self.title = title
-        self.type = type
-        self.url = url
-        self.description = description
+        self._colour: Union[int, Colour, _EmptyEmbed] = colour if colour is not EmptyEmbed else color
+        self.title: MaybeEmpty[str] = title
+        self.type: EmbedType = type
+        self.url: MaybeEmpty[str] = url
+        self.description: MaybeEmpty[str] = description
 
         if self.title is not EmptyEmbed:
             self.title = str(self.title)
@@ -202,7 +202,7 @@ class Embed:
             self.url = str(self.url)
 
         if timestamp:
-            self.timestamp = timestamp
+            self._timestamp: Union[datetime.datetime, _EmptyEmbed, None] = timestamp
 
     @classmethod
     def from_dict(cls: Type[E], data: Mapping[str, Any]) -> E:

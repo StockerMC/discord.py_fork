@@ -796,7 +796,7 @@ class Client:
             raise TypeError('activity must derive from BaseActivity.')
     
     @property
-    def status(self):
+    def status(self) -> Status:
         """:class:`.Status`:
         The status being used upon logging on to Discord.
 
@@ -807,7 +807,7 @@ class Client:
         return Status.online
 
     @status.setter
-    def status(self, value):
+    def status(self, value: Status) -> None:
         if value is Status.offline:
             self._connection._status = 'invisible'
         elif isinstance(value, Status):

@@ -89,6 +89,7 @@ __all__ = (
 
 T = TypeVar('T')
 T_co = TypeVar('T_co', covariant=True)
+SLT = TypeVar('SLT', bound='SnowflakeList')
 
 DISCORD_EPOCH = 1420070400000
 
@@ -621,10 +622,10 @@ class SnowflakeList(array.array):
 
     if TYPE_CHECKING:
 
-        def __init__(self, data: Iterable[int], *, is_sorted: bool = False):
+        def __init__(self, data: Iterable[int], *, is_sorted: bool = False) -> None:
             ...
 
-    def __new__(cls, data: Iterable[int], *, is_sorted: bool = False):
+    def __new__(cls: Type[SLT], data: Iterable[int], *, is_sorted: bool = False) -> SLT:
         return array.array.__new__(cls, 'Q', data if is_sorted else sorted(data))  # type: ignore
 
     def add(self, element: int) -> None:

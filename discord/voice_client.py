@@ -258,7 +258,7 @@ class VoiceClient(VoiceProtocol):
         self.ip: str = MISSING
         self.port: int = MISSING
 
-    warn_nacl = not has_nacl
+    warn_nacl: bool = not has_nacl
     supported_modes: Tuple[SupportedModes, ...] = (
         'xsalsa20_poly1305_lite',
         'xsalsa20_poly1305_suffix',

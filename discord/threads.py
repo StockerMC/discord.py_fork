@@ -24,7 +24,7 @@ DEALINGS IN THE SOFTWARE.
 
 from __future__ import annotations
 
-from typing import Callable, Dict, Iterable, List, Optional, Union, TYPE_CHECKING
+from typing import Callable, Dict, Iterable, List, Optional, Union, TypeVar, TYPE_CHECKING
 import time
 import asyncio
 
@@ -57,6 +57,8 @@ if TYPE_CHECKING:
     from .state import ConnectionState
 
     import datetime
+
+    ThreadT = TypeVar('ThreadT', bound='Thread')
 
 class Thread(Messageable, Hashable):
     """Represents a Discord thread.
@@ -148,11 +150,11 @@ class Thread(Messageable, Hashable):
 
     def __init__(self, *, guild: Guild, state: ConnectionState, data: ThreadPayload):
         self._state: ConnectionState = state
-        self.guild = guild
+        self.guild: Guild = guild
         self._members: Dict[int, ThreadMember] = {}
         self._from_data(data)
 
-    async def _get_channel(self):
+    async def _get_channel(self: ThreadT) -> ThreadT:
         return self
 
     def __repr__(self) -> str:
@@ -165,15 +167,15 @@ class Thread(Messageable, Hashable):
         return self.name
 
     def _from_data(self, data: ThreadPayload):
-        self.id = int(data['id'])
-        self.parent_id = int(data['parent_id'])
-        self.owner_id = int(data['owner_id'])
-        self.name = data['name']
-        self._type = try_enum(ChannelType, data['type'])
-        self.last_message_id = _get_as_snowflake(data, 'last_message_id')
-        self.slowmode_delay = data.get('rate_limit_per_user', 0)
-        self.message_count = data['message_count']
-        self.member_count = data['member_count']
+        self.id: int = int(data['id'])
+        self.parent_id: int = int(data['parent_id'])
+        self.owner_id: int = int(data['owner_id'])
+        self.name: str = data['name']
+        self._type: ChannelType = try_enum(ChannelType, data['type'])
+        self.last_message_id: Optional[int] = _get_as_snowflake(data, 'last_message_id')
+        self.slowmode_delay: int = data.get('rate_limit_per_user', 0)
+        self.message_count: int = data['message_count']
+        self.member_count: int = data['member_count']
         self._unroll_metadata(data['thread_metadata'])
 
         try:
@@ -184,14 +186,14 @@ class Thread(Messageable, Hashable):
             self.me = ThreadMember(self, member)
 
     def _unroll_metadata(self, data: ThreadMetadata):
-        self.archived = data['archived']
-        self.archiver_id = _get_as_snowflake(data, 'archiver_id')
-        self.auto_archive_duration = data['auto_archive_duration']
-        self.archive_timestamp = parse_time(data['archive_timestamp'])
-        self.locked = data.get('locked', False)
-        self.invitable = data.get('invitable', True)
+        self.archived: bool = data['archived']
+        self.archiver_id: Optional[int] = _get_as_snowflake(data, 'archiver_id')
+        self.auto_archive_duration: int = data['auto_archive_duration']
+        self.archive_timestamp: datetime.datetime = parse_time(data['archive_timestamp'])
+        self.locked: bool = data.get('locked', False)
+        self.invitable: bool = data.get('invitable', True)
 
-    def _update(self, data):
+    def _update(self, data: ThreadPayload) -> None:
         try:
             self.name = data['name']
         except KeyError:
@@ -607,7 +609,7 @@ class Thread(Messageable, Hashable):
         """
         await self._state.http.join_thread(self.id)
 
-    async def leave(self):
+    async def leave(self) -> None:
         """|coro|
 
         Leaves this thread.
@@ -619,7 +621,7 @@ class Thread(Messageable, Hashable):
         """
         await self._state.http.leave_thread(self.id)
 
-    async def add_user(self, user: Snowflake):
+    async def add_user(self, user: Snowflake) -> None:
         """|coro|
 
         Adds a user to this thread.
@@ -643,7 +645,7 @@ class Thread(Messageable, Hashable):
         """
         await self._state.http.add_user_to_thread(self.id, user.id)
 
-    async def remove_user(self, user: Snowflake):
+    async def remove_user(self, user: Snowflake) -> None:
         """|coro|
 
         Removes a user from this thread.
@@ -686,7 +688,7 @@ class Thread(Messageable, Hashable):
         members = await self._state.http.get_thread_members(self.id)
         return [ThreadMember(parent=self, data=data) for data in members]
 
-    async def delete(self):
+    async def delete(self) -> None:
         """|coro|
 
         Deletes this thread.

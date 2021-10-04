@@ -88,6 +88,7 @@ if TYPE_CHECKING:
         GuildChannel as GuildChannelPayload,
         OverwriteType,
     )
+    from .types.snowflake import SnowflakeList
 
     PartialMessageableChannel = Union[TextChannel, Thread, DMChannel, PartialMessageable]
     MessageableChannel = Union[PartialMessageableChannel, GroupChannel]
@@ -1223,21 +1224,21 @@ class Messageable:
 
     async def send(
         self,
-        content=None,
+        content: Optional[Any] = None,
         *,
-        tts=None,
-        embed=None,
-        embeds=None,
-        file=None,
-        files=None,
-        stickers=None,
-        delete_after=None,
-        nonce=None,
-        allowed_mentions=None,
-        reference=None,
-        mention_author=None,
-        view=None,
-    ):
+        tts: bool = False,
+        embed: Optional[Embed] = None,
+        embeds: Optional[List[Embed]] = None,
+        file: Optional[File] = None,
+        files: Optional[List[File]] = None,
+        stickers: Optional[Sequence[Union[GuildSticker, StickerItem]]] = None,
+        delete_after: Optional[float] = None,
+        nonce: Optional[Union[str, int]] = None,
+        allowed_mentions: Optional[AllowedMentions] = None,
+        reference: Optional[Union[Message, MessageReference, PartialMessage]] = None,
+        mention_author: Optional[bool] = None,
+        view: Optional[View] = None,
+    ) -> Message:
         """|coro|
 
         Sends a message to the destination with the content given.
@@ -1334,32 +1335,34 @@ class Messageable:
         if embed is not None and embeds is not None:
             raise InvalidArgument('cannot pass both embed and embeds parameter to send()')
 
+        embed_payload = embeds_payload = stickers_payload = reference_payload = stickers_payload = None
+
         if embed is not None:
-            embed = embed.to_dict()
+            embed_payload = embed.to_dict()
 
         elif embeds is not None:
             if len(embeds) > 10:
                 raise InvalidArgument('embeds parameter must be a list of up to 10 elements')
-            embeds = [embed.to_dict() for embed in embeds]
+            embeds_payload = [embed.to_dict() for embed in embeds]
 
         if stickers is not None:
-            stickers = [sticker.id for sticker in stickers]
+            stickers_payload: Optional[SnowflakeList] = [sticker.id for sticker in stickers]
 
         if allowed_mentions is not None:
             if state.allowed_mentions is not None:
-                allowed_mentions = state.allowed_mentions.merge(allowed_mentions).to_dict()
+                allowed_mentions_payload = state.allowed_mentions.merge(allowed_mentions).to_dict()
             else:
-                allowed_mentions = allowed_mentions.to_dict()
+                allowed_mentions_payload = allowed_mentions.to_dict()
         else:
-            allowed_mentions = state.allowed_mentions and state.allowed_mentions.to_dict()
+            allowed_mentions_payload = state.allowed_mentions and state.allowed_mentions.to_dict()
 
         if mention_author is not None:
-            allowed_mentions = allowed_mentions or AllowedMentions().to_dict()
-            allowed_mentions['replied_user'] = bool(mention_author)
+            allowed_mentions_payload = allowed_mentions_payload or AllowedMentions().to_dict()
+            allowed_mentions_payload['replied_user'] = bool(mention_author)
 
         if reference is not None:
             try:
-                reference = reference.to_message_reference_dict()
+                reference_payload = reference.to_message_reference_dict()
             except AttributeError:
                 raise InvalidArgument('reference parameter must be Message, MessageReference, or PartialMessage') from None
 
@@ -1382,14 +1385,14 @@ class Messageable:
                 data = await state.http.send_files(
                     channel.id,
                     files=[file],
-                    allowed_mentions=allowed_mentions,
+                    allowed_mentions=allowed_mentions_payload,
                     content=content,
                     tts=tts,
-                    embed=embed,
-                    embeds=embeds,
+                    embed=embed_payload,
+                    embeds=embeds_payload,
                     nonce=nonce,
-                    message_reference=reference,
-                    stickers=stickers,
+                    message_reference=reference_payload,
+                    stickers=stickers_payload,
                     components=components,
                 )
             finally:
@@ -1407,12 +1410,12 @@ class Messageable:
                     files=files,
                     content=content,
                     tts=tts,
-                    embed=embed,
-                    embeds=embeds,
+                    embed=embed_payload,
+                    embeds=embeds_payload,
                     nonce=nonce,
-                    allowed_mentions=allowed_mentions,
-                    message_reference=reference,
-                    stickers=stickers,
+                    allowed_mentions=allowed_mentions_payload,
+                    message_reference=reference_payload,
+                    stickers=stickers_payload,
                     components=components,
                 )
             finally:
@@ -1423,12 +1426,12 @@ class Messageable:
                 channel.id,
                 content,
                 tts=tts,
-                embed=embed,
-                embeds=embeds,
+                embed=embed_payload,
+                embeds=embeds_payload,
                 nonce=nonce,
-                allowed_mentions=allowed_mentions,
-                message_reference=reference,
-                stickers=stickers,
+                allowed_mentions=allowed_mentions_payload,
+                message_reference=reference_payload,
+                stickers=stickers_payload,
                 components=components,
             )
 

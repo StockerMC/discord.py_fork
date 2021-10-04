@@ -135,7 +135,7 @@ class Button(Item[V]):
         return self._underlying.style
 
     @style.setter
-    def style(self, value: ButtonStyle):
+    def style(self, value: ButtonStyle) -> None:
         self._underlying.style = value
 
     @property

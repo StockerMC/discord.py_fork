@@ -419,10 +419,10 @@ class HTTPClient:
         tts: bool = False,
         embed: Optional[embed.Embed] = None,
         embeds: Optional[List[embed.Embed]] = None,
-        nonce: Optional[str] = None,
+        nonce: Optional[Union[str, int]] = None,
         allowed_mentions: Optional[message.AllowedMentions] = None,
         message_reference: Optional[message.MessageReference] = None,
-        stickers: Optional[List[sticker.StickerItem]] = None,
+        stickers: Optional[SnowflakeList] = None,
         components: Optional[List[components.Component]] = None,
     ) -> Response[message.Message]:
         r = Route('POST', '/channels/{channel_id}/messages', channel_id=channel_id)
@@ -469,10 +469,10 @@ class HTTPClient:
         tts: bool = False,
         embed: Optional[embed.Embed] = None,
         embeds: Optional[Iterable[Optional[embed.Embed]]] = None,
-        nonce: Optional[str] = None,
+        nonce: Optional[Union[str, int]] = None,
         allowed_mentions: Optional[message.AllowedMentions] = None,
         message_reference: Optional[message.MessageReference] = None,
-        stickers: Optional[List[sticker.StickerItem]] = None,
+        stickers: Optional[SnowflakeList] = None,
         components: Optional[List[components.Component]] = None,
     ) -> Response[message.Message]:
         form = []
@@ -528,10 +528,10 @@ class HTTPClient:
         tts: bool = False,
         embed: Optional[embed.Embed] = None,
         embeds: Optional[List[embed.Embed]] = None,
-        nonce: Optional[str] = None,
+        nonce: Optional[Union[str, int]] = None,
         allowed_mentions: Optional[message.AllowedMentions] = None,
         message_reference: Optional[message.MessageReference] = None,
-        stickers: Optional[List[sticker.StickerItem]] = None,
+        stickers: Optional[SnowflakeList] = None,
         components: Optional[List[components.Component]] = None,
     ) -> Response[message.Message]:
         r = Route('POST', '/channels/{channel_id}/messages', channel_id=channel_id)

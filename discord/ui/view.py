@@ -190,12 +190,12 @@ class View:
             # Wait N seconds to see if timeout data has been refreshed
             await asyncio.sleep(self.__timeout_expiry - now)
 
-    def to_components(self) -> List[Dict[str, Any]]:
+    def to_components(self) -> List[ComponentPayload]:
         def key(item: Item[Any]) -> int:
             return item._rendered_row or 0
 
         children = sorted(self.children, key=key)
-        components: List[Dict[str, Any]] = []
+        components = []
         for _, group in groupby(children, key=key):
             children = [item.to_component_dict() for item in group]
             if not children:

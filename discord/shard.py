@@ -409,7 +409,8 @@ class AutoShardedClient(Client):
 
     async def launch_shards(self) -> None:
         if self.shard_count is None:
-            self.shard_count, gateway = await self.http.get_bot_gateway()
+            shard_count, gateway = await self.http.get_bot_gateway()
+            self.shard_count: Optional[int] = shard_count
         else:
             gateway = await self.http.get_gateway()
 
