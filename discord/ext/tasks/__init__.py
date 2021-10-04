@@ -58,8 +58,6 @@ if TYPE_CHECKING:
 else:
     P = TypeVar("P")  # hacky runtime fix
 
-log = logging.getLogger(__name__)
-
 __all__ = (
     'loop',
 )
