@@ -705,10 +705,10 @@ class Client:
                     global_payload.append(command_payload)
 
             if global_payload:
-                await self.http.bulk_upsert_global_commands(application_id, global_payload) # type: ignore
+                await self.http.bulk_upsert_global_commands(application_id, global_payload)
 
             for guild_id, commands in guild_payloads.items():
-                await self.http.bulk_upsert_guild_commands(application_id, guild_id, commands)  # type: ignore
+                await self.http.bulk_upsert_guild_commands(application_id, guild_id, commands)
 
         await self.connect(reconnect=reconnect)
 
@@ -1852,13 +1852,13 @@ class Client:
 
         .. code-block:: python3
 
-            @bot.listen()
+            @client.listen()
             async def on_message(message):
                 print('one')
 
             # in some other file...
 
-            @bot.listen('on_message')
+            @client.listen('on_message')
             async def my_message(message):
                 print('two')
 
