@@ -545,7 +545,13 @@ class HelpCommand:
             return f'Command "{command.qualified_name}" has no subcommand named {string}'
         return f'Command "{command.qualified_name}" has no subcommands.'
 
-    async def filter_commands(self, commands: Iterable[Command[Any, Any, Any]], *, sort: bool = False, key: Optional[Callable[[Command[Any, Any, Any]], str]] = None):
+    async def filter_commands(
+        self,
+        commands: Iterable[Command[Any, Any, Any]],
+        *,
+        sort: bool = False,
+        key: Optional[Callable[[Command[Any, Any, Any]], str]] = None
+    ) -> List[Command[Any, Any, Any]]:
         """|coro|
 
         Returns a filtered list of commands and optionally sorts them.
@@ -959,7 +965,7 @@ class DefaultHelpCommand(HelpCommand):
             f"You can also type {self.context.clean_prefix}{command_name} category for more info on a category."
         )
 
-    def add_indented_commands(self, commands: Sequence[Command[Any, Any, Any]], *, heading: str, max_size: Optional[int] = None):
+    def add_indented_commands(self, commands: Sequence[Command[Any, Any, Any]], *, heading: str, max_size: Optional[int] = None) -> None:
         """Indents a list of commands after the specified heading.
 
         The formatting is added to the :attr:`paginator`.
@@ -1037,7 +1043,7 @@ class DefaultHelpCommand(HelpCommand):
         self.paginator.clear()
         await super().prepare_help_command(ctx, command)
 
-    async def send_bot_help(self, mapping: CommandMapping):
+    async def send_bot_help(self, mapping: CommandMapping) -> None:
         ctx = self.context
         bot = ctx.bot
 
@@ -1232,7 +1238,7 @@ class MinimalHelpCommand(HelpCommand):
         fmt = '{0}{1} \N{EN DASH} {2}' if command.short_doc else '{0}{1}'
         self.paginator.add_line(fmt.format(self.context.clean_prefix, command.qualified_name, command.short_doc))
 
-    def add_aliases_formatting(self, aliases: Sequence[str]):
+    def add_aliases_formatting(self, aliases: Sequence[str]) -> None:
         """Adds the formatting information on a command's aliases.
 
         The formatting should be added to the :attr:`paginator`.

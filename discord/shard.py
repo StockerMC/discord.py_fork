@@ -43,7 +43,7 @@ from .errors import (
 
 from .enums import Status, Enum
 
-from typing import TYPE_CHECKING, Any, Callable, Tuple, Type, Optional, List, Dict, TypeVar
+from typing import TYPE_CHECKING, Any, Callable, Tuple, Type, Optional, List, Dict, TypeVar, overload
 
 if TYPE_CHECKING:
     from .gateway import DiscordWebSocket
@@ -72,9 +72,9 @@ class EventType(Enum):
 class EventItem:
     __slots__ = ('type', 'shard', 'error')
 
-    def __init__(self, etype: EventType, shard: Optional['Shard'], error: Optional[Exception]) -> None:
+    def __init__(self, etype: EventType, shard: Optional[Shard], error: Optional[Exception]) -> None:
         self.type: int = etype.value
-        self.shard: Optional['Shard'] = shard
+        self.shard: Optional[Shard] = shard
         self.error: Optional[Exception] = error
 
     def __lt__(self: EI, other: EI) -> bool:
@@ -333,16 +333,22 @@ class AutoShardedClient(Client):
 
         # instead of a single websocket, we have multiple
         # the key is the shard_id
-        self.__shards = {}
+        self.__shards: Dict[int, Shard] = {}
         self._connection._get_websocket = self._get_websocket
         self._connection._get_client = lambda: self
-        self.__queue = asyncio.PriorityQueue()
+        self.__queue: asyncio.PriorityQueue[EventItem] = asyncio.PriorityQueue()
+
+    @overload
+    def _get_websocket(self, guild_id: None, *, shard_id: int) -> DiscordWebSocket: ...
+
+    @overload
+    def _get_websocket(self, guild_id: int, *, shard_id: Optional[int] = ...) -> DiscordWebSocket: ...
 
     def _get_websocket(self, guild_id: Optional[int] = None, *, shard_id: Optional[int] = None) -> DiscordWebSocket:
         if shard_id is None:
             # guild_id won't be None if shard_id is None and shard_count won't be None here
             shard_id = (guild_id >> 22) % self.shard_count  # type: ignore
-        return self.__shards[shard_id].ws
+        return self.__shards[shard_id].ws  # type: ignore
 
     def _get_state(self, **options: Any) -> AutoShardedConnectionState:
         return AutoShardedConnectionState(
@@ -430,15 +436,15 @@ class AutoShardedClient(Client):
                     if item.error.code != 1000:
                         raise item.error
                     if item.error.code == 4014:
-                        raise PrivilegedIntentsRequired(item.shard.id) from None
+                        raise PrivilegedIntentsRequired(item.shard.id) from None  # type: ignore
                 return
             elif item.type in (EventType.identify, EventType.resume):
-                await item.shard.reidentify(item.error)
+                await item.shard.reidentify(item.error)  # type: ignore
             elif item.type == EventType.reconnect:
-                await item.shard.reconnect()
+                await item.shard.reconnect()  # type: ignore
             elif item.type == EventType.terminate:
                 await self.close()
-                raise item.error
+                raise item.error  # type: ignore
             elif item.type == EventType.clean_close:
                 return
 

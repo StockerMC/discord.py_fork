@@ -115,7 +115,7 @@ def when_mentioned_or(*prefixes: str) -> Callable[[Union[Bot, AutoShardedBot], M
 def _is_submodule(parent: str, child: str) -> bool:
     return parent == child or child.startswith(parent + ".")
 
-class BotBase(GroupMixin):
+class BotBase(GroupMixin[Any]):
     def __init__(self, command_prefix: Union[PrefixType, PrefixCallable], help_command: Optional[HelpCommand] = MISSING, description: Optional[str] = None, **options: Any) -> None:
         super().__init__(**options)
         self.command_prefix: Union[PrefixType, PrefixCallable] = command_prefix

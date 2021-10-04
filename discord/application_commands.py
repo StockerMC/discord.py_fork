@@ -182,8 +182,8 @@ CHANNEL_TO_CHANNEL_TYPE: Final[Dict[ChannelTypes, Optional[ChannelType]]] = {
     GuildChannel: None,
 }
 
-for channel_type in CHANNEL_TO_CHANNEL_TYPE.keys():
-    OPTION_TYPE_MAPPING[channel_type] = ApplicationCommandOptionType.channel
+for _channel_type in CHANNEL_TO_CHANNEL_TYPE.keys():
+    OPTION_TYPE_MAPPING[_channel_type] = ApplicationCommandOptionType.channel
 
 def _resolve_option_type(option: Union[ValidOptionTypes, ApplicationCommandOptionType]) -> ApplicationCommandOptionType:
     if isinstance(option, ApplicationCommandOptionType):
@@ -1065,7 +1065,7 @@ class SlashCommand(BaseApplicationCommand, type=ApplicationCommandType.slash):
         description: :class:`str`
             The description of the slash command.
         """
-        cls.__application_command_description__ = str(description)
+        cls.__application_command_description__: str = str(description)
 
     @classmethod
     def add_subcommand(cls, subcommand: SlashCommand) -> None:
@@ -1093,7 +1093,7 @@ class SlashCommand(BaseApplicationCommand, type=ApplicationCommandType.slash):
         if not isinstance(parent, SlashCommand):
             raise TypeError(f'parent must be a SlashCommand not {parent.__class__.__name__}')
 
-        cls.__application_command_parent__ = parent
+        cls.__application_command_parent__: SlashCommand = parent
 
     @classmethod
     def add_option(cls, option: ApplicationCommandOption) -> None:

@@ -276,7 +276,7 @@ class VoiceClient(VoiceProtocol):
         # the bot's user won't be None here
         return self._state.user # type: ignore
 
-    def checked_add(self, attr, value, limit):
+    def checked_add(self, attr: str, value: int, limit: int) -> None:
         val = getattr(self, attr)
         if val + value > limit:
             setattr(self, attr, 0)

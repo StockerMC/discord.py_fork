@@ -902,7 +902,7 @@ class GuildChannel:
     ) -> None:
         ...
 
-    async def move(self, **kwargs) -> None:
+    async def move(self, **kwargs: Any) -> None:
         """|coro|
 
         A rich interface to help move a channel relative to other channels.

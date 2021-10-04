@@ -41,6 +41,7 @@ from typing import (
     Union,
     Coroutine,
     TypeVar,
+    Protocol,
     overload,
 )
 
@@ -122,6 +123,15 @@ if TYPE_CHECKING:
     VocalGuildChannel = Union[VoiceChannel, StageChannel]
     GuildChannel = Union[VoiceChannel, StageChannel, TextChannel, CategoryChannel, StoreChannel]
     ByCategoryItem = Tuple[Optional[CategoryChannel], List[GuildChannel]]
+
+    class CreateCategory(Protocol):
+        async def __call__(self,
+            name: str,
+            *,
+            overwrites: Dict[Union[Role, Member], PermissionOverwrite] = MISSING,
+            reason: Optional[str] = None,
+            position: int = MISSING,
+        ) -> CategoryChannel: ...
 
 
 class BanEntry(NamedTuple):
@@ -1389,7 +1399,10 @@ class Guild(Hashable):
         self._channels[channel.id] = channel
         return channel
 
-    create_category_channel = create_category
+    if TYPE_CHECKING:
+        create_category_channel: CreateCategory
+    else:
+        create_category_channel = create_category
 
     async def leave(self) -> None:
         """|coro|
@@ -3044,7 +3057,7 @@ class Guild(Hashable):
 
     async def change_voice_state(
         self, *, channel: Optional[VocalGuildChannel], self_mute: bool = False, self_deaf: bool = False
-    ):
+    ) -> None:
         """|coro|
 
         Changes client's voice state in the guild.

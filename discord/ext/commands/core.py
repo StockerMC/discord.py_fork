@@ -412,14 +412,14 @@ class Command(discord._types._BaseCommand, Generic[CogT, P, T]):
         ]) -> None:
         self._callback = function
         unwrap = unwrap_function(function)
-        self.module = unwrap.__module__
+        self.module: str = unwrap.__module__
 
         try:
             globalns = unwrap.__globals__
         except AttributeError:
             globalns = {}
 
-        self.params = get_signature_parameters(function, globalns)
+        self.params: Dict[str, inspect.Parameter] = get_signature_parameters(function, globalns)
 
     def add_check(self, func: Check) -> None:
         """Adds a check to the command.
@@ -681,7 +681,7 @@ class Command(discord._types._BaseCommand, Generic[CogT, P, T]):
         return entries
 
     @property
-    def root_parent(self) -> Optional[Group]:
+    def root_parent(self) -> Optional[Group[CogT, Any, Any]]:
         """Optional[:class:`Group`]: Retrieves the root parent of this command.
 
         If the command has no parents then it returns ``None``.

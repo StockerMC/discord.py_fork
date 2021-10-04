@@ -129,10 +129,10 @@ class Context(discord.abc.Messageable, Generic[BotT]):
         args: List[Any] = MISSING,
         kwargs: Dict[str, Any] = MISSING,
         prefix: Optional[str] = None,
-        command: Optional[Command] = None,
+        command: Optional[Command[Any, Any, Any]] = None,
         invoked_with: Optional[str] = None,
         invoked_parents: List[str] = MISSING,
-        invoked_subcommand: Optional[Command] = None,
+        invoked_subcommand: Optional[Command[Any, Any, Any]] = None,
         subcommand_passed: Optional[str] = None,
         command_failed: bool = False,
         current_parameter: Optional[inspect.Parameter] = None,
@@ -142,11 +142,11 @@ class Context(discord.abc.Messageable, Generic[BotT]):
         self.args: List[Any] = args or []
         self.kwargs: Dict[str, Any] = kwargs or {}
         self.prefix: Optional[str] = prefix
-        self.command: Optional[Command] = command
+        self.command: Optional[Command[Any, Any, Any]] = command
         self.view: StringView = view
         self.invoked_with: Optional[str] = invoked_with
         self.invoked_parents: List[str] = invoked_parents or []
-        self.invoked_subcommand: Optional[Command] = invoked_subcommand
+        self.invoked_subcommand: Optional[Command[Any, Any, Any]] = invoked_subcommand
         self.subcommand_passed: Optional[str] = subcommand_passed
         self.command_failed: bool = command_failed
         self.current_parameter: Optional[inspect.Parameter] = current_parameter
@@ -382,7 +382,8 @@ class Context(discord.abc.Messageable, Generic[BotT]):
         try:
             if hasattr(entity, '__cog_commands__'):
                 injected = wrap_callback(cmd.send_cog_help)
-                return await injected(entity)
+                # entity is a Cog here
+                return await injected(entity)  # type: ignore
             elif isinstance(entity, Group):
                 injected = wrap_callback(cmd.send_group_help)
                 return await injected(entity)

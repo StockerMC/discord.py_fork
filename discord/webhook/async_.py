@@ -57,13 +57,15 @@ _log = logging.getLogger(__name__)
 if TYPE_CHECKING:
     from ..types.webhook import (
         Webhook as WebhookPayload,
+        SourceGuild as SourceGuildPayload,
+        PartialChannel as PartialChannelPayload
     )
     from ..types.message import (
         Message as MessagePayload,
     )
     from ..types.user import (
         User as UserPayload,
-        PartialUser as PartialUserPayload
+        PartialUser as PartialUserPayload,
     )
     from ..types.channel import FollowedChannel
 
@@ -548,11 +550,11 @@ class PartialWebhookChannel(Hashable):
 
     __slots__ = ('id', 'name')
 
-    def __init__(self, *, data):
-        self.id = int(data['id'])
-        self.name = data['name']
+    def __init__(self, *, data: PartialChannelPayload) -> None:
+        self.id: int = int(data['id'])
+        self.name: str = data['name']
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f'<PartialWebhookChannel name={self.name!r} id={self.id}>'
 
 
@@ -573,13 +575,13 @@ class PartialWebhookGuild(Hashable):
 
     __slots__ = ('id', 'name', '_icon', '_state')
 
-    def __init__(self, *, data, state):
-        self._state = state
-        self.id = int(data['id'])
-        self.name = data['name']
-        self._icon = data['icon']
+    def __init__(self, *, data: SourceGuildPayload, state: Union[ConnectionState, _WebhookState]) -> None:
+        self._state: Union[ConnectionState, _WebhookState] = state
+        self.id: int = int(data['id'])
+        self.name: str = data['name']
+        self._icon: str = data['icon']
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f'<PartialWebhookGuild name={self.name!r} id={self.id}>'
 
     @property
@@ -593,14 +595,14 @@ class PartialWebhookGuild(Hashable):
 class _FriendlyHttpAttributeErrorHelper:
     __slots__ = ()
 
-    def __getattr__(self, attr):
+    def __getattr__(self, attr: str) -> Any:
         raise AttributeError('PartialWebhookState does not support http methods.')
 
 
 class _WebhookState:
     __slots__ = ('_parent', '_webhook')
 
-    def __init__(self, webhook: Any, parent: Optional[Union[ConnectionState, _WebhookState]]):
+    def __init__(self, webhook: Any, parent: Optional[Union[ConnectionState, _WebhookState]]) -> None:
         self._webhook: Any = webhook
 
         self._parent: Optional[ConnectionState]
@@ -791,13 +793,13 @@ class BaseWebhook(Hashable):
         self._update(data)
 
     def _update(self, data: WebhookPayload) -> None:
-        self.id = int(data['id'])
-        self.type = try_enum(WebhookType, int(data['type']))
-        self.channel_id = utils._get_as_snowflake(data, 'channel_id')
-        self.guild_id = utils._get_as_snowflake(data, 'guild_id')
-        self.name = data.get('name')
-        self._avatar = data.get('avatar')
-        self.token = data.get('token')
+        self.id: int = int(data['id'])
+        self.type: WebhookType = try_enum(WebhookType, int(data['type']))
+        self.channel_id: Optional[int] = utils._get_as_snowflake(data, 'channel_id')
+        self.guild_id: Optional[int] = utils._get_as_snowflake(data, 'guild_id')
+        self.name: Optional[str] = data.get('name')
+        self._avatar: Optional[str] = data.get('avatar')
+        self.token: Optional[str] = data.get('token')
 
         user = data.get('user')
         self.user: Optional[Union[BaseUser, User]] = None
@@ -1110,7 +1112,7 @@ class Webhook(BaseWebhook):
 
         return Webhook(data, self.session, token=self.auth_token, state=self._state)
 
-    async def delete(self, *, reason: Optional[str] = None, prefer_auth: bool = True):
+    async def delete(self, *, reason: Optional[str] = None, prefer_auth: bool = True) -> None:
         """|coro|
 
         Deletes this Webhook.

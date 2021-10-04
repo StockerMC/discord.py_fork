@@ -170,7 +170,7 @@ class HTTPClient:
         unsync_clock: bool = True,
     ) -> None:
         self.loop: asyncio.AbstractEventLoop = asyncio.get_event_loop() if loop is None else loop
-        self.connector = connector
+        self.connector: Optional[aiohttp.BaseConnector] = connector
         self.__session: aiohttp.ClientSession = MISSING  # filled in static_login
         self._locks: weakref.WeakValueDictionary = weakref.WeakValueDictionary()
         self._global_over: asyncio.Event = asyncio.Event()
@@ -1653,7 +1653,7 @@ class HTTPClient:
         return self.request(r)
 
     def bulk_upsert_global_commands(
-        self, application_id: Snowflake, payload
+        self, application_id: Snowflake, payload: List[interactions.ApplicationCommand]
     ) -> Response[List[interactions.ApplicationCommand]]:
         r = Route('PUT', '/applications/{application_id}/commands', application_id=application_id)
         return self.request(r, json=payload)

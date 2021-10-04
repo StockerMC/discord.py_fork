@@ -241,8 +241,8 @@ class SelectMenu(Component):
 
     __repr_info__: ClassVar[Tuple[str, ...]] = __slots__
 
-    def __init__(self, data: SelectMenuPayload):
-        self.type = ComponentType.select
+    def __init__(self, data: SelectMenuPayload) -> None:
+        self.type:ComponentType = ComponentType.select
         self.custom_id: str = data['custom_id']
         self.placeholder: Optional[str] = data.get('placeholder')
         self.min_values: int = data.get('min_values', 1)

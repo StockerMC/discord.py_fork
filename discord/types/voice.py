@@ -83,3 +83,8 @@ class VoiceReady(TypedDict):
     port: int
     modes: List[SupportedModes]
     heartbeat_interval: int
+
+
+class SessionDescription(TypedDict):
+    mode: SupportedModes
+    secret_key: List[int]

@@ -29,7 +29,23 @@ import datetime
 import re
 import io
 from os import PathLike
-from typing import Dict, TYPE_CHECKING, Union, List, Optional, Any, Callable, Tuple, ClassVar, Optional, overload, TypeVar, Type
+from typing import (
+    Dict,
+    TYPE_CHECKING,
+    Union,
+    List,
+    Optional,
+    Any,
+    Callable,
+    Tuple,
+    ClassVar,
+    Optional,
+    overload,
+    TypeVar,
+    Type,
+    Protocol,
+    Coroutine,
+)
 
 from . import utils
 from .reaction import Reaction
@@ -75,8 +91,78 @@ if TYPE_CHECKING:
     from .role import Role
     from .ui.view import View
 
+    T = TypeVar('T')
     MR = TypeVar('MR', bound='MessageReference')
     EmojiInputType = Union[Emoji, PartialEmoji, str]
+    CoroFunc = Callable[[], Coroutine[Any, Any, T]]
+
+    # these protocols are to help typehint the inherited methods from Message
+    # for PartialMessage
+
+    class Delete(Protocol):
+        async def __call__(self, *, delay: Optional[float] = None) -> None: ...
+
+    class Edit(Protocol):
+        @overload
+        async def __call__(
+            self,
+            *,
+            content: Optional[str] = ...,
+            embed: Optional[Embed] = ...,
+            attachments: List[Attachment] = ...,
+            suppress: bool = ...,
+            delete_after: Optional[float] = ...,
+            allowed_mentions: Optional[AllowedMentions] = ...,
+            view: Optional[View] = ...,
+        ) -> Message:
+            ...
+
+        @overload
+        async def __call__(
+            self,
+            *,
+            content: Optional[str] = ...,
+            embeds: List[Embed] = ...,
+            attachments: List[Attachment] = ...,
+            suppress: bool = ...,
+            delete_after: Optional[float] = ...,
+            allowed_mentions: Optional[AllowedMentions] = ...,
+            view: Optional[View] = ...,
+        ) -> Message:
+            ...
+
+        async def __call__(
+            self,
+            content: Optional[str] = MISSING,
+            embed: Optional[Embed] = MISSING,
+            embeds: List[Embed] = MISSING,
+            attachments: List[Attachment] = MISSING,
+            suppress: bool = MISSING,
+            delete_after: Optional[float] = None,
+            allowed_mentions: Optional[AllowedMentions] = MISSING,
+            view: Optional[View] = MISSING,
+        ) -> Message: ...
+
+    class Pin(Protocol):
+        async def __call__(self, *, reason: Optional[str] = None) -> None: ...
+
+    class Unpin(Protocol):
+        async def __call__(self, *, reason: Optional[str] = None) -> None: ...
+
+    class AddReaction(Protocol):
+        async def __call__(self, emoji: EmojiInputType) -> None: ...
+
+    class RemoveReaction(Protocol):
+        async def __call__(self, emoji: Union[EmojiInputType, Reaction], member: Snowflake) -> None: ...
+
+    class ClearReaction(Protocol):
+        async def __call__(self, emoji: Union[EmojiInputType, Reaction], member: Snowflake) -> None: ...
+
+    class Reply(Protocol):
+        async def __call__(self, content: Optional[str] = None, **kwargs: Any) -> Message: ...
+
+    class ToReference(Protocol):
+        async def __call__(self, *, fail_if_not_exists: bool = True) -> MessageReference: ...
 
 __all__ = (
     'Attachment',
@@ -87,7 +173,7 @@ __all__ = (
 )
 
 
-def convert_emoji_reaction(emoji):
+def convert_emoji_reaction(emoji: Union[Reaction, Emoji, PartialEmoji, str]) -> str:
     if isinstance(emoji, Reaction):
         emoji = emoji.emoji
 
@@ -466,7 +552,10 @@ class MessageReference:
             result['fail_if_not_exists'] = self.fail_if_not_exists
         return result
 
-    to_message_reference_dict = to_dict
+    if TYPE_CHECKING:
+        to_message_reference_dict: Callable[[], MessageReferencePayload]
+    else:
+        to_message_reference_dict = to_dict
 
 
 def flatten_handlers(cls: Type[Message]) -> Type[Message]:
@@ -993,7 +1082,8 @@ class Message(Hashable):
         )
 
     @utils.cached_slot_property('_cs_system_content')
-    def system_content(self):
+    # a value will always be returned
+    def system_content(self) -> str:  # type: ignore
         r""":class:`str`: A property that returns the content that is rendered
         regardless of the :attr:`Message.type`.
 
@@ -1536,7 +1626,7 @@ class Message(Hashable):
         )
         return Thread(guild=self.guild, state=self._state, data=data)
 
-    async def reply(self, content: Optional[str] = None, **kwargs) -> Message:
+    async def reply(self, content: Optional[str] = None, **kwargs: Any) -> Message:
         """|coro|
 
         A shortcut method to :meth:`.abc.Messageable.send` to reply to the
@@ -1634,18 +1724,32 @@ class PartialMessage(Hashable):
 
     __slots__ = ('channel', 'id', '_cs_guild', '_state')
 
-    jump_url: str = Message.jump_url  # type: ignore
-    delete = Message.delete
-    publish = Message.publish
-    pin = Message.pin
-    unpin = Message.unpin
-    add_reaction = Message.add_reaction
-    remove_reaction = Message.remove_reaction
-    clear_reaction = Message.clear_reaction
-    clear_reactions = Message.clear_reactions
-    reply = Message.reply
-    to_reference = Message.to_reference
-    to_message_reference_dict = Message.to_message_reference_dict
+    if TYPE_CHECKING:
+        jump_url: str
+        delete: Delete
+        publish: CoroFunc[None]
+        pin: Pin
+        unpin: Unpin
+        add_reaction: AddReaction
+        remove_reaction: RemoveReaction
+        clear_reaction: ClearReaction
+        clear_reactions: CoroFunc[None]
+        reply: Reply
+        to_reference: ToReference
+        to_message_reference_dict: Callable[[], MessageReferencePayload]
+    else:
+        jump_url = Message.jump_url
+        delete: Delete = Message.delete
+        publish = Message.publish
+        pin = Message.pin
+        unpin = Message.unpin
+        add_reaction = Message.add_reaction
+        remove_reaction = Message.remove_reaction
+        clear_reaction = Message.clear_reaction
+        clear_reactions = Message.clear_reactions
+        reply = Message.reply
+        to_reference = Message.to_reference
+        to_message_reference_dict = Message.to_message_reference_dict
 
     def __init__(self, *, channel: PartialMessageableChannel, id: int):
         if channel.type not in (
@@ -1662,7 +1766,7 @@ class PartialMessage(Hashable):
         self._state: ConnectionState = channel._state
         self.id: int = id
 
-    def _update(self, data) -> None:
+    def _update(self, data: MessagePayload) -> None:
         # This is used for duck typing purposes.
         # Just do nothing with the data.
         pass

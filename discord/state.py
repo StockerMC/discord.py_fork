@@ -183,7 +183,6 @@ class ConnectionState:
     if TYPE_CHECKING:
         _get_websocket: Callable[..., DiscordWebSocket]
         _get_client: Callable[[], Client]
-        _parsers: Dict[str, Callable[[Dict[str, Any]], None]]
 
     def __init__(
         self,
@@ -268,10 +267,10 @@ class ConnectionState:
             self.store_user = self.create_user  # type: ignore
             self.deref_user = self.deref_user_no_intents  # type: ignore
 
-        self.parsers = parsers = {}
+        self.parsers: Dict[str, Callable[[Dict[str, Any]], None]] = {}
         for attr, func in inspect.getmembers(self):
             if attr.startswith('parse_'):
-                parsers[attr[6:].upper()] = func
+                self.parsers[attr[6:].upper()] = func
 
         self.clear()
 
@@ -520,7 +519,9 @@ class ConnectionState:
         ws = self._get_websocket(guild_id)  # This is ignored upstream
         await ws.request_chunks(guild_id, query=query, limit=limit, presences=presences, nonce=nonce)
 
-    async def query_members(self, guild: Guild, query: Optional[str], limit: int, user_ids: Optional[List[int]], cache: bool, presences: bool):
+    async def query_members(
+        self, guild: Guild, query: Optional[str], limit: int, user_ids: Optional[List[int]], cache: bool, presences: bool
+    ) -> List[Member]:
         guild_id = guild.id
         ws = self._get_websocket(guild_id)
         if ws is None:

@@ -87,14 +87,14 @@ class _ViewWeights:
             for item in group:
                 self.add_item(item)
 
-    def find_open_space(self, item: Item) -> int:
+    def find_open_space(self, item: Item[Any]) -> int:
         for index, weight in enumerate(self.weights):
             if weight + item.width <= 5:
                 return index
 
         raise ValueError('could not find open space for item')
 
-    def add_item(self, item: Item) -> None:
+    def add_item(self, item: Item[Any]) -> None:
         if item.row is not None:
             total = self.weights[item.row] + item.width
             if total > 5:
@@ -106,7 +106,7 @@ class _ViewWeights:
             self.weights[index] += item.width
             item._rendered_row = index
 
-    def remove_item(self, item: Item) -> None:
+    def remove_item(self, item: Item[Any]) -> None:
         if item._rendered_row is not None:
             self.weights[item._rendered_row] -= item.width
             item._rendered_row = None
@@ -152,11 +152,11 @@ class View:
 
         cls.__view_children_items__ = children
 
-    def __init__(self, *, timeout: Optional[float] = 180.0):
-        self.timeout = timeout
+    def __init__(self, *, timeout: Optional[float] = 180.0) -> None:
+        self.timeout: Optional[float] = timeout
         self.children: List[Item] = []
         for func in self.__view_children_items__:
-            item: Item = func.__discord_ui_model_type__(**func.__discord_ui_model_kwargs__)
+            item: Item[Any] = func.__discord_ui_model_type__(**func.__discord_ui_model_kwargs__)
             item.callback = partial(func, self, item)
             item._view = self
             setattr(self, func.__name__, item)
@@ -191,7 +191,7 @@ class View:
             await asyncio.sleep(self.__timeout_expiry - now)
 
     def to_components(self) -> List[Dict[str, Any]]:
-        def key(item: Item) -> int:
+        def key(item: Item[Any]) -> int:
             return item._rendered_row or 0
 
         children = sorted(self.children, key=key)
@@ -243,7 +243,7 @@ class View:
             return time.monotonic() + self.timeout
         return None
 
-    def add_item(self, item: Item) -> None:
+    def add_item(self, item: Item[Any]) -> None:
         """Adds an item to the view.
 
         Parameters
@@ -271,7 +271,7 @@ class View:
         item._view = self
         self.children.append(item)
 
-    def remove_item(self, item: Item) -> None:
+    def remove_item(self, item: Item[Any]) -> None:
         """Removes an item from the view.
 
         Parameters
@@ -327,7 +327,7 @@ class View:
         """
         pass
 
-    async def on_error(self, error: Exception, item: Item, interaction: Interaction) -> None:
+    async def on_error(self, error: Exception, item: Item[Any], interaction: Interaction) -> None:
         """|coro|
 
         A callback that is called when an item's callback or :meth:`interaction_check`
@@ -347,7 +347,7 @@ class View:
         print(f'Ignoring exception in view {self} for item {item}:', file=sys.stderr)
         traceback.print_exception(error.__class__, error, error.__traceback__, file=sys.stderr)
 
-    async def _scheduled_task(self, item: Item, interaction: Interaction) -> None:
+    async def _scheduled_task(self, item: Item[Any], interaction: Interaction) -> None:
         try:
             if self.timeout:
                 self.__timeout_expiry = time.monotonic() + self.timeout
@@ -379,7 +379,7 @@ class View:
         self.__stopped.set_result(True)
         asyncio.create_task(self.on_timeout(), name=f'discord-ui-view-timeout-{self.id}')
 
-    def _dispatch_item(self, item: Item, interaction: Interaction) -> None:
+    def _dispatch_item(self, item: Item[Any], interaction: Interaction) -> None:
         if self.__stopped.done():
             return
 

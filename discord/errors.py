@@ -26,17 +26,13 @@ from __future__ import annotations
 
 from typing import Dict, List, Optional, TYPE_CHECKING, Any, Tuple, Union
 
-from aiohttp import ClientResponse, ClientWebSocketResponse
+if TYPE_CHECKING:
+    from .interactions import Interaction
 
-try:
+    from aiohttp import ClientResponse, ClientWebSocketResponse
     from requests import Response
 
     _ResponseType = Union[ClientResponse, Response]
-except ModuleNotFoundError:
-    _ResponseType = ClientResponse
-
-if TYPE_CHECKING:
-    from .interactions import Interaction
 
 __all__ = (
     'DiscordException',

@@ -259,7 +259,7 @@ class CooldownMapping(Generic[T]):
         bucket = self.get_bucket(arg, current)
         return bucket.update_rate_limit(current)
 
-class DynamicCooldownMapping(CooldownMapping, Generic[T]):
+class DynamicCooldownMapping(CooldownMapping[T], Generic[T]):
 
     def __init__(
         self,

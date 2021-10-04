@@ -309,7 +309,7 @@ class ClientUser(BaseUser):
         Specifies if the user has MFA turned on and working.
     """
 
-    __slots__ = ('locale', '_flags', 'verified', 'mfa_enabled', '__weakref__')
+    __slots__ = ('locale', '_flags', 'verified', 'mfa_enabled')
 
     if TYPE_CHECKING:
         verified: bool

@@ -81,7 +81,7 @@ class Object(Hashable):
         except ValueError:
             raise TypeError(f'id parameter must be convertable to int not {id.__class__!r}') from None
         else:
-            self.id = id
+            self.id: int = id
 
     def __repr__(self) -> str:
         return f'<Object id={self.id!r}>'

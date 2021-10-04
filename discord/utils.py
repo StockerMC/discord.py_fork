@@ -87,6 +87,9 @@ __all__ = (
     'format_dt',
 )
 
+T = TypeVar('T')
+T_co = TypeVar('T_co', covariant=True)
+
 DISCORD_EPOCH = 1420070400000
 
 
@@ -103,13 +106,18 @@ class _MissingSentinel:
 
 MISSING: Any = _MissingSentinel()
 
+class _cached_property(Generic[T, T_co]):
+    def __init__(self, function: Callable[[T], T_co]) -> None:
+        self.function: Callable[[T], T_co] = function
+        self.__doc__: Optional[str] = getattr(function, '__doc__')
 
-class _cached_property:
-    def __init__(self, function):
-        self.function = function
-        self.__doc__ = getattr(function, '__doc__')
+    @overload
+    def __get__(self, instance: None, owner: Type[T]) -> _cached_property[T, T_co]: ...
 
-    def __get__(self, instance, owner):
+    @overload
+    def __get__(self, instance: T, owner: Type[T]) -> T_co: ...
+
+    def __get__(self, instance: Optional[T], owner: Type[T]) -> Any:
         if instance is None:
             return self
 
@@ -140,16 +148,14 @@ else:
     cached_property = _cached_property
 
 
-T = TypeVar('T')
-T_co = TypeVar('T_co', covariant=True)
 _Iter = Union[Iterator[T], AsyncIterator[T]]
 
 
 class CachedSlotProperty(Generic[T, T_co]):
     def __init__(self, name: str, function: Callable[[T], T_co]) -> None:
-        self.name = name
-        self.function = function
-        self.__doc__ = getattr(function, '__doc__')
+        self.name: str = name
+        self.function: Callable[[T], T_co] = function
+        self.__doc__: Optional[str] = getattr(function, '__doc__')
 
     @overload
     def __get__(self, instance: None, owner: Type[T]) -> CachedSlotProperty[T, T_co]:
@@ -910,7 +916,7 @@ def evaluate_annotation(
     cache: Dict[str, Any],
     *,
     implicit_str: bool = True,
-):
+) -> Any:
     if isinstance(tp, ForwardRef):
         tp = tp.__forward_arg__
         # ForwardRefs always evaluate their internals

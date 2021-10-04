@@ -69,10 +69,9 @@ if TYPE_CHECKING:
     from .audit_logs import AuditLogEntry
     from .guild import Guild
     from .threads import Thread
-    from .abc import Snowflake
+    from .abc import Snowflake, Messageable, MessageableChannel
     from .state import ConnectionState
     from .http import HTTPClient, Response
-    from .abc import Messageable
     from .enums import AuditLogAction
     from .client import Client
 
@@ -280,7 +279,7 @@ class HistoryIterator(_AsyncIterator['Message']):
     def __init__(
         self,
         messageable: Messageable,
-        limit: int,
+        limit: Optional[int],
         before: Optional[Union[Snowflake, datetime.datetime]] = None,
         after: Optional[Union[Snowflake, datetime.datetime]] = None,
         around: Optional[Union[Snowflake, datetime.datetime]] = None,
@@ -300,7 +299,7 @@ class HistoryIterator(_AsyncIterator['Message']):
             self.reverse: bool = oldest_first
 
         self.messageable: Messageable = messageable
-        self.limit: int = limit
+        self.limit: Optional[int] = limit
         self.before: Optional[Snowflake] = before
         self.after: Optional[Snowflake] = after or OLDEST_OBJECT
         self.around: Optional[Snowflake] = around
@@ -351,14 +350,14 @@ class HistoryIterator(_AsyncIterator['Message']):
             r = 100
         else:
             r = l
-        self.retrieve = r
+        self.retrieve: int = r
         return r > 0
 
     async def fill_messages(self) -> None:
         if not hasattr(self, 'channel'):
             # do the required set up
             channel = await self.messageable._get_channel()
-            self.channel = channel
+            self.channel: MessageableChannel = channel
 
         if self._get_retrieve():
             data = await self._retrieve_messages(self.retrieve)
@@ -493,7 +492,7 @@ class AuditLogIterator(_AsyncIterator['AuditLogEntry']):
             r = 100
         else:
             r = l
-        self.retrieve = r
+        self.retrieve: int = r
         return r > 0
 
     async def _fill(self) -> None:
@@ -597,7 +596,7 @@ class GuildIterator(_AsyncIterator['Guild']):
             r = 100
         else:
             r = l
-        self.retrieve = r
+        self.retrieve: int = r
         return r > 0
 
     def create_guild(self, data: GuildPayload) -> Guild:
@@ -670,7 +669,7 @@ class MemberIterator(_AsyncIterator['Member']):
             r = 1000
         else:
             r = l
-        self.retrieve = r
+        self.retrieve: int = r
         return r > 0
 
     async def fill_members(self) -> None:

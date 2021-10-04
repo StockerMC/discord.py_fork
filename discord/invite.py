@@ -496,7 +496,7 @@ class Invite(Hashable):
         """:class:`str`: A property that retrieves the invite URL."""
         return self.BASE + '/' + self.code
 
-    async def delete(self, *, reason: Optional[str] = None):
+    async def delete(self, *, reason: Optional[str] = None) -> None:
         """|coro|
 
         Revokes the instant invite.

@@ -64,6 +64,8 @@ if TYPE_CHECKING:
     from .state import ConnectionState
     from .voice_client import VoiceClient
 
+    from .types.voice import SessionDescription
+
     T = TypeVar('T')
     DWS = TypeVar('DWS', bound='DiscordWebSocket')
     DVWS = TypeVar('DVWS', bound='DiscordVoiceWebSocket')
@@ -354,10 +356,10 @@ class DiscordWebSocket:
     def is_ratelimited(self) -> bool:
         return self._rate_limiter.is_ratelimited()
 
-    def debug_log_receive(self, data, /) -> None:
+    def debug_log_receive(self, data: Any, /) -> None:
         self._dispatch('socket_raw_receive', data)
 
-    def log_receive(self, _, /) -> None:
+    def log_receive(self, _: Any, /) -> None:
         pass
 
     @classmethod
@@ -492,7 +494,7 @@ class DiscordWebSocket:
         await self.send_as_json(payload)
         log.info('Shard ID %s has sent the RESUME payload.', self.shard_id)
 
-    async def received_message(self, msg, /) -> None:
+    async def received_message(self, msg: Any, /) -> None:
         self.log_receive(msg)
 
         if type(msg) is bytes:
@@ -657,7 +659,7 @@ class DiscordWebSocket:
                 log.info('Websocket closed with %s, cannot reconnect.', code)
                 raise ConnectionClosed(self.socket, shard_id=self.shard_id, code=code) from None
 
-    async def debug_send(self, data, /) -> None:
+    async def debug_send(self, data: Any, /) -> None:
         await self._rate_limiter.block()
         self._dispatch('socket_raw_send', data)
         await self.socket.send_str(data)
@@ -898,7 +900,7 @@ class DiscordVoiceWebSocket:
 
         await self.send_as_json(payload)
 
-    async def received_message(self, msg) -> None:
+    async def received_message(self, msg: Any) -> None:
         log.debug('Voice websocket frame received: %s', msg)
         op = msg['op']
         data = msg.get('d')
@@ -964,7 +966,7 @@ class DiscordVoiceWebSocket:
 
         return sum(heartbeat.recent_ack_latencies) / len(heartbeat.recent_ack_latencies)
 
-    async def load_secret_key(self, data) -> None:
+    async def load_secret_key(self, data: SessionDescription) -> None:
         log.info('received secret key for voice connection')
         self.secret_key = self._connection.secret_key = data.get('secret_key')
         await self.speak()

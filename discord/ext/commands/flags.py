@@ -68,6 +68,7 @@ __all__ = (
 if TYPE_CHECKING:
     from .context import Context
 
+    FMT = TypeVar('FMT', bound='FlagsMeta')
 
 @dataclass
 class Flag:
@@ -146,7 +147,7 @@ def flag(
     return Flag(name=name, aliases=aliases, default=default, max_args=max_args, override=override)
 
 
-def validate_flag_name(name: str, forbidden: Set[str]):
+def validate_flag_name(name: str, forbidden: Set[str]) -> None:
     if not name:
         raise ValueError('flag names should not be empty')
 
@@ -265,7 +266,7 @@ class FlagsMeta(type):
         __commands_flag_prefix__: str
 
     def __new__(
-        cls: Type[type],
+        cls: Type[FMT],
         name: str,
         bases: Tuple[type, ...],
         attrs: Dict[str, Any],
@@ -273,7 +274,7 @@ class FlagsMeta(type):
         case_insensitive: bool = MISSING,
         delimiter: str = MISSING,
         prefix: str = MISSING,
-    ):
+    ) -> FMT:
         attrs['__commands_is_flag__'] = True
 
         try:

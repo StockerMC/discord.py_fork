@@ -48,7 +48,7 @@ from .errors import *
 
 if TYPE_CHECKING:
     from .context import Context
-    from discord.message import PartialMessageableChannel
+    from .bot import Bot
 
 
 __all__ = (
@@ -190,7 +190,7 @@ class MemberConverter(IDConverter[discord.Member]):
         optionally caching the result if :attr:`.MemberCacheFlags.joined` is enabled.
     """
 
-    async def query_member_named(self, guild, argument):
+    async def query_member_named(self, guild: discord.Guild, argument: str) -> Optional[discord.Member]:
         cache = guild._state.member_cache_flags.joined
         if len(argument) > 5 and argument[-5] == '#':
             username, _, discriminator = argument.rpartition('#')
@@ -200,7 +200,7 @@ class MemberConverter(IDConverter[discord.Member]):
             members = await guild.query_members(argument, limit=100, cache=cache)
             return discord.utils.find(lambda m: m.name == argument or m.nick == argument, members)
 
-    async def query_member_by_id(self, bot, guild, user_id):
+    async def query_member_by_id(self, bot: Bot, guild: discord.Guild, user_id: int) -> Optional[discord.Member]:
         ws = bot._get_websocket(shard_id=guild.shard_id)
         cache = guild._state.member_cache_flags.joined
         if ws.is_ratelimited():
@@ -358,7 +358,7 @@ class PartialMessageConverter(Converter[discord.PartialMessage]):
         return guild_id, message_id, channel_id
 
     @staticmethod
-    def _resolve_channel(ctx: Context[Any], guild_id: Optional[int], channel_id: Optional[int]) -> Optional[PartialMessageableChannel]:
+    def _resolve_channel(ctx: Context[Any], guild_id: Optional[int], channel_id: Optional[int]) -> Optional[discord.message.PartialMessageableChannel]:
         if guild_id is not None:
             guild = ctx.bot.get_guild(guild_id)
             if guild is not None and channel_id is not None:

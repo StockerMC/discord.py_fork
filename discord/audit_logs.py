@@ -214,8 +214,8 @@ class AuditLogChanges:
     # fmt: on
 
     def __init__(self, entry: AuditLogEntry, data: List[AuditLogChangePayload]):
-        self.before = AuditLogDiff()
-        self.after = AuditLogDiff()
+        self.before: AuditLogDiff = AuditLogDiff()
+        self.after: AuditLogDiff = AuditLogDiff()
 
         for elem in data:
             attr = elem['key']
@@ -362,11 +362,11 @@ class AuditLogEntry(Hashable):
         self._from_data(data)
 
     def _from_data(self, data: AuditLogEntryPayload) -> None:
-        self.action = enums.try_enum(enums.AuditLogAction, data['action_type'])
-        self.id = int(data['id'])
+        self.action: enums.AuditLogAction = enums.try_enum(enums.AuditLogAction, data['action_type'])
+        self.id: int = int(data['id'])
 
         # this key is technically not usually present
-        self.reason = data.get('reason')
+        self.reason: Optional[str] = data.get('reason')
         self.extra = data.get('options')  # type: ignore
 
         if isinstance(self.action, enums.AuditLogAction) and self.extra:
