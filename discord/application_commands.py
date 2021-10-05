@@ -42,6 +42,7 @@ from typing import (
     Coroutine,
     Final,
     Literal,
+    Iterator,
 )
 
 from operator import attrgetter
@@ -507,7 +508,7 @@ class ApplicationCommandOptions:
         state: ConnectionState,
         command_options: List[ApplicationCommandOption],
     ) -> None:
-        self.__defaults__: Dict[str, Any] = {option.name: None for option in command_options if not option.required}
+        self.__application_command_options__: Dict[str, Any] = {option.name: None for option in command_options if not option.required}
         if options is None:
             return
 
@@ -547,13 +548,16 @@ class ApplicationCommandOptions:
                 else:
                     value = User(state=state, data=resolved_data['users'][value])  # type: ignore
 
-            setattr(self, option['name'], value)
+            self.__application_command_options__[option['name']] = value
 
     def __getattr__(self, name: str) -> Any:
         try:
-            return self.__defaults__[name]
+            return self.__application_command_options__[name]
         except KeyError:
             raise AttributeError(name) from None
+
+    def __iter__(self) -> Iterator[Tuple[str, Any]]:
+        yield from self.__application_command_options__.items()
 
 
 def _get_used_subcommand(options: Union[ApplicationCommandPayload, ApplicationCommandOptionPayload]) -> Optional[str]:
@@ -895,7 +899,7 @@ class BaseApplicationCommand:
                         if isinstance(default, ApplicationCommandOptionDefault):
                             default = await default.default(response)
 
-                        setattr(response.options, option.name, default)
+                        response.options.__application_command_options__[option.name] = default
 
             # the response type is correct
             global_allow = await async_all(f(response) for f in client._application_command_checks)  # type: ignore
