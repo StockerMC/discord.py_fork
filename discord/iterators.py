@@ -192,10 +192,10 @@ class _FilteredAsyncIterator(_AsyncIterator[T_co]):
 
 
 class ReactionIterator(_AsyncIterator[Union['User', 'Member']]):
-    def __init__(self, message: Message, emoji: str, limit: int = 100, after: Optional[Object] = None) -> None:
+    def __init__(self, message: Message, emoji: str, limit: int = 100, after: Optional[Snowflake] = None) -> None:
         self.message: Message = message
         self.limit: int = limit
-        self.after: Optional[Object] = after
+        self.after: Optional[Snowflake] = after
         state = message._state
         self.getter: Callable[[_Snowflake, _Snowflake, str, int, Optional[_Snowflake]], Response[List[UserPayload]]] = state.http.get_reaction_users
         self.state: ConnectionState = state

@@ -81,7 +81,7 @@ if TYPE_CHECKING:
         StageInstance as StageInstancePayload,
     )
     from .types.user import User as UserPayload, PartialUser as PartialUserPayload
-    from .types.emoji import Emoji as EmojiPayload
+    from .types.emoji import Emoji as EmojiPayload, PartialEmoji as PartialEmojiPayload
     from .types.sticker import GuildSticker as GuildStickerPayload
     from .types.guild import Guild as GuildPayload, UnavailableGuild as UnavailableGuildPayload
     from .types.message import Message as MessagePayload
@@ -1463,7 +1463,7 @@ class ConnectionState:
             return channel.guild.get_member(user_id)
         return self.get_user(user_id)
 
-    def get_reaction_emoji(self, data: EmojiPayload) -> Union[Emoji, PartialEmoji]:
+    def get_reaction_emoji(self, data: Union[EmojiPayload, PartialEmojiPayload]) -> Union[Emoji, PartialEmoji]:
         emoji_id = utils._get_as_snowflake(data, 'id')
 
         if not emoji_id:
