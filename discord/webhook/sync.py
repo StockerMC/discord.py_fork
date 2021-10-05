@@ -621,7 +621,7 @@ class SyncWebhook(BaseWebhook):
             if not isinstance(session, requests.Session):
                 raise TypeError(f'expected requests.Session not {session.__class__!r}')
         else:
-            session = requests  # type: ignore
+            session = requests.Session()
         return cls(data, session, token=bot_token)
 
     @classmethod
