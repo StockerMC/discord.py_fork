@@ -82,7 +82,6 @@ if TYPE_CHECKING:
         Type[StageChannel],
         Type[CategoryChannel],
         Type[Thread],
-        Type[GuildChannel],
     ]
     ValidOptionTypes = Union[
         Type[str],
@@ -173,13 +172,12 @@ OPTION_TYPE_MAPPING: Final[Dict[Union[ValidOptionTypes], ApplicationCommandOptio
     Role: ApplicationCommandOptionType.role,
 }
 
-CHANNEL_TO_CHANNEL_TYPE: Final[Dict[ChannelTypes, Optional[ChannelType]]] = {
+CHANNEL_TO_CHANNEL_TYPE: Final[Dict[ChannelTypes, ChannelType]] = {
     TextChannel: ChannelType.text,
     VoiceChannel: ChannelType.voice,
     StageChannel: ChannelType.stage_voice,
     CategoryChannel: ChannelType.category,
     Thread: ChannelType.public_thread,  # is public_thread correct?
-    GuildChannel: None,
 }
 
 for _channel_type in CHANNEL_TO_CHANNEL_TYPE.keys():
@@ -269,7 +267,8 @@ class ApplicationCommandOption:
         The default for the option, if any.
 
         This is for when the option is accessed with it's relevant :class:`ApplicationCommandOptions` instance.
-    channel_types: 
+    channel_types: List[:class:`ChannelType`]
+        The valid channel types for this option. This is only valid for options that have a type of :attr:`ApplicationCommandOptionType.channel`.
     """
 
     __slots__= (
@@ -337,15 +336,19 @@ def application_command_option(
     required: bool = True,
     choices: List[ApplicationCommandOptionChoice] = [],
     default: Optional[Union[ApplicationCommandOptionDefault, Type[ApplicationCommandOptionDefault], Any]] = None,
+    channel_types: List[Union[ChannelType, ChannelTypes]] = [],
 ) -> Any:
-    """Used for creating an option for an application command.
+    r"""Used for creating an option for an application command.
 
     To avoid type checker errors when using this with typehints,
     the return type is ``Any``.        
 
     .. note::
 
-        If the type is a channel, 
+        If this is used in a class with a channel typehint (excluding :class:`.abc.GuildChannel`),
+        the channel types of the option will be set to the class being typehinted. In the case of a
+        :data:`typing.Union` typehint of channel types, the channel types of the option will be set
+        to that.
 
     .. versionadded:: 2.0
 
@@ -355,9 +358,9 @@ def application_command_option(
         The description of the option.
     name: :class:`str`
         The name of the option.
-    type: Union[:class:`ApplicationCommandOptionType`, Type[Any]]
+    type: Union[:class:`ApplicationCommandOptionType`, Type]
         The type of the option. This can be an :class:`ApplicationCommandOptionType` member or a :ref:`Discord model <discord_api_models>`.
-        Note that not all Discord models are acceptable types. 
+        Note that not all Discord models are acceptable types.
     required: :class:`bool`
         Whether the option is required or not.
         Defaults to ``True``.
@@ -365,6 +368,11 @@ def application_command_option(
         The choices of the option.
     default: Optional[Union[:class:`ApplicationCommandOptionDefault`, Type[:class:`ApplicationCommandOptionDefault`]]]
         The default of the option for when it's accessed with it's relevant :class:`ApplicationCommandOptions` instance.
+    channel_types: List[Union[:class:`ChannelType`, Type]]
+        The valid channel types for this option. This is only valid for options that have a type of :attr:`ApplicationCommandOptionType.channel`
+
+        This can be a list including the following: :class:`ChannelType` members, :class:`TextChannel`, :class:`VoiceChannel`,
+        :class:`StageChannel`, :class:`CategoryChannel` and :class:`Thread`.
 
     Returns
     --------
@@ -385,6 +393,8 @@ def application_command_option(
         if hasattr(default, '__discord_application_command_option_default__') and inspect.isclass(default):
             default = default()
 
+    resolved_channel_types = [CHANNEL_TO_CHANNEL_TYPE[channel_type] if not isinstance(channel_type, ChannelType) else channel_type for channel_type in channel_types]
+
     return ApplicationCommandOption(
         name=name,
         description=description,
@@ -392,6 +402,7 @@ def application_command_option(
         required=required,
         choices=choices,
         default=default,
+        channel_types=resolved_channel_types,
     )
 
 def _transform_literal_choices(
@@ -404,13 +415,13 @@ def _transform_literal_choices(
     for arg in annotation.__args__:
         arg_type = type(arg)
         if arg_type not in (str, int, float):
-            raise TypeError(f'The choice of an option must be either a str, int or float not {type(arg_type)!r}.')
+            raise TypeError(f'The choice of the option {attr_name!r} must be either a str, int or float not {type(arg_type)!r}.')
 
         if annotation_type is not MISSING and arg_type is not annotation_type:
             raise TypeError(f'The choices for the option {attr_name!r} must be the same type (str, int or float).')
 
         if attr_type is not MISSING and arg_type is not annotation_type:
-            raise TypeError(f'The type of the choices of the option must be the same as the type of the option.')
+            raise TypeError(f'The type of the choices of the option {attr_name!r} must be the same as the type of the option.')
 
         annotation_type = arg_type
         choices.append(ApplicationCommandOptionChoice(name=str(arg), value=arg))
