@@ -581,6 +581,22 @@ class Member(discord.abc.Messageable, _UserTag):
         return max(guild.get_role(rid) or guild.default_role for rid in self._roles)
 
     @property
+    def role_icon(self) -> Optional[Asset]:
+        """Optional[:class:`Asset`]: A property that returns the icon displayed
+        next to the member. If the member does not have any roles with an icon,
+        ``None`` is returned.
+        """
+        roles = self.roles[1:]  # remove @everyone
+
+        # highest order of the role icon is the one that gets displayed next to the member.
+        for role in reversed(roles):
+            icon = role.icon
+            if icon:
+                return icon
+
+        return None
+
+    @property
     def guild_permissions(self) -> Permissions:
         """:class:`Permissions`: Returns the member's guild permissions.
 
