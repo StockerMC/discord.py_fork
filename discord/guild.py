@@ -3057,7 +3057,7 @@ class Guild(Hashable):
         )
 
     async def change_voice_state(
-        self, *, channel: Optional[VocalGuildChannel], self_mute: bool = False, self_deaf: bool = False
+        self, *, channel: Optional[Snowflake], self_mute: bool = False, self_deaf: bool = False
     ) -> None:
         """|coro|
 

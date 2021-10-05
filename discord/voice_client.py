@@ -44,7 +44,7 @@ import socket
 import logging
 import struct
 import threading
-from typing import Any, Callable, List, Optional, TYPE_CHECKING, Tuple
+from typing import Any, Callable, List, Optional, TYPE_CHECKING, Tuple, Union
 
 from . import opus, utils
 from .backoff import ExponentialBackoff
@@ -59,6 +59,7 @@ if TYPE_CHECKING:
     from .state import ConnectionState
     from .user import ClientUser
     from .opus import Encoder
+    from .channel import VoiceChannel, StageChannel
     from . import abc
 
     from .types.voice import (
@@ -298,7 +299,7 @@ class VoiceClient(VoiceProtocol):
                 await self.disconnect()
             else:
                 guild = self.guild
-                self.channel: abc.Connectable = channel_id and guild and guild.get_channel(int(channel_id))  # type: ignore
+                self.channel: Union[VoiceChannel, StageChannel] = channel_id and guild and guild.get_channel(int(channel_id))  # type: ignore
         else:
             self._voice_state_complete.set()
 
@@ -340,7 +341,7 @@ class VoiceClient(VoiceProtocol):
         await self.channel.guild.change_voice_state(channel=self.channel)
 
     async def voice_disconnect(self) -> None:
-        _log.info('The voice handshake is being terminated for Channel ID %s (Guild ID %s)', self.channel.id, self.guild.id)
+        _log.info('The voice handshake is being terminated for Channel ID %s (Guild ID %s)', self.channel.id, self.channel.guild.id)
         await self.channel.guild.change_voice_state(channel=None)
 
     def prepare_handshake(self) -> None:
