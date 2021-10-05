@@ -380,7 +380,7 @@ class Command(discord._types._BaseCommand, Generic[CogT, P, T]):
 
         # bandaid for the fact that sometimes parent can be the bot instance
         parent = kwargs.get('parent')
-        self.parent: Optional[GroupMixin] = parent if isinstance(parent, discord._types._BaseCommand) else None  # type: ignore
+        self.parent: Optional[GroupMixin[CogT]] = parent if isinstance(parent, discord._types._BaseCommand) else None  # type: ignore
 
         self._before_invoke: Optional[Hook] = None
         try:

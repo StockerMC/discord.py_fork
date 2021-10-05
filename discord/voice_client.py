@@ -298,7 +298,7 @@ class VoiceClient(VoiceProtocol):
                 await self.disconnect()
             else:
                 guild = self.guild
-                self.channel = channel_id and guild and guild.get_channel(int(channel_id))  # type: ignore
+                self.channel: abc.Connectable = channel_id and guild and guild.get_channel(int(channel_id))  # type: ignore
         else:
             self._voice_state_complete.set()
 
