@@ -1422,7 +1422,7 @@ class HTTPClient:
     def get_widget(self, guild_id: Snowflake) -> Response[widget.Widget]:
         return self.request(Route('GET', '/guilds/{guild_id}/widget.json', guild_id=guild_id))
 
-    def edit_widget(self, guild_id: Snowflake, payload: widget.Widget) -> Response[widget.WidgetSettings]:
+    def edit_widget(self, guild_id: Snowflake, payload: widget.EditWidget) -> Response[widget.WidgetSettings]:
         return self.request(Route('PATCH', '/guilds/{guild_id}/widget', guild_id=guild_id), json=payload)
 
     # Invite management

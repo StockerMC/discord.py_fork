@@ -106,6 +106,7 @@ if TYPE_CHECKING:
     from .types.snowflake import SnowflakeList, Snowflake as _Snowflake
     from .types.sticker import CreateGuildSticker
     from .types.template import CreateTemplate
+    from .types.widget import EditWidget
     from .types import channel
 
     from .permissions import Permissions
@@ -2934,7 +2935,7 @@ class Guild(Hashable):
         HTTPException
             Editing the widget failed.
         """
-        payload = {}
+        payload: EditWidget = {}
         if channel is not MISSING:
             payload['channel_id'] = None if channel is None else channel.id
         if enabled is not MISSING:
