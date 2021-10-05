@@ -985,7 +985,6 @@ class BaseApplicationCommand:
 
         return ret
 
-# TODO add examples and docstrings
 
 class SlashCommand(BaseApplicationCommand, type=ApplicationCommandType.slash):
     """Represents a Discord slash command.
