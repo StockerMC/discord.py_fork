@@ -37,6 +37,10 @@ class CreateTemplate(_CreateTemplateOptional):
     name: str
 
 
+class EditTemplate(_CreateTemplateOptional, total=False):
+    name: str
+
+
 class Template(TypedDict):
     code: str
     name: str

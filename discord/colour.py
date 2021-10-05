@@ -22,6 +22,8 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 """
 
+from __future__ import annotations
+
 import colorsys
 import random
 
@@ -32,6 +34,8 @@ from typing import (
     Type,
     TypeVar,
     Union,
+    Callable,
+    TYPE_CHECKING,
 )
 
 __all__ = (
@@ -262,28 +266,40 @@ class Colour:
         """A factory method that returns a :class:`Colour` with a value of ``0x95a5a6``."""
         return cls(0x95a5a6)
 
-    lighter_gray = lighter_grey
+    if TYPE_CHECKING:
+        lighter_gray: Callable[[], Colour]
+    else:
+        lighter_gray = lighter_grey
 
     @classmethod
     def dark_grey(cls: Type[CT]) -> CT:
         """A factory method that returns a :class:`Colour` with a value of ``0x607d8b``."""
         return cls(0x607d8b)
 
-    dark_gray = dark_grey
+    if TYPE_CHECKING:
+        dark_gray: Callable[[], Colour]
+    else:
+        dark_gray = dark_grey
 
     @classmethod
     def light_grey(cls: Type[CT]) -> CT:
         """A factory method that returns a :class:`Colour` with a value of ``0x979c9f``."""
         return cls(0x979c9f)
 
-    light_gray = light_grey
+    if TYPE_CHECKING:
+        light_gray: Callable[[], Colour]
+    else:
+        light_gray = light_grey
 
     @classmethod
     def darker_grey(cls: Type[CT]) -> CT:
         """A factory method that returns a :class:`Colour` with a value of ``0x546e7a``."""
         return cls(0x546e7a)
 
-    darker_gray = darker_grey
+    if TYPE_CHECKING:
+        darker_gray: Callable[[], Colour]
+    else:
+        darker_gray = darker_grey
 
     @classmethod
     def og_blurple(cls: Type[CT]) -> CT:

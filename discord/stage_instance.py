@@ -89,8 +89,8 @@ class StageInstance(Hashable):
     )
 
     def __init__(self, *, state: ConnectionState, guild: Guild, data: StageInstancePayload) -> None:
-        self._state = state
-        self.guild = guild
+        self._state: ConnectionState = state
+        self.guild: Guild = guild
         self._update(data)
 
     def _update(self, data: StageInstancePayload):

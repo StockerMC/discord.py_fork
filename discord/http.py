@@ -399,7 +399,7 @@ class HTTPClient:
 
         return self.request(Route('POST', '/users/{user_id}/channels', user_id=user_id), json=payload)
 
-    def leave_group(self, channel_id) -> Response[None]:
+    def leave_group(self, channel_id: Snowflake) -> Response[None]:
         return self.request(Route('DELETE', '/channels/{channel_id}', channel_id=channel_id))
 
     # Message management
@@ -1165,12 +1165,12 @@ class HTTPClient:
     def sync_template(self, guild_id: Snowflake, code: str) -> Response[template.Template]:
         return self.request(Route('PUT', '/guilds/{guild_id}/templates/{code}', guild_id=guild_id, code=code))
 
-    def edit_template(self, guild_id: Snowflake, code: str, payload) -> Response[template.Template]:
+    def edit_template(self, guild_id: Snowflake, code: str, payload: template.EditTemplate) -> Response[template.Template]:
         valid_keys = (
             'name',
             'description',
         )
-        payload = {k: v for k, v in payload.items() if k in valid_keys}
+        payload = {k: v for k, v in payload.items() if k in valid_keys}  # type: ignore
         return self.request(
             Route('PATCH', '/guilds/{guild_id}/templates/{code}', guild_id=guild_id, code=code), json=payload
         )
@@ -1422,7 +1422,7 @@ class HTTPClient:
     def get_widget(self, guild_id: Snowflake) -> Response[widget.Widget]:
         return self.request(Route('GET', '/guilds/{guild_id}/widget.json', guild_id=guild_id))
 
-    def edit_widget(self, guild_id: Snowflake, payload) -> Response[widget.WidgetSettings]:
+    def edit_widget(self, guild_id: Snowflake, payload: widget.Widget) -> Response[widget.WidgetSettings]:
         return self.request(Route('PATCH', '/guilds/{guild_id}/widget', guild_id=guild_id), json=payload)
 
     # Invite management
@@ -1619,7 +1619,7 @@ class HTTPClient:
         )
         return self.request(r)
 
-    def upsert_global_command(self, application_id: Snowflake, payload) -> Response[interactions.ApplicationCommand]:
+    def upsert_global_command(self, application_id: Snowflake, payload: List[interactions.ApplicationCommand]) -> Response[interactions.ApplicationCommand]:
         r = Route('POST', '/applications/{application_id}/commands', application_id=application_id)
         return self.request(r, json=payload)
 

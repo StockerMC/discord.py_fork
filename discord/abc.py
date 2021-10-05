@@ -704,7 +704,14 @@ class GuildChannel:
     ) -> None:
         ...
 
-    async def set_permissions(self, target, *, overwrite=_undefined, reason=None, **permissions):
+    async def set_permissions(  # type: ignore
+        self,
+        target: Union[Member, Role],
+        *,
+        overwrite: Optional[Union[PermissionOverwrite, _Undefined]] = _undefined,
+        reason: Optional[str] = None,
+        **permissions: bool,
+    ) -> None:
         r"""|coro|
 
         Sets the channel specific permission overwrites for a target in the

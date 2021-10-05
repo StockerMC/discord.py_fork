@@ -35,7 +35,7 @@ __all__ = (
 
 if TYPE_CHECKING:
     import datetime
-    from .types.template import Template as TemplatePayload
+    from .types.template import Template as TemplatePayload, EditTemplate
     from .state import ConnectionState
     from .user import User
 
@@ -276,7 +276,7 @@ class Template:
         :class:`Template`
             The newly edited template.
         """
-        payload = {}
+        payload: EditTemplate = {}
 
         if name is not MISSING:
             payload['name'] = name

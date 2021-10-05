@@ -35,7 +35,22 @@ import collections.abc
 import types
 import importlib.util
 
-from typing import Any, Callable, Coroutine, Dict, Generator, List, Optional, Sequence, TYPE_CHECKING, Tuple, TypeVar, Union, Type, Mapping
+from typing import (
+    Any,
+    Callable,
+    Coroutine,
+    Dict,
+    Generator,
+    List,
+    Optional,
+    Sequence,
+    TYPE_CHECKING,
+    Tuple,
+    TypeVar,
+    Union,
+    Type,
+    Mapping,
+)
 
 import aiohttp
 
@@ -79,10 +94,9 @@ from .application_commands import (
 if TYPE_CHECKING:
     import importlib.machinery
 
-    from .ext.commands._types import (
-        CoroFunc,
-        Coro
-    )
+    from typing_extensions import ParamSpec
+
+    from .ext.commands._types import CoroFunc
 
     from .abc import SnowflakeTime, PrivateChannel, GuildChannel, Snowflake
     from .channel import DMChannel
@@ -92,6 +106,7 @@ if TYPE_CHECKING:
     from .cog import Cog
 
     T = TypeVar('T')
+    P = ParamSpec('P')
 
     ApplicationCommand = Union[SlashCommand, MessageCommand, UserCommand]
     AT = TypeVar('AT', bound=ApplicationCommand)
@@ -107,7 +122,6 @@ __all__ = (
     'Client',
 )
 
-Coro = TypeVar('Coro', bound=Callable[..., Coroutine[Any, Any, Any]])
 CFT = TypeVar('CFT', bound='CoroFunc')
 
 _log = logging.getLogger(__name__)
@@ -1122,7 +1136,7 @@ class Client:
 
     # event registration
 
-    def event(self, coro: Coro) -> Coro:
+    def event(self, coro: Callable[P, Coroutine[Any, Any, T]]) -> Callable[P, Coroutine[Any, Any, T]]:
         """A decorator that registers an event to listen to.
 
         You can find more info about the events on the :ref:`documentation below <discord-api-events>`.

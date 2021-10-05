@@ -43,8 +43,8 @@ BF = TypeVar('BF', bound='BaseFlags')
 
 class flag_value:
     def __init__(self, func: Callable[[Any], int]):
-        self.flag = func(None)
-        self.__doc__ = func.__doc__
+        self.flag: int = func(None)
+        self.__doc__: Optional[str] = func.__doc__
 
     @overload
     def __get__(self: FV, instance: None, owner: Type[BF]) -> FV:
@@ -62,7 +62,7 @@ class flag_value:
     def __set__(self, instance: BaseFlags, value: bool) -> None:
         instance._set_flag(self.flag, value)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f'<flag_value flag={self.flag!r}>'
 
 
@@ -100,7 +100,7 @@ class BaseFlags:
 
     __slots__ = ('value',)
 
-    def __init__(self, **kwargs: bool):
+    def __init__(self, **kwargs: bool) -> None:
         self.value: int = self.DEFAULT_VALUE
         for key, value in kwargs.items():
             if key not in self.VALID_FLAGS:
@@ -457,8 +457,8 @@ class Intents(BaseFlags):
 
     __slots__ = ()
 
-    def __init__(self, **kwargs: bool):
-        self.value = self.DEFAULT_VALUE
+    def __init__(self, **kwargs: bool) -> None:
+        self.value: int = self.DEFAULT_VALUE
         for key, value in kwargs.items():
             if key not in self.VALID_FLAGS:
                 raise TypeError(f'{key!r} is not a valid flag name.')

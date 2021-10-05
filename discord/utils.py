@@ -46,6 +46,7 @@ from typing import (
     Type,
     TypeVar,
     Union,
+    NoReturn,
     overload,
     TYPE_CHECKING,
 )
@@ -180,12 +181,12 @@ class CachedSlotProperty(Generic[T, T_co]):
 
 class classproperty(Generic[T_co]):
     def __init__(self, fget: Callable[[Any], T_co]) -> None:
-        self.fget = fget
+        self.fget: Callable[[Any], T_co] = fget
 
     def __get__(self, instance: Optional[Any], owner: Type[Any]) -> T_co:
         return self.fget(owner)
 
-    def __set__(self, instance, value) -> None:
+    def __set__(self, instance: Any, value: Any) -> NoReturn:
         raise AttributeError('cannot set attribute')
 
 
@@ -522,7 +523,7 @@ async def maybe_coroutine(f: Callable[P, Any], *args: P.args, **kwargs: P.kwargs
 @overload
 async def maybe_coroutine(f: Any, *args: Any, **kwargs: Any) -> Any: ...
 
-async def maybe_coroutine(f, *args, **kwargs) -> Any:
+async def maybe_coroutine(f: Any, *args: Any, **kwargs: Any) -> Any:
     value = f(*args, **kwargs)
     if _isawaitable(value):
         return await value

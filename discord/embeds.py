@@ -309,7 +309,7 @@ class Embed:
         return getattr(self, '_colour', EmptyEmbed)
 
     @colour.setter
-    def colour(self, value: Union[int, Colour, _EmptyEmbed]):  # type: ignore
+    def colour(self, value: Union[int, Colour, _EmptyEmbed]) -> None:  # type: ignore
         if isinstance(value, (Colour, _EmptyEmbed)):
             self._colour = value
         elif isinstance(value, int):
@@ -317,14 +317,21 @@ class Embed:
         else:
             raise TypeError(f'Expected discord.Colour, int, or Embed.Empty but received {value.__class__.__name__} instead.')
 
-    color = colour
+    if TYPE_CHECKING:
+        @property
+        def color(self) -> MaybeEmpty[Colour]: ...
+
+        @color.setter
+        def color(self, value: Union[int, Colour, _EmptyEmbed]) -> None: ...  # type: ignore
+    else:
+        color = colour
 
     @property
     def timestamp(self) -> MaybeEmpty[datetime.datetime]:
         return getattr(self, '_timestamp', EmptyEmbed)
 
     @timestamp.setter
-    def timestamp(self, value: MaybeEmpty[datetime.datetime]):
+    def timestamp(self, value: MaybeEmpty[datetime.datetime]) -> None:
         if isinstance(value, datetime.datetime):
             if value.tzinfo is None:
                 value = value.astimezone()

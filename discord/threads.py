@@ -181,9 +181,9 @@ class Thread(Messageable, Hashable):
         try:
             member = data['member']
         except KeyError:
-            self.me = None
+            self.me: Optional[ThreadMember] = None
         else:
-            self.me = ThreadMember(self, member)
+            self.me: Optional[ThreadMember] = ThreadMember(self, member)
 
     def _unroll_metadata(self, data: ThreadMetadata):
         self.archived: bool = data['archived']
@@ -592,7 +592,7 @@ class Thread(Messageable, Hashable):
         # The data payload will always be a Thread payload
         return Thread(data=data, state=self._state, guild=self.guild)  # type: ignore
 
-    async def join(self):
+    async def join(self) -> None:
         """|coro|
 
         Joins this thread.

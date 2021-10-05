@@ -131,10 +131,16 @@ class Permissions(BaseFlags):
         """Returns ``True`` if the permissions on other are a strict superset of those on self."""
         return self.is_superset(other) and self != other
 
-    __le__ = is_subset
-    __ge__ = is_superset
-    __lt__ = is_strict_subset
-    __gt__ = is_strict_superset
+    if TYPE_CHECKING:
+        __le__: Callable[[Permissions], bool]
+        __ge__: Callable[[Permissions], bool]
+        __lt__: Callable[[Permissions], bool]
+        __gt__: Callable[[Permissions], bool]
+    else:
+        __le__ = is_subset
+        __ge__ = is_superset
+        __lt__ = is_strict_subset
+        __gt__ = is_strict_superset
 
     @classmethod
     def none(cls: Type[P]) -> P:
@@ -274,7 +280,7 @@ class Permissions(BaseFlags):
         # So 0000 OP2 0101 -> 0101
         # The OP is base  & ~denied.
         # The OP2 is base | allowed.
-        self.value = (self.value & ~deny) | allow
+        self.value: int = (self.value & ~deny) | allow
 
     @flag_value
     def create_instant_invite(self) -> int:

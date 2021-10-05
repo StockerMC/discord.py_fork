@@ -155,7 +155,6 @@ class WidgetMember(BaseUser):
         'name',
         'status',
         'nick',
-        'avatar',
         'discriminator',
         'id',
         'bot',
@@ -167,6 +166,10 @@ class WidgetMember(BaseUser):
     )
 
     if TYPE_CHECKING:
+        name: str
+        discriminator: str
+        id: int
+        bot: bool
         activity: Optional[Union[BaseActivity, Spotify]]
 
     def __init__(
