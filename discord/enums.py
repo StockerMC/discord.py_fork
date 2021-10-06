@@ -165,7 +165,14 @@ class EnumMeta(type):
 
 
 if TYPE_CHECKING:
-    from enum import Enum
+    import enum
+    ET = TypeVar('ET')
+
+    class Enum(enum.Enum):
+        def __le__(self: ET, other: ET) -> bool: ...
+        def __ge__(self: ET, other: ET) -> bool: ...
+        def __lt__(self: ET, other: ET) -> bool: ...
+        def __gt__(self: ET, other: ET) -> bool: ...
 else:
 
     class Enum(metaclass=EnumMeta):
