@@ -267,6 +267,48 @@ class AsyncWebhookAdapter:
         route = Route('PATCH', '/webhooks/{webhook_id}/{webhook_token}', webhook_id=webhook_id, webhook_token=token)
         return self.request(route, session, reason=reason, payload=payload)
 
+    @overload
+    def execute_webhook(
+        self,
+        webhook_id: int,
+        token: str,
+        *,
+        session: aiohttp.ClientSession,
+        payload: Optional[Dict[str, Any]] = None,
+        multipart: Optional[List[Dict[str, Any]]] = None,
+        files: Optional[List[File]] = None,
+        thread_id: Optional[int] = None,
+        wait: Literal[True],
+    ) -> Response[MessagePayload]: ...
+
+    @overload
+    def execute_webhook(
+        self,
+        webhook_id: int,
+        token: str,
+        *,
+        session: aiohttp.ClientSession,
+        payload: Optional[Dict[str, Any]] = None,
+        multipart: Optional[List[Dict[str, Any]]] = None,
+        files: Optional[List[File]] = None,
+        thread_id: Optional[int] = None,
+        wait: Literal[False],
+    ) -> Response[None]: ...
+
+    @overload
+    def execute_webhook(
+        self,
+        webhook_id: int,
+        token: str,
+        *,
+        session: aiohttp.ClientSession,
+        payload: Optional[Dict[str, Any]] = None,
+        multipart: Optional[List[Dict[str, Any]]] = None,
+        files: Optional[List[File]] = None,
+        thread_id: Optional[int] = None,
+        wait: bool = ...,
+    ) -> Response[None]: ...
+
     def execute_webhook(
         self,
         webhook_id: int,
