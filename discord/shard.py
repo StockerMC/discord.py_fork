@@ -73,7 +73,7 @@ class EventItem:
     __slots__ = ('type', 'shard', 'error')
 
     def __init__(self, etype: EventType, shard: Optional[Shard], error: Optional[Exception]) -> None:
-        self.type: int = etype.value
+        self.type: EventType = etype
         self.shard: Optional[Shard] = shard
         self.error: Optional[Exception] = error
 
@@ -88,7 +88,7 @@ class EventItem:
         return self.type == other.type
 
     def __hash__(self) -> int:
-        return hash(self.type)
+        return hash(self.type.value)
 
 
 class Shard:
@@ -431,7 +431,7 @@ class AutoShardedClient(Client):
 
         while not self.is_closed():
             item = await self.__queue.get()
-            if item.type == EventType.close:
+            if item.type is EventType.close:
                 await self.close()
                 if isinstance(item.error, ConnectionClosed):
                     if item.error.code != 1000:
@@ -441,12 +441,12 @@ class AutoShardedClient(Client):
                 return
             elif item.type in (EventType.identify, EventType.resume):
                 await item.shard.reidentify(item.error)  # type: ignore
-            elif item.type == EventType.reconnect:
+            elif item.type is EventType.reconnect:
                 await item.shard.reconnect()  # type: ignore
-            elif item.type == EventType.terminate:
+            elif item.type is EventType.terminate:
                 await self.close()
                 raise item.error  # type: ignore
-            elif item.type == EventType.clean_close:
+            elif item.type is EventType.clean_close:
                 return
 
     async def close(self) -> None:
