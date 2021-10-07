@@ -29,7 +29,7 @@ from .snowflake import Snowflake
 from .components import Component, ComponentType
 from .embed import Embed
 from .channel import ChannelType
-from .member import Member
+from .member import Member, MemberWithUser
 from .role import Role
 from .user import User
 
@@ -183,7 +183,7 @@ class _InteractionOptional(TypedDict, total=False):
     data: InteractionData
     guild_id: Snowflake
     channel_id: Snowflake
-    member: Member
+    member: MemberWithUser
     user: User
     message: Message
 
