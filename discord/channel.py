@@ -351,8 +351,7 @@ class TextChannel(discord.abc.Messageable, discord.abc.GuildChannel, Hashable):
 
         payload = await self._edit(options, reason=reason)
         if payload is not None:
-            # the payload will always be the proper channel payload
-            return self.__class__(state=self._state, guild=self.guild, data=payload)  # type: ignore
+            return self.__class__(state=self._state, guild=self.guild, data=payload)
 
     @utils.copy_doc(discord.abc.GuildChannel.clone)
     async def clone(self, *, name: Optional[str] = None, reason: Optional[str] = None) -> TextChannel:
@@ -1034,8 +1033,7 @@ class VoiceChannel(VocalGuildChannel):
 
         payload = await self._edit(options, reason=reason)
         if payload is not None:
-            # the payload will always be the proper channel payload
-            return self.__class__(state=self._state, guild=self.guild, data=payload)  # type: ignore
+            return self.__class__(state=self._state, guild=self.guild, data=payload)
 
 
 class StageChannel(VocalGuildChannel):
@@ -1307,8 +1305,7 @@ class StageChannel(VocalGuildChannel):
 
         payload = await self._edit(options, reason=reason)
         if payload is not None:
-            # the payload will always be the proper channel payload
-            return self.__class__(state=self._state, guild=self.guild, data=payload)  # type: ignore
+            return self.__class__(state=self._state, guild=self.guild, data=payload)
 
 
 class CategoryChannel(discord.abc.GuildChannel, Hashable):
@@ -1450,8 +1447,7 @@ class CategoryChannel(discord.abc.GuildChannel, Hashable):
 
         payload = await self._edit(options, reason=reason)
         if payload is not None:
-            # the payload will always be the proper channel payload
-            return self.__class__(state=self._state, guild=self.guild, data=payload)  # type: ignore
+            return self.__class__(state=self._state, guild=self.guild, data=payload)
 
     @utils.copy_doc(discord.abc.GuildChannel.move)
     async def move(self, **kwargs: Any) -> None:
@@ -1700,8 +1696,7 @@ class StoreChannel(discord.abc.GuildChannel, Hashable):
 
         payload = await self._edit(options, reason=reason)
         if payload is not None:
-            # the payload will always be the proper channel payload
-            return self.__class__(state=self._state, guild=self.guild, data=payload)  # type: ignore
+            return self.__class__(state=self._state, guild=self.guild, data=payload)
 
 
 DMC = TypeVar('DMC', bound='DMChannel')

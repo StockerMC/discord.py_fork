@@ -75,15 +75,30 @@ if TYPE_CHECKING:
     from .state import ConnectionState
     from .guild import Guild
     from .member import Member
-    from .channel import CategoryChannel
     from .embeds import Embed
     from .message import Message, MessageReference, PartialMessage
-    from .channel import TextChannel, DMChannel, GroupChannel, PartialMessageable
     from .threads import Thread
     from .enums import InviteTarget
     from .ui.view import View
+    from .channel import (
+        TextChannel,
+        DMChannel,
+        GroupChannel, 
+        PartialMessageable,
+        CategoryChannel,
+        VoiceChannel,
+        Thread,
+        StoreChannel,
+        StageChannel,
+    )
     from .types.channel import (
         PermissionOverwrite as PermissionOverwritePayload,
+        TextChannel as TextChannelPayload,
+        VoiceChannel as VoiceChannelPayload,
+        CategoryChannel as CategoryChannelPayload,
+        StoreChannel as StoreChannelPayload,
+        ThreadChannel as ThreadChannelPayload,
+        StageChannel as StageChannelPayload,
         Channel as ChannelPayload,
         GuildChannel as GuildChannelPayload,
         OverwriteType,
@@ -304,6 +319,24 @@ class GuildChannel:
             payload.append(d)
 
         await http.bulk_channel_update(self.guild.id, payload, reason=reason)
+
+    @overload
+    async def _edit(self: TextChannel, options: Dict[str, Any], reason: Optional[str]) -> Optional[TextChannelPayload]: ...
+
+    @overload
+    async def _edit(self: VoiceChannel, options: Dict[str, Any], reason: Optional[str]) -> Optional[VoiceChannelPayload]: ...
+
+    @overload
+    async def _edit(self: CategoryChannel, options: Dict[str, Any], reason: Optional[str]) -> Optional[CategoryChannelPayload]: ...
+
+    @overload
+    async def _edit(self: StageChannel, options: Dict[str, Any], reason: Optional[str]) -> Optional[StageChannelPayload]: ...
+
+    @overload
+    async def _edit(self: StoreChannel, options: Dict[str, Any], reason: Optional[str]) -> Optional[StoreChannelPayload]: ...
+
+    @overload
+    async def _edit(self: Thread, options: Dict[str, Any], reason: Optional[str]) -> Optional[ThreadChannelPayload]: ...
 
     async def _edit(self, options: Dict[str, Any], reason: Optional[str]) -> Optional[ChannelPayload]:
         try:
