@@ -26,6 +26,7 @@ from __future__ import annotations
 
 import inspect
 import sys
+import types
 from typing import (
     TYPE_CHECKING,
     Type,
@@ -162,6 +163,7 @@ __all__ = (
     'application_command_option',
 )
 
+PY_310: Final[bool] = sys.version_info >= (3, 10)
 
 OPTION_TYPE_MAPPING: Final[Dict[Union[ValidOptionTypes], ApplicationCommandOptionType]] = {
     str: ApplicationCommandOptionType.string,
@@ -446,9 +448,14 @@ def _get_options(
             annotation = resolve_annotation(annotation_namespace[attr_name], globals, locals, cache)
 
             origin = getattr(annotation, '__origin__', None)
+            args = getattr(annotation, '__args__', None)
+            is_union = origin is Union
+            if not is_union:
+                if PY_310 and annotation.__class__ is types.UnionType:  # type: ignore
+                    args = annotation.__args__
 
-            if origin is Union:
-                args = list(annotation.__args__)
+            if is_union:
+                args = list(args)
                 if type(None) in args:
                     attr.required = False
                     args.remove(type(None))
