@@ -70,7 +70,7 @@ if TYPE_CHECKING:
     ]
 
 MISSING: Any = utils.MISSING
-ClientT = TypeVar('ClientT', bound=Client)
+ClientT = TypeVar('ClientT', bound='Client')
 
 
 class Interaction(Generic[ClientT]):
@@ -157,7 +157,7 @@ class Interaction(Generic[ClientT]):
         if self.guild_id:
             guild = self.guild or Object(id=self.guild_id)
             try:
-                member = data['member']  # type: ignore
+                member = data['member']
             except KeyError:
                 pass
             else:
