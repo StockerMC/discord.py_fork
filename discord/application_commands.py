@@ -44,6 +44,7 @@ from typing import (
     Final,
     Literal,
     Iterator,
+    Generic,
 )
 
 from operator import attrgetter
@@ -163,6 +164,7 @@ __all__ = (
     'application_command_option',
 )
 
+ClientT = TypeVar('ClientT', bound=Client)
 PY_310: Final[bool] = sys.version_info >= (3, 10)
 
 OPTION_TYPE_MAPPING: Final[Dict[Union[ValidOptionTypes], ApplicationCommandOptionType]] = {
@@ -448,11 +450,12 @@ def _get_options(
             annotation = resolve_annotation(annotation_namespace[attr_name], globals, locals, cache)
 
             origin = getattr(annotation, '__origin__', None)
-            args = getattr(annotation, '__args__', None)
             is_union = origin is Union
             if not is_union:
                 if PY_310 and annotation.__class__ is types.UnionType:  # type: ignore
                     args = annotation.__args__
+            else:
+                args = annotation.__args__
 
             if is_union:
                 args = list(args)
@@ -631,7 +634,7 @@ def flatten(original_cls: Type[Any], original_attr: str) -> Callable[[Type[BaseA
 
 @flatten(Interaction, 'interaction')
 @flatten(InteractionResponse, 'interaction.response')
-class BaseApplicationCommandResponse:
+class BaseApplicationCommandResponse(Generic[ClientT]):
     if TYPE_CHECKING:
         command: BaseApplicationCommand
         # interaction attributes
@@ -645,7 +648,7 @@ class BaseApplicationCommandResponse:
         application_id: int
         message: Optional[Message]
         user: Optional[Union[User, Member]]
-        _permissions: int
+        client: ClientT
         # properties
         guild: Guild
         channel: Optional[InteractionChannel]
@@ -663,7 +666,7 @@ class BaseApplicationCommandResponse:
         edit_message: EditMessage
 
 
-class SlashCommandResponse(BaseApplicationCommandResponse):
+class SlashCommandResponse(BaseApplicationCommandResponse[ClientT]):
     """A class that represents the response from a slash command.
 
     .. versionadded:: 2.0
@@ -677,8 +680,8 @@ class SlashCommandResponse(BaseApplicationCommandResponse):
     command: :class:`SlashCommand`
         The slash command used.
     """
-    def __init__(self, interaction: Interaction, options: ApplicationCommandOptions, command: SlashCommand) -> None:
-        self.interaction: Interaction = interaction
+    def __init__(self, interaction: Interaction[ClientT], options: ApplicationCommandOptions, command: SlashCommand) -> None:
+        self.interaction: Interaction[ClientT] = interaction
         self.options: Any = options  # we typehint it as `Any` to avoid type checker errors when accessing attributes
         self.command: SlashCommand = command
 
@@ -697,8 +700,8 @@ class MessageCommandResponse(BaseApplicationCommandResponse):
     command: :class:`MessageCommand`
         The message command used.
     """
-    def __init__(self, interaction: Interaction, target: Message, command: MessageCommand) -> None:
-        self.interaction: Interaction = interaction
+    def __init__(self, interaction: Interaction[ClientT], target: Message, command: MessageCommand) -> None:
+        self.interaction: Interaction[ClientT] = interaction
         self.target: Message = target
         self.command: MessageCommand = command
 
@@ -717,8 +720,8 @@ class UserCommandResponse(BaseApplicationCommandResponse):
     command: :class:`UserCommand`
         The user command used.
     """
-    def __init__(self, interaction: Interaction, target: Union[Member, User], command: UserCommand) -> None:
-        self.interaction: Interaction = interaction
+    def __init__(self, interaction: Interaction[ClientT], target: Union[Member, User], command: UserCommand) -> None:
+        self.interaction: Interaction[ClientT] = interaction
         self.target: Union[Member, User] = target
         self.command: UserCommand = command
 

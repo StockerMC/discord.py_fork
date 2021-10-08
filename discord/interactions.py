@@ -25,7 +25,7 @@ DEALINGS IN THE SOFTWARE.
 """
 
 from __future__ import annotations
-from typing import Any, Dict, List, Optional, TYPE_CHECKING, Tuple, Union
+from typing import Any, Dict, List, Optional, TYPE_CHECKING, Tuple, Union, TypeVar, Generic
 import asyncio
 
 from . import utils
@@ -70,9 +70,10 @@ if TYPE_CHECKING:
     ]
 
 MISSING: Any = utils.MISSING
+ClientT = TypeVar('ClientT', bound=Client)
 
 
-class Interaction:
+class Interaction(Generic[ClientT]):
     """Represents a Discord interaction.
 
     An interaction happens when a user does an action that needs to
@@ -126,9 +127,9 @@ class Interaction:
         '_cs_channel',
     )
 
-    def __init__(self, *, data: InteractionPayload, state: ConnectionState):
+    def __init__(self, *, data: InteractionPayload, state: ConnectionState, client: ClientT) -> None:
         self._state: ConnectionState = state
-        self.client: Client = state._get_client()
+        self.client: ClientT = client
         self._session: ClientSession = state.http._HTTPClient__session  # type: ignore
         self._original_message: Optional[InteractionMessage] = None
         self._from_data(data)

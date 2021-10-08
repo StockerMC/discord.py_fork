@@ -740,13 +740,13 @@ class ConnectionState:
 
     # although this isn't a good solution, data is typehinted as Any to avoid the need for more type ignores
     def parse_interaction_create(self, data: Any) -> None:
-        interaction = Interaction(data=data, state=self)
+        client = self._get_client()
+        interaction = Interaction(data=data, state=self, client=client)
         if data['type'] == 3:  # interaction component
             custom_id = interaction.data['custom_id']  # type: ignore
             component_type = interaction.data['component_type']  # type: ignore
             self._view_store.dispatch(component_type, custom_id, interaction)
         elif data['type'] == 2:  # application command
-            client = self._get_client()
             application_command_data = data['data']
             application_command_type = application_command_data['type']
             resolved_data = application_command_data.get('resolved')
