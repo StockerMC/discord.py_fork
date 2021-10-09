@@ -148,12 +148,12 @@ class ThreadListSyncEvent(_ThreadListSyncEventOptional):
     members: List[ThreadMember]
 
 
-class _ThreadMemberUpdateEventOptional(TypedDict, total=False):
+class _ThreadMembersUpdateEventOptional(TypedDict, total=False):
     added_members: List[ThreadMember]
     removed_member_ids: List[Snowflake]
 
 
-class ThreadMemberUpdateEvent(_ThreadMemberUpdateEventOptional):
+class ThreadMembersUpdateEvent(_ThreadMembersUpdateEventOptional):
     id: Snowflake
     guild_id: Snowflake
     member_count: int

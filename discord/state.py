@@ -99,7 +99,7 @@ if TYPE_CHECKING:
         GuildBanEvent,
         ChannelPinsUpdateEvent,
         ThreadListSyncEvent,
-        ThreadMemberUpdateEvent,
+        ThreadMembersUpdateEvent,
         TypingStartEvent,
         VoiceServerUpdateEvent,
         GuildRoleAddEvent,
@@ -1039,7 +1039,7 @@ class ConnectionState:
         member = ThreadMember(thread, data)
         thread.me = member
 
-    def parse_thread_members_update(self, data: ThreadMemberUpdateEvent) -> None:
+    def parse_thread_members_update(self, data: ThreadMembersUpdateEvent) -> None:
         guild_id = int(data['guild_id'])
         guild: Optional[Guild] = self._get_guild(guild_id)
         if guild is None:
