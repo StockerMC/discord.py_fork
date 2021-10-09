@@ -94,9 +94,6 @@ class PartialEmoji(_EmojiTag, AssetMixin):
 
     _CUSTOM_EMOJI_RE = re.compile(r'<?(?P<animated>a)?:?(?P<name>[A-Za-z0-9\_]+):(?P<id>[0-9]{13,20})>?')
 
-    if TYPE_CHECKING:
-        id: Optional[int]
-
     def __init__(self, *, name: Optional[str], animated: bool = False, id: Optional[int] = None):
         self.animated: bool = animated
         self.name: Optional[str] = name
