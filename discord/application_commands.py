@@ -191,8 +191,12 @@ CHANNEL_TO_CHANNEL_TYPE: Final[Dict[ChannelTypes, ChannelType]] = {
     Thread: ChannelType.public_thread,  # is public_thread correct?
 }
 
+_channel_type = None
+
 for _channel_type in CHANNEL_TO_CHANNEL_TYPE.keys():
     OPTION_TYPE_MAPPING[_channel_type] = ApplicationCommandOptionType.channel
+
+del _channel_type
 
 def _resolve_option_type(option: Union[ValidOptionTypes, ApplicationCommandOptionType]) -> ApplicationCommandOptionType:
     if isinstance(option, ApplicationCommandOptionType):
