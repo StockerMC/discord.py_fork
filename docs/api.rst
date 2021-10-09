@@ -4052,6 +4052,10 @@ ApplicationCommandOption
 
 .. autoclass:: ApplicationCommandOption()
     :members:
+    :exclude-members: autocomplete
+
+    .. automethod:: ApplicationCommandOption.autocomplete()
+        :decorator:
 
 .. autofunction:: discord.application_command_option
 
@@ -4272,6 +4276,15 @@ UserCommandResponse
 .. attributetable:: UserCommandResponse
 
 .. autoclass:: UserCommandResponse()
+    :members:
+    :inherited-members:
+
+AutocompleteResponse
+~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: AutocompleteResponse
+
+.. autoclass:: AutocompleteResponse()
     :members:
     :inherited-members:
 

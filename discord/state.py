@@ -62,6 +62,7 @@ from .application_commands import (
     SlashCommandResponse,
     MessageCommandResponse,
     UserCommandResponse,
+    AutocompleteResponse,
     ApplicationCommandOptions,
 )
 
@@ -88,7 +89,6 @@ if TYPE_CHECKING:
     from .types.invite import GatewayInviteCreate, GatewayInviteDelete
     from .types.threads import Thread as ThreadPayload, ThreadMember as ThreadMemberPayload
     from .types.voice import VoiceState as VoiceStatePayload
-    from .types.member import Member as MemberPayload
     from .types.events import (
         ReadyEvent,
         MessageDeleteEvent,
@@ -741,6 +741,7 @@ class ConnectionState:
     # although this isn't a good solution, data is typehinted as Any to avoid the need for more type ignores
     def parse_interaction_create(self, data: Any) -> None:
         client = self._get_client()
+        guild_id = utils._get_as_snowflake(data, 'guild_id')
         interaction = Interaction(data=data, state=self, client=client)
         if data['type'] == 3:  # interaction component
             custom_id = interaction.data['custom_id']  # type: ignore
@@ -750,7 +751,6 @@ class ConnectionState:
             application_command_data = data['data']
             application_command_type = application_command_data['type']
             resolved_data = application_command_data.get('resolved')
-            guild_id = utils._get_as_snowflake(data, 'guild_id')
             target_id = application_command_data.get('target_id')
             for command in client._application_commands.values():
                 used_command = command._get_used_command(application_command_data, guild_id)
@@ -798,6 +798,37 @@ class ConnectionState:
                     break
 
                 asyncio.create_task(used_command._scheduled_task(response, self._get_client()))
+                break
+        elif data['type'] == 4:  # application command autocomplete
+            application_command_data = data['data']
+            resolved_data = application_command_data.get('resolved')
+            for command in client._application_commands.values():
+                used_command = command._get_used_command(application_command_data, guild_id)
+                if used_command is None:
+                    continue
+
+                command_options = list(used_command.__application_command_options__.values())
+                focused_option: Dict[str, Any]
+                options = application_command_data['options']
+                for i, option in enumerate(options):
+                    if not option.get('focused'):
+                        continue
+
+                    focused_option = option
+                    options.pop(i)
+
+                command_option = used_command.__application_command_options__[option['name']]
+                options = ApplicationCommandOptions(
+                    guild_id=guild_id,
+                    options=options,
+                    resolved_data=resolved_data,
+                    state=self,
+                    command_options=command_options,
+                )
+                # the type of the used command is correct
+                response = AutocompleteResponse(interaction, options, used_command, focused_option['value'])  # type: ignore
+                asyncio.create_task(command_option._define_autocomplete_result(response=response, command=used_command))  # type: ignore
+
                 break
 
         self.dispatch('interaction', interaction)

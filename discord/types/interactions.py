@@ -52,9 +52,11 @@ class ApplicationCommand(_ApplicationCommandOptional):
 
 
 class _ApplicationCommandOptionOptional(TypedDict, total=False):
+    required: bool
     choices: List[ApplicationCommandOptionChoice]
     options: List[ApplicationCommandOption]
     channel_types: List[ChannelType]
+    autocomplete: bool
 
 
 ApplicationCommandOptionType = Literal[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
@@ -64,7 +66,6 @@ class ApplicationCommandOption(_ApplicationCommandOptionOptional):
     type: ApplicationCommandOptionType
     name: str
     description: str
-    required: bool
 
 
 class ApplicationCommandOptionChoice(TypedDict):
@@ -94,7 +95,7 @@ class GuildApplicationCommandPermissions(PartialGuildApplicationCommandPermissio
     guild_id: Snowflake
 
 
-InteractionType = Literal[1, 2, 3]
+InteractionType = Literal[1, 2, 3, 4]
 
 
 class _ApplicationCommandInteractionDataOption(TypedDict):
@@ -205,7 +206,7 @@ class InteractionApplicationCommandCallbackData(TypedDict, total=False):
     components: List[Component]
 
 
-InteractionResponseType = Literal[1, 4, 5, 6, 7]
+InteractionResponseType = Literal[1, 4, 5, 6, 7, 8]
 
 
 class _InteractionResponseOptional(TypedDict, total=False):
@@ -221,9 +222,6 @@ class MessageInteraction(TypedDict):
     type: InteractionType
     name: str
     user: User
-
-
-
 
 
 class _EditApplicationCommandOptional(TypedDict, total=False):

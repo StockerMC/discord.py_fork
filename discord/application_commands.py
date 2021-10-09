@@ -45,10 +45,12 @@ from typing import (
     Literal,
     Iterator,
     Generic,
+    AsyncGenerator,
+    Iterable,
 )
 
 from operator import attrgetter
-from .enums import ApplicationCommandType, ApplicationCommandOptionType, InteractionType, ChannelType
+from .enums import ApplicationCommandType, ApplicationCommandOptionType, InteractionType, ChannelType, InteractionResponseType
 from .utils import resolve_annotation, MISSING, copy_doc, async_all
 from .member import Member
 from .user import User
@@ -59,6 +61,7 @@ from .object import Object
 from .guild import Guild
 from .channel import TextChannel, StageChannel, VoiceChannel, CategoryChannel, StoreChannel, Thread, PartialMessageable
 from .abc import GuildChannel
+from .webhook.async_ import async_context
 
 if TYPE_CHECKING:
     from .types.interactions import (
@@ -101,6 +104,8 @@ if TYPE_CHECKING:
     InteractionChannel = Union[
         VoiceChannel, StageChannel, TextChannel, CategoryChannel, StoreChannel, Thread, PartialMessageable
     ]
+    AutocompleteCallback = Callable[['SlashCommand', 'AutocompleteResponse'], Union[AsyncGenerator[Union[str, int, float], None], Iterable[str]]]
+    AutocompleteCallbackT = TypeVar('AutocompleteCallbackT', bound=AutocompleteCallback)
 
     # these protocols are to help typehint the inherited methods from Interaction/InteractionResponse
     # for BaseApplicationCommandResponse
@@ -158,13 +163,14 @@ __all__ = (
     'SlashCommandResponse',
     'MessageCommandResponse',
     'UserCommandResponse',
+    'AutocompleteResponse',
     'ApplicationCommandOption',
     'ApplicationCommandOptionChoice',
     'ApplicationCommandOptionDefault',
     'application_command_option',
 )
 
-ClientT = TypeVar('ClientT', bound=Client)
+ClientT = TypeVar('ClientT', bound='Client')
 PY_310: Final[bool] = sys.version_info >= (3, 10)
 
 OPTION_TYPE_MAPPING: Final[Dict[Union[ValidOptionTypes], ApplicationCommandOptionType]] = {
@@ -274,6 +280,10 @@ class ApplicationCommandOption:
         This is for when the option is accessed with it's relevant :class:`ApplicationCommandOptions` instance.
     channel_types: List[:class:`ChannelType`]
         The valid channel types for this option. This is only valid for options that have a type of :attr:`ApplicationCommandOptionType.channel`.
+    autocomplete: Callable[[:class:`AutocompleteResponse`], Any]
+        The callable for responses to when a user is typing an autocomplete option. This can be an :data:`typing.AsyncIterator`
+        that yields choices with types of :class:`str`, :class:`int` or `:class:`float`. This can also be a
+        :ref:`coroutine <coroutine>` that returns an iterable of choices with types of :class:`str`, :class:`int` or `:class:`float`.
     """
 
     __slots__= (
@@ -285,6 +295,7 @@ class ApplicationCommandOption:
         'options',
         'default',
         'channel_types',
+        '_autocomplete',
     )
 
     def __init__(
@@ -307,16 +318,58 @@ class ApplicationCommandOption:
         self.options: Optional[List[ApplicationCommandOption]] = options
         self.default: Optional[Union[ApplicationCommandOptionDefault, Any]] = default
         self.channel_types: List[ChannelType] = channel_types
+        self._autocomplete: Optional[AutocompleteCallback] = None
 
     def __repr__(self) -> str:
         return f'<{self.__class__.__name__} type={self.type!r} name={self.name!r} description={self.description!r} required={self.required!r}>'
 
+    def autocomplete(self, func: AutocompleteCallbackT) -> AutocompleteCallbackT:
+        """A decorator that registers a callback for an autocomplete option.
+
+        Functions being registered can be :data:`typing.AsyncIterator` that yields choices with types of :class:`str`, :class:`int` or `:class:`float`.
+        This can also be a :ref:`coroutine <coroutine>` that returns an iterable of choices with types of :class:`str`, :class:`int` or `:class:`float`.
+        
+        Raises
+        -------
+        TypeError
+            The function being listened to is not a coroutine function or async generator function.
+        """
+
+        if not inspect.iscoroutinefunction(func) or not inspect.isasyncgenfunction(func):
+            raise TypeError('Autocomplete option callbacks must be a coroutine function or async generator function.')
+
+        self._autocomplete = func
+        return func
+
+    async def _define_autocomplete_result(self, *, response: AutocompleteResponse, command: SlashCommand) -> None:
+        if self._autocomplete is None:
+            return
+
+        result = self._autocomplete(command, response)
+        if inspect.isasyncgen(result):
+            choices = [choice async for choice in result]
+        else:
+            choices = await result  # type: ignore
+
+        if not all(isinstance(choice, (str, int, float)) for choice in choices):
+            raise TypeError('the types of the choices returned from an autocomplete callback must be a str, int or float.')
+
+        data: Dict[str, Any] = {'choices': [{'name': str(choice), 'value': choice} for choice in choices]}
+
+        adapter = async_context.get()
+        autocomplete_type = InteractionResponseType.application_command_autocomplete_result.value
+        interaction = response.interaction
+        await adapter.create_interaction_response(
+            interaction.id, token=interaction.token, session=interaction._session, type=autocomplete_type, data=data
+        )
+
+
     def to_dict(self) -> ApplicationCommandOptionPayload:
         ret: ApplicationCommandOptionPayload = {
-            'type': int(self.type),  # type: ignore
+            'type': int(self.type),
             'name': self.name,
             'description': self.description,
-        }
+        }  # type: ignore
 
         if self.required is not MISSING:
             ret['required'] = self.required
@@ -329,6 +382,9 @@ class ApplicationCommandOption:
 
         if self.channel_types is not None:
             ret['channel_types'] = [type.value for type in self.channel_types]
+
+        if self._autocomplete is not None:
+            ret['autocomplete'] = True
 
         return ret
 
@@ -726,10 +782,34 @@ class UserCommandResponse(BaseApplicationCommandResponse):
         self.command: UserCommand = command
 
 
+class AutocompleteResponse(BaseApplicationCommandResponse[ClientT]):
+    """A class that represents the response from a user typing an autocomplete option.
+
+    .. versionadded:: 2.0
+
+    Attributes
+    -----------
+    interaction: :class:`Interaction`
+        The interaction of the response.
+    value: :class:`str`
+        The data the user is typing.
+    command: :class:`SlashCommand`
+        The slash command used.
+    options: :class:`ApplicationCommandOptions`
+        The options of the slash command used.
+    """
+
+    def __init__(self, interaction: Interaction[ClientT], options: ApplicationCommandOptions, command: SlashCommand, value: str) -> None:
+        self.interaction: Interaction[ClientT] = interaction
+        self.options: Any = options
+        self.value: str = value
+        self.command: SlashCommand = command
+
+
 def _traverse_mro_for_attr(cls: Type[object], attr_name: str, default: T = MISSING) -> Union[Any, T]:
     attr = default
     for base in cls.__mro__[:-1]:
-        attr = getattr(base, attr_name, default)  # type: ignore
+        attr = getattr(base, attr_name, default)
         if attr is default:
             continue
 
@@ -979,9 +1059,9 @@ class BaseApplicationCommand:
     def to_dict(cls) -> ApplicationCommandPayload:
         ret: ApplicationCommandPayload = {
             'name': cls.__application_command_name__,
-            'type': int(cls.__application_command_type__),  # type: ignore
+            'type': int(cls.__application_command_type__),
             'default_permission': cls.__application_command_default_permission__,
-        }
+        }  # type: ignore
 
         if cls.__application_command_type__ is ApplicationCommandType.slash:
             description = cls.__application_command_description__
