@@ -382,8 +382,8 @@ class InteractionResponse:
         '_parent',
     )
 
-    def __init__(self, parent: Interaction):
-        self._parent: Interaction = parent
+    def __init__(self, parent: Interaction[Any]):
+        self._parent: Interaction[Any] = parent
         self._responded: bool = False
 
     def is_done(self) -> bool:
@@ -644,8 +644,8 @@ class InteractionResponse:
 class _InteractionMessageState:
     __slots__ = ('_parent', '_interaction')
 
-    def __init__(self, interaction: Interaction, parent: ConnectionState):
-        self._interaction: Interaction = interaction
+    def __init__(self, interaction: Interaction[Any], parent: ConnectionState):
+        self._interaction: Interaction[Any] = interaction
         self._parent: ConnectionState = parent
 
     def _get_guild(self, guild_id):
