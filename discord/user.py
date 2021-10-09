@@ -40,6 +40,7 @@ if TYPE_CHECKING:
     from .guild import Guild
     from .message import Message
     from .state import ConnectionState
+    from .webhook.async_ import _WebhookState
     from .types.channel import DMChannel as DMChannelPayload
     from .types.user import User as UserPayload, PartialUser as PartialUserPayload
 
@@ -71,8 +72,8 @@ class BaseUser(_UserTag):
         '_state',
     )
 
-    def __init__(self, *, state: ConnectionState, data: Union[UserPayload, PartialUserPayload]) -> None:
-        self._state: ConnectionState = state
+    def __init__(self, *, state: Union[ConnectionState, _WebhookState], data: Union[UserPayload, PartialUserPayload]) -> None:
+        self._state: Union[ConnectionState, _WebhookState] = state
         self._update(data)
 
     def __repr__(self) -> str:
@@ -120,7 +121,7 @@ class BaseUser(_UserTag):
 
         return self
 
-    def _to_minimal_user_json(self) -> Dict[str, Any]:
+    def _to_minimal_user_json(self) -> UserPayload:
         return {
             'username': self.name,
             'id': self.id,
@@ -317,7 +318,7 @@ class ClientUser(BaseUser):
         mfa_enabled: bool
         _flags: int
 
-    def __init__(self, *, state: ConnectionState, data: UserPayload) -> None:
+    def __init__(self, *, state: Union[ConnectionState, _WebhookState], data: UserPayload) -> None:
         super().__init__(state=state, data=data)
 
     def __repr__(self) -> str:
@@ -419,7 +420,7 @@ class User(BaseUser, discord.abc.Messageable):
 
     __slots__ = ('_stored',)
 
-    def __init__(self, *, state: ConnectionState, data: Union[UserPayload, PartialUserPayload]) -> None:
+    def __init__(self, *, state: Union[ConnectionState, _WebhookState], data: Union[UserPayload, PartialUserPayload]) -> None:
         super().__init__(state=state, data=data)
         self._stored: bool = False
 

@@ -661,12 +661,11 @@ class _WebhookState:
     def store_user(self, data: Union[UserPayload, PartialUserPayload]) -> Union[User, BaseUser]:
         if self._parent is not None:
             return self._parent.store_user(data)
-        # state parameter is artificial
-        return BaseUser(state=self, data=data)  # type: ignore
+
+        return BaseUser(state=self, data=data)
 
     def create_user(self, data: Union[UserPayload, PartialUserPayload]) -> BaseUser:
-        # state parameter is artificial
-        return BaseUser(state=self, data=data)  # type: ignore
+        return BaseUser(state=self, data=data)
 
     @property
     def http(self) -> Union[HTTPClient, _FriendlyHttpAttributeErrorHelper]:
@@ -846,8 +845,7 @@ class BaseWebhook(Hashable):
         user = data.get('user')
         self.user: Optional[Union[BaseUser, User]] = None
         if user is not None:
-            # state parameter may be _WebhookState
-            self.user = User(state=self._state, data=user)  # type: ignore
+            self.user = User(state=self._state, data=user)
 
         source_channel = data.get('source_channel')
         if source_channel:
