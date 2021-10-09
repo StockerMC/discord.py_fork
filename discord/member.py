@@ -285,6 +285,7 @@ class Member(discord.abc.Messageable, _UserTag):
         banner: Optional[Asset]
         accent_color: Optional[Colour]
         accent_colour: Optional[Colour]
+        _to_minimal_user_json: Callable[[], UserPayload]
 
     def __init__(self, *, data: MemberWithUserPayload, guild: Guild, state: ConnectionState):
         self._state: ConnectionState = state
@@ -320,7 +321,7 @@ class Member(discord.abc.Messageable, _UserTag):
     @classmethod
     def _from_message(cls: Type[M], *, message: Message, data: MemberPayload) -> M:
         author = message.author
-        data['user'] = author._to_minimal_user_json()  # type: ignore
+        data['user'] = author._to_minimal_user_json()
         return cls(data=data, guild=message.guild, state=message._state)  # type: ignore
 
     def _update_from_message(self, data: MemberPayload) -> None:
