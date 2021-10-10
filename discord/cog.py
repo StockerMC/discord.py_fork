@@ -399,7 +399,7 @@ class Cog(metaclass=CogMeta):
         return True
 
     @_cog_special_method
-    async def client_application_command_check(self, response: Union[SlashCommandResponse, MessageCommandResponse, UserCommandResponse]) -> bool:
+    async def client_application_command_check(self, response: Union[SlashCommandResponse[Any], MessageCommandResponse[Any], UserCommandResponse[Any]]) -> bool:
         """A special method that registers as a :meth:`.Client.application_command_check`
         check.
 
@@ -409,7 +409,7 @@ class Cog(metaclass=CogMeta):
         return True
 
     @_cog_special_method
-    async def cog_application_command_check(self, response: Union[SlashCommandResponse, MessageCommandResponse, UserCommandResponse]) -> bool:
+    async def cog_application_command_check(self, response: Union[SlashCommandResponse[Any], MessageCommandResponse[Any], UserCommandResponse[Any]]) -> bool:
         """A special method that registers as a :meth:`command_check` for every
         application command inside this cog.
 
@@ -438,7 +438,7 @@ class Cog(metaclass=CogMeta):
         pass
 
     @_cog_special_method
-    async def cog_application_command_error(self, response: Union[SlashCommandResponse, MessageCommandResponse, UserCommandResponse], error: Exception) -> None:
+    async def cog_application_command_error(self, response: Union[SlashCommandResponse[Any], MessageCommandResponse[Any], UserCommandResponse[Any]], error: Exception) -> None:
         """A special method that is called whenever an error
         is dispatched inside an application command inside this cog.
 
