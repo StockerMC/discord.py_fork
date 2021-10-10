@@ -483,7 +483,9 @@ class Client:
         print(f'Ignoring exception in {event_method}', file=sys.stderr)
         traceback.print_exc()
 
-    async def on_application_command_error(self, response: Union[SlashCommandResponse, MessageCommandResponse, UserCommandResponse], exception: Exception) -> None:
+    async def on_application_command_error(
+        self, response: Union[SlashCommandResponse[Any], MessageCommandResponse[Any], UserCommandResponse[Any]], exception: Exception
+    ) -> None:
         """|coro|
 
         The default application command error handler provided by the client.

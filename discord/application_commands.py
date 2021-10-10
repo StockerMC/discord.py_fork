@@ -219,7 +219,7 @@ class ApplicationCommandOptionDefault:
 
     __discord_application_command_option_default__: ClassVar[bool] = True
 
-    async def default(self, response: SlashCommandResponse) -> Any:
+    async def default(self, response: SlashCommandResponse[Any]) -> Any:
         """|coro|
 
         The method to override to handle default logic.
@@ -345,7 +345,7 @@ class ApplicationCommandOption:
         self._autocomplete = func
         return func
 
-    async def _define_autocomplete_result(self, *, response: AutocompleteResponse, command: SlashCommand) -> None:
+    async def _define_autocomplete_result(self, *, response: AutocompleteResponse[Any], command: SlashCommand) -> None:
         if self._autocomplete is None:
             return
 
@@ -746,7 +746,7 @@ class SlashCommandResponse(BaseApplicationCommandResponse[ClientT]):
         self.command: SlashCommand = command
 
 
-class MessageCommandResponse(BaseApplicationCommandResponse):
+class MessageCommandResponse(BaseApplicationCommandResponse[ClientT]):
     """A class that represents the response from a message command.
 
     .. versionadded:: 2.0
@@ -766,7 +766,7 @@ class MessageCommandResponse(BaseApplicationCommandResponse):
         self.command: MessageCommand = command
 
 
-class UserCommandResponse(BaseApplicationCommandResponse):
+class UserCommandResponse(BaseApplicationCommandResponse[ClientT]):
     """A class that represents the response from a message command.
 
     .. versionadded:: 2.0
@@ -981,7 +981,7 @@ class BaseApplicationCommand:
             options=list(cls.__application_command_options__.values()),
         )
 
-    async def _scheduled_task(self, response: BaseApplicationCommandResponse, client: Client) -> None:
+    async def _scheduled_task(self, response: BaseApplicationCommandResponse[Any], client: Client) -> None:
         from .cog import Cog  # circular import
         cog = self._cog
         try:
@@ -1050,13 +1050,13 @@ class BaseApplicationCommand:
             raise TypeError(f'type must be an ApplicationCommandType member not {type.__class__.__name__}')
         cls.__application_command_type__ = type
 
-    async def callback(self, response: BaseApplicationCommandResponse) -> None:
+    async def callback(self, response: BaseApplicationCommandResponse[Any]) -> None:
         pass
 
-    async def command_check(self, response: BaseApplicationCommandResponse) -> bool:
+    async def command_check(self, response: BaseApplicationCommandResponse[Any]) -> bool:
         return True
 
-    async def on_error(self, response: BaseApplicationCommandResponse, error: Exception) -> None:
+    async def on_error(self, response: BaseApplicationCommandResponse[Any], error: Exception) -> None:
         pass
 
     @classmethod
@@ -1108,7 +1108,7 @@ class SlashCommand(BaseApplicationCommand, type=ApplicationCommandType.slash):
         '__application_command_group_command__': 'group_command',
     }
 
-    async def callback(self, response: SlashCommandResponse) -> None:
+    async def callback(self, response: SlashCommandResponse[Any]) -> None:
         """|coro|
 
         The callback associated with this slash command.
@@ -1122,7 +1122,7 @@ class SlashCommand(BaseApplicationCommand, type=ApplicationCommandType.slash):
         """
         pass
 
-    async def command_check(self, response: SlashCommandResponse) -> bool:
+    async def command_check(self, response: SlashCommandResponse[Any]) -> bool:
         """|coro|
 
         A callback that is called when the slash command is used that checks
@@ -1147,7 +1147,7 @@ class SlashCommand(BaseApplicationCommand, type=ApplicationCommandType.slash):
         """
         return True
 
-    async def on_error(self, error: Exception, response: SlashCommandResponse) -> None:
+    async def on_error(self, error: Exception, response: SlashCommandResponse[Any]) -> None:
         """|coro|
 
         A callback that is called when a slash command's callback or :meth:`command_check`
@@ -1240,7 +1240,7 @@ class MessageCommand(BaseApplicationCommand, type=ApplicationCommandType.message
     .. versionadded:: 2.0
     """
 
-    async def callback(self, response: MessageCommandResponse) -> None:
+    async def callback(self, response: MessageCommandResponse[Any]) -> None:
         """|coro|
 
         The callback associated with this message command.
@@ -1254,7 +1254,7 @@ class MessageCommand(BaseApplicationCommand, type=ApplicationCommandType.message
         """
         pass
 
-    async def command_check(self, response: MessageCommandResponse) -> bool:
+    async def command_check(self, response: MessageCommandResponse[Any]) -> bool:
         """|coro|
 
         A callback that is called when the message command is used that checks
@@ -1279,7 +1279,7 @@ class MessageCommand(BaseApplicationCommand, type=ApplicationCommandType.message
         """
         return True
 
-    async def on_error(self, error: Exception, response: MessageCommandResponse) -> None:
+    async def on_error(self, error: Exception, response: MessageCommandResponse[Any]) -> None:
         """|coro|
 
         A callback that is called when a message command's callback or :meth:`command_check`
@@ -1303,7 +1303,7 @@ class UserCommand(BaseApplicationCommand, type=ApplicationCommandType.user):
     .. versionadded:: 2.0
     """
 
-    async def callback(self, response: UserCommandResponse) -> None:
+    async def callback(self, response: UserCommandResponse[Any]) -> None:
         """|coro|
 
         The callback associated with this user command.
@@ -1317,7 +1317,7 @@ class UserCommand(BaseApplicationCommand, type=ApplicationCommandType.user):
         """
         pass
 
-    async def command_check(self, response: UserCommandResponse) -> bool:
+    async def command_check(self, response: UserCommandResponse[Any]) -> bool:
         """|coro|
 
         A callback that is called when the user command is used that checks
@@ -1342,7 +1342,7 @@ class UserCommand(BaseApplicationCommand, type=ApplicationCommandType.user):
         """
         return True
 
-    async def on_error(self, error: Exception, response: UserCommandResponse) -> None:
+    async def on_error(self, error: Exception, response: UserCommandResponse[Any]) -> None:
         """|coro|
 
         A callback that is called when a user command's callback or :meth:`command_check`

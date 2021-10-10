@@ -292,7 +292,7 @@ class View:
         self.children.clear()
         self.__weights.clear()
 
-    async def interaction_check(self, interaction: Interaction) -> bool:
+    async def interaction_check(self, interaction: Interaction[Any]) -> bool:
         """|coro|
 
         A callback that is called when an interaction happens within the view
@@ -327,7 +327,7 @@ class View:
         """
         pass
 
-    async def on_error(self, error: Exception, item: Item[Any], interaction: Interaction) -> None:
+    async def on_error(self, error: Exception, item: Item[Any], interaction: Interaction[Any]) -> None:
         """|coro|
 
         A callback that is called when an item's callback or :meth:`interaction_check`
@@ -347,7 +347,7 @@ class View:
         print(f'Ignoring exception in view {self} for item {item}:', file=sys.stderr)
         traceback.print_exception(error.__class__, error, error.__traceback__, file=sys.stderr)
 
-    async def _scheduled_task(self, item: Item[Any], interaction: Interaction) -> None:
+    async def _scheduled_task(self, item: Item[Any], interaction: Interaction[Any]) -> None:
         try:
             if self.timeout:
                 self.__timeout_expiry = time.monotonic() + self.timeout
@@ -379,7 +379,7 @@ class View:
         self.__stopped.set_result(True)
         asyncio.create_task(self.on_timeout(), name=f'discord-ui-view-timeout-{self.id}')
 
-    def _dispatch_item(self, item: Item[Any], interaction: Interaction) -> None:
+    def _dispatch_item(self, item: Item[Any], interaction: Interaction[Any]) -> None:
         if self.__stopped.done():
             return
 
@@ -503,7 +503,7 @@ class ViewStore:
                 del self._synced_message_views[key]
                 break
 
-    def dispatch(self, component_type: int, custom_id: str, interaction: Interaction) -> None:
+    def dispatch(self, component_type: int, custom_id: str, interaction: Interaction[Any]) -> None:
         self.__verify_integrity()
         message_id: Optional[int] = interaction.message and interaction.message.id
         key = (component_type, message_id, custom_id)

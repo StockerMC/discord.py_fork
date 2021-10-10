@@ -23,7 +23,7 @@ DEALINGS IN THE SOFTWARE.
 """
 
 from __future__ import annotations
-from typing import List, Optional, TYPE_CHECKING, Tuple, TypeVar, Type, Callable, Union
+from typing import List, Optional, TYPE_CHECKING, Tuple, TypeVar, Type, Callable, Union, Any
 import inspect
 import os
 
@@ -270,7 +270,7 @@ class Select(Item[V]):
     def refresh_component(self, component: SelectMenu) -> None:
         self._underlying = component
 
-    def refresh_state(self, interaction: Interaction) -> None:
+    def refresh_state(self, interaction: Interaction[Any]) -> None:
         data: ComponentInteractionData = interaction.data  # type: ignore
         self._selected_values = data.get('values', [])
 

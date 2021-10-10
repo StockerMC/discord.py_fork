@@ -73,7 +73,7 @@ class Item(Generic[V]):
     def refresh_component(self, component: Component) -> None:
         return None
 
-    def refresh_state(self, interaction: Interaction) -> None:
+    def refresh_state(self, interaction: Interaction[Any]) -> None:
         return None
 
     @classmethod
@@ -116,7 +116,7 @@ class Item(Generic[V]):
         """Optional[:class:`View`]: The underlying view for this item."""
         return self._view
 
-    async def callback(self, interaction: Interaction) -> None:
+    async def callback(self, interaction: Interaction[Any]) -> None:
         """|coro|
 
         The callback associated with this UI item.
