@@ -100,6 +100,7 @@ if TYPE_CHECKING:
     )
 
     from .state import ConnectionState
+    from .webhook.async_ import _WebhookState
 
 
 class BaseActivity:
@@ -810,14 +811,14 @@ class CustomActivity(BaseActivity):
 ActivityTypes = Union[Activity, Game, CustomActivity, Streaming, Spotify]
 
 @overload
-def create_activity(data: ActivityPayload, state: ConnectionState) -> ActivityTypes:
+def create_activity(data: ActivityPayload, state: Union[ConnectionState, _WebhookState]) -> ActivityTypes:
     ...
 
 @overload
-def create_activity(data: None, state: ConnectionState) -> None:
+def create_activity(data: None, state: Union[ConnectionState, _WebhookState]) -> None:
     ...
 
-def create_activity(data: Optional[ActivityPayload], state: ConnectionState) -> Optional[ActivityTypes]:
+def create_activity(data: Optional[ActivityPayload], state: Union[ConnectionState, _WebhookState]) -> Optional[ActivityTypes]:
     if not data:
         return None
 

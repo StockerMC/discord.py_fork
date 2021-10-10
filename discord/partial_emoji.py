@@ -36,9 +36,11 @@ __all__ = (
 )
 
 if TYPE_CHECKING:
-    from .state import ConnectionState
-    from datetime import datetime
+    import datetime
+
     from .types.message import PartialEmoji as PartialEmojiPayload
+    from .state import ConnectionState
+    from .webhook.async_ import _WebhookState
 
 class _EmojiTag:
     __slots__ = ()
@@ -98,7 +100,7 @@ class PartialEmoji(_EmojiTag, AssetMixin):
         self.animated: bool = animated
         self.name: Optional[str] = name
         self.id: Optional[int] = id
-        self._state: Optional[ConnectionState] = None
+        self._state: Optional[Union[ConnectionState, _WebhookState]] = None
 
     @classmethod
     def from_dict(cls: Type[PE], data: Union[PartialEmojiPayload, Dict[str, Any]]) -> PE:
@@ -200,7 +202,7 @@ class PartialEmoji(_EmojiTag, AssetMixin):
         return f'{self.name}:{self.id}'
 
     @property
-    def created_at(self) -> Optional[datetime]:
+    def created_at(self) -> Optional[datetime.datetime]:
         """Optional[:class:`datetime.datetime`]: Returns the emoji's creation time in UTC, or None if Unicode emoji.
 
         .. versionadded:: 1.6
