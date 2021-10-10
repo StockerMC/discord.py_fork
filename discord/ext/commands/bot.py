@@ -128,9 +128,9 @@ class BotBase(GroupMixin[Any]):
         self.strip_after_prefix: bool = options.get('strip_after_prefix', False)
 
         if help_command is MISSING:
-            self._help_command = DefaultHelpCommand()
+            self.help_command = DefaultHelpCommand()
         else:
-            self._help_command = help_command
+            self.help_command = help_command
 
     # internal helpers
 
