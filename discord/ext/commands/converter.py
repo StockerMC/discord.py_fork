@@ -50,6 +50,7 @@ if TYPE_CHECKING:
     from .context import Context
     from .bot import Bot
 
+    PartialMessageableChannel = Union[discord.TextChannel, discord.Thread, discord.DMChannel, discord.PartialMessageable]
 
 __all__ = (
     'Converter',
@@ -358,7 +359,7 @@ class PartialMessageConverter(Converter[discord.PartialMessage]):
         return guild_id, message_id, channel_id
 
     @staticmethod
-    def _resolve_channel(ctx: Context[Any], guild_id: Optional[int], channel_id: Optional[int]) -> Optional[discord.message.PartialMessageableChannel]:
+    def _resolve_channel(ctx: Context[Any], guild_id: Optional[int], channel_id: Optional[int]) -> Optional[PartialMessageableChannel]:
         if guild_id is not None:
             guild = ctx.bot.get_guild(guild_id)
             if guild is not None and channel_id is not None:

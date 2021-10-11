@@ -41,13 +41,18 @@ if TYPE_CHECKING:
         UserCommand,
         SlashCommandResponse,
         MessageCommandResponse,
-        UserCommandResponse
+        UserCommandResponse,
     )
 
     ApplicationCommand = Union[
         SlashCommand,
         MessageCommand,
-        UserCommand
+        UserCommand,
+    ]
+    ApplicationCommandResponse = Union[
+        SlashCommandResponse[Any],
+        MessageCommandResponse[Any],
+        UserCommandResponse[Any],
     ]
     ApplicationCommandKey = Tuple[str, int, Optional['ApplicationCommandKey']]  # name, type, parent
 
@@ -121,7 +126,7 @@ class CogMeta(type):
     """
     __cog_name__: str
     __cog_settings__: Dict[str, Any]
-    __cog_commands__: List[Command]
+    __cog_commands__: List[Command[Any, Any, Any]]
     __cog_listeners__: List[Tuple[str, str]]
 
     def __new__(cls: Type[CogMeta], *args: Any, **kwargs: Any) -> CogMeta:
@@ -201,7 +206,7 @@ class Cog(metaclass=CogMeta):
     """
     __cog_name__: ClassVar[str]
     __cog_settings__: ClassVar[Dict[str, Any]]
-    __cog_commands__: ClassVar[List[Command]]
+    __cog_commands__: ClassVar[List[Command[Any, Any, Any]]]
     __cog_listeners__: ClassVar[List[Tuple[str, str]]]
     __cog_application_commands__: Dict[ApplicationCommandKey, ApplicationCommand] = {}
 
@@ -235,7 +240,7 @@ class Cog(metaclass=CogMeta):
 
         return self
 
-    def get_commands(self) -> List[Command]:
+    def get_commands(self) -> List[Command[Any, Any, Any]]:
         r"""
         Returns
         --------
@@ -263,7 +268,7 @@ class Cog(metaclass=CogMeta):
     def description(self, description: str) -> None:
         self.__cog_description__: str = description
 
-    def walk_commands(self) -> Generator[Command, None, None]:
+    def walk_commands(self) -> Generator[Command[Any, Any, Any], None, None]:
         """An iterator that recursively walks through this cog's commands and subcommands.
 
         Yields
@@ -399,7 +404,7 @@ class Cog(metaclass=CogMeta):
         return True
 
     @_cog_special_method
-    async def client_application_command_check(self, response: Union[SlashCommandResponse[Any], MessageCommandResponse[Any], UserCommandResponse[Any]]) -> bool:
+    async def client_application_command_check(self, response: ApplicationCommandResponse) -> bool:
         """A special method that registers as a :meth:`.Client.application_command_check`
         check.
 
@@ -409,7 +414,7 @@ class Cog(metaclass=CogMeta):
         return True
 
     @_cog_special_method
-    async def cog_application_command_check(self, response: Union[SlashCommandResponse[Any], MessageCommandResponse[Any], UserCommandResponse[Any]]) -> bool:
+    async def cog_application_command_check(self, response: ApplicationCommandResponse) -> bool:
         """A special method that registers as a :meth:`command_check` for every
         application command inside this cog.
 
@@ -438,7 +443,7 @@ class Cog(metaclass=CogMeta):
         pass
 
     @_cog_special_method
-    async def cog_application_command_error(self, response: Union[SlashCommandResponse[Any], MessageCommandResponse[Any], UserCommandResponse[Any]], error: Exception) -> None:
+    async def cog_application_command_error(self, response: ApplicationCommandResponse, error: Exception) -> None:
         """A special method that is called whenever an error
         is dispatched inside an application command inside this cog.
 

@@ -99,9 +99,9 @@ MISSING: Any = discord.utils.MISSING
 
 T = TypeVar('T')
 CogT = TypeVar('CogT', bound='discord.Cog')
-CommandT = TypeVar('CommandT', bound='Command')
-ContextT = TypeVar('ContextT', bound='Context')
-GroupT = TypeVar('GroupT', bound='Group')
+CommandT = TypeVar('CommandT', bound='Command[Any, Any, Any]')
+ContextT = TypeVar('ContextT', bound='Context[Any]')
+GroupT = TypeVar('GroupT', bound='Group[Any, Any, Any]')
 HookT = TypeVar('HookT', bound='Hook')
 ErrorT = TypeVar('ErrorT', bound='Error')
 
@@ -131,6 +131,7 @@ def get_signature_parameters(function: Callable[..., Any], globalns: Dict[str, A
         # the second condition was added to prevent the unnecessary
         # evaluation of the first parameter of a command, which should be
         # the invocation context (e.g. `ctx`)
+        # note that if the function is in a class, the parameter after self will be evaluated
         if annotation is parameter.empty or i == 0:
             params[name] = parameter
             continue
@@ -400,15 +401,15 @@ class Command(discord._types._BaseCommand, Generic[CogT, P, T]):
 
     @property
     def callback(self) -> Union[
-            Callable[Concatenate[CogT, Context, P], Coro[T]],
-            Callable[Concatenate[Context, P], Coro[T]],
+            Callable[Concatenate[CogT, Context[Any], P], Coro[T]],
+            Callable[Concatenate[Context[Any], P], Coro[T]],
         ]:
         return self._callback
 
     @callback.setter
     def callback(self, function: Union[
-            Callable[Concatenate[CogT, Context, P], Coro[T]],
-            Callable[Concatenate[Context, P], Coro[T]],
+            Callable[Concatenate[CogT, Context[Any], P], Coro[T]],
+            Callable[Concatenate[Context[Any], P], Coro[T]],
         ]) -> None:
         self._callback = function
         unwrap = unwrap_function(function)
@@ -419,7 +420,7 @@ class Command(discord._types._BaseCommand, Generic[CogT, P, T]):
         except AttributeError:
             globalns = {}
 
-        self.params: Dict[str, inspect.Parameter] = get_signature_parameters(function, globalns)
+        self.params: Dict[str, inspect.Parameter] = get_signature_parameters(unwrap, globalns)
 
     def add_check(self, func: Check) -> None:
         """Adds a check to the command.
@@ -478,9 +479,9 @@ class Command(discord._types._BaseCommand, Generic[CogT, P, T]):
         .. versionadded:: 1.3
         """
         if self.cog is not None:
-            return await self.callback(self.cog, context, *args, **kwargs)  # type: ignore
+            return await self.callback(self.cog, Context[Any], *args, **kwargs)  # type: ignore
         else:
-            return await self.callback(context, *args, **kwargs)  # type: ignore
+            return await self.callback(Context[Any], *args, **kwargs)  # type: ignore
 
     def _ensure_assignment_on_copy(self, other: CommandT) -> CommandT:
         other._before_invoke = self._before_invoke
@@ -1321,7 +1322,7 @@ class GroupMixin(Generic[CogT]):
         cls: Type[CommandT] = ...,
         *args: Any,
         **kwargs: Any,
-    ) -> Callable[[Callable[Concatenate[ContextT, P], Coro[Any]]], CommandT]:
+    ) -> Callable[[Callable[Concatenate[Context[Any], P], Coro[Any]]], CommandT]:
         ...
 
     def command(
@@ -1330,7 +1331,7 @@ class GroupMixin(Generic[CogT]):
         cls: Type[CommandT] = MISSING,
         *args: Any,
         **kwargs: Any,
-    ) -> Callable[[Callable[Concatenate[ContextT, P], Coro[Any]]], CommandT]:
+    ) -> Callable[[Callable[Concatenate[Context[Any], P], Coro[Any]]], CommandT]:
         """A shortcut decorator that invokes :func:`.command` and adds it to
         the internal command list via :meth:`~.GroupMixin.add_command`.
 
@@ -1343,7 +1344,7 @@ class GroupMixin(Generic[CogT]):
             kwargs.setdefault('parent', self)
             result = command(name=name, cls=cls, *args, **kwargs)(func)
             self.add_command(result)
-            return result
+            return result  # type: ignore
 
         return decorator
 
@@ -1369,7 +1370,7 @@ class GroupMixin(Generic[CogT]):
         cls: Type[GroupT] = ...,
         *args: Any,
         **kwargs: Any,
-    ) -> Callable[[Callable[Concatenate[ContextT, P], Coro[Any]]], GroupT]:
+    ) -> Callable[[Callable[Concatenate[Context[Any], P], Coro[Any]]], GroupT]:
         ...
 
     def group(
@@ -1378,7 +1379,7 @@ class GroupMixin(Generic[CogT]):
         cls: Type[GroupT] = MISSING,
         *args: Any,
         **kwargs: Any,
-    ) -> Callable[[Callable[Concatenate[ContextT, P], Coro[Any]]], GroupT]:
+    ) -> Callable[[Callable[Concatenate[Context[Any], P], Coro[Any]]], GroupT]:
         """A shortcut decorator that invokes :func:`.group` and adds it to
         the internal command list via :meth:`~.GroupMixin.add_command`.
 
@@ -1391,7 +1392,7 @@ class GroupMixin(Generic[CogT]):
             kwargs.setdefault('parent', self)
             result = group(name=name, cls=cls, *args, **kwargs)(func)
             self.add_command(result)
-            return result
+            return result  # type: ignore
 
         return decorator
 
@@ -1530,7 +1531,7 @@ def command(
 ) -> Callable[
     [
         Union[
-            Callable[Concatenate[CogT, ContextT, P], Coro[Any]],
+            Callable[Concatenate[discord.Cog, ContextT, P], Coro[Any]],
             Callable[Concatenate[ContextT, P], Coro[Any]],
         ]
     ]
@@ -1614,7 +1615,7 @@ def group(
 ) -> Callable[
     [
         Union[
-            Callable[Concatenate[CogT, ContextT, P], Coro[Any]],
+            Callable[Concatenate[discord.Cog, ContextT, P], Coro[Any]],
             Callable[Concatenate[ContextT, P], Coro[Any]],
         ]
     ]
@@ -2019,7 +2020,7 @@ def has_guild_permissions(**perms: bool) -> Callable[[T], T]:
     """Similar to :func:`.has_permissions`, but operates on guild wide
     permissions instead of the current channel permissions.
 
-    If this check is called in a DM context, it will raise an
+    If this check is called in a DM Context[Any], it will raise an
     exception, :exc:`.NoPrivateMessage`.
 
     .. versionadded:: 1.3

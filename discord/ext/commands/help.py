@@ -29,7 +29,21 @@ import copy
 import functools
 import re
 
-from typing import TYPE_CHECKING, List, Dict, Optional, Callable, Iterable, Any, Tuple, Type, TypeVar, Sequence, Mapping
+from typing import (
+    TYPE_CHECKING,
+    List,
+    Dict,
+    Optional,
+    Callable,
+    Iterable,
+    Any,
+    Tuple,
+    Type,
+    TypeVar,
+    Sequence,
+    Mapping,
+    Generator
+)
 
 import discord.utils
 
@@ -240,20 +254,24 @@ class _HelpCommandImpl(Command[Any, Any, Any]):
             return result
 
     def _inject_into_cog(self, cog: Cog) -> None:
-        # Warning: hacky
+        if TYPE_CHECKING:
+            wrapped_get_commands = cog.get_commands
+            wrapped_walk_commands = cog.walk_commands
+        else:
+            # Warning: hacky
 
-        # Make the cog think that get_commands returns this command
-        # as well if we inject it without modifying __cog_commands__
-        # since that's used for the injection and ejection of cogs.
-        def wrapped_get_commands(*, _original=cog.get_commands):
-            ret = _original()
-            ret.append(self)
-            return ret
+            # Make the cog think that get_commands returns this command
+            # as well if we inject it without modifying __cog_commands__
+            # since that's used for the injection and ejection of cogs.
+            def wrapped_get_commands(*, _original=cog.get_commands) -> List[Command[Any, Any, Any]]:
+                ret = _original()
+                ret.append(self)
+                return ret
 
-        # Ditto here
-        def wrapped_walk_commands(*, _original=cog.walk_commands):
-            yield from _original()
-            yield self
+            # Ditto here
+            def wrapped_walk_commands(*, _original=cog.walk_commands) -> Generator[Command[Any, Any, Any], None, None]:
+                yield from _original()
+                yield self
 
         functools.update_wrapper(wrapped_get_commands, cog.get_commands)
         functools.update_wrapper(wrapped_walk_commands, cog.walk_commands)

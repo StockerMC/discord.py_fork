@@ -112,9 +112,9 @@ if TYPE_CHECKING:
     AT = TypeVar('AT', bound=ApplicationCommand)
 
     Check = Union[
-        Callable[[SlashCommandResponse], Union[bool, Coroutine[Any, Any, bool]]],
-        Callable[[UserCommandResponse], Union[bool, Coroutine[Any, Any, bool]]],
-        Callable[[MessageCommandResponse], Union[bool, Coroutine[Any, Any, bool]]],
+        Callable[[SlashCommandResponse[Any]], Union[bool, Coroutine[Any, Any, bool]]],
+        Callable[[UserCommandResponse[Any]], Union[bool, Coroutine[Any, Any, bool]]],
+        Callable[[MessageCommandResponse[Any]], Union[bool, Coroutine[Any, Any, bool]]],
     ]
     ApplicationCommandKey = Tuple[str, int, Optional['ApplicationCommandKey']]  # name, type, parent
 
