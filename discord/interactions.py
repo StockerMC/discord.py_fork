@@ -25,12 +25,12 @@ DEALINGS IN THE SOFTWARE.
 """
 
 from __future__ import annotations
-from typing import Any, Dict, List, Optional, TYPE_CHECKING, Tuple, Union, TypeVar, Generic
+from typing import Any, Dict, List, Optional, TYPE_CHECKING, Tuple, Union, TypeVar, Generic, overload
 import asyncio
 
 from . import utils
 from .enums import try_enum, InteractionType, InteractionResponseType
-from .errors import InteractionResponded, HTTPException, ClientException
+from .errors import InteractionResponded, HTTPException, ClientException, InvalidArgument
 from .channel import PartialMessageable, ChannelType
 
 from .user import User
@@ -38,7 +38,7 @@ from .member import Member
 from .message import Message, Attachment
 from .object import Object
 from .permissions import Permissions
-from .webhook.async_ import async_context, Webhook, handle_message_parameters
+from .webhook.async_ import async_context, Webhook, ExecuteWebhookParameters, generate_file_multipart, handle_message_parameters
 
 __all__ = (
     'Interaction',
@@ -71,6 +71,76 @@ if TYPE_CHECKING:
 
 MISSING: Any = utils.MISSING
 ClientT = TypeVar('ClientT', bound='Client')
+
+def handle_create_interaction_response_message_parameters(
+    content: Optional[str] = MISSING,
+    *,
+    tts: bool = False,
+    ephemeral: bool = False,
+    file: File = MISSING,
+    files: List[File] = MISSING,
+    embed: Optional[Embed] = MISSING,
+    embeds: List[Embed] = MISSING,
+    view: Optional[View] = MISSING,
+    allowed_mentions: Optional[AllowedMentions] = MISSING,
+    previous_allowed_mentions: Optional[AllowedMentions] = None,
+) -> ExecuteWebhookParameters:
+    if files is not MISSING and file is not MISSING:
+        raise TypeError('Cannot mix file and files keyword arguments.')
+    if embeds is not MISSING and embed is not MISSING:
+        raise TypeError('Cannot mix embed and embeds keyword arguments.')
+
+    data = {}
+    if embeds is not MISSING:
+        if len(embeds) > 10:
+            raise InvalidArgument('embeds has a maximum of 10 elements.')
+        data['embeds'] = [e.to_dict() for e in embeds]
+
+    if embed is not MISSING:
+        if embed is None:
+            data['embeds'] = []
+        else:
+            data['embeds'] = [embed.to_dict()]
+
+    if content is not MISSING:
+        if content is not None:
+            data['content'] = str(content)
+        else:
+            data['content'] = None
+
+    if view is not MISSING:
+        if view is not None:
+            data['components'] = view.to_components()
+        else:
+            data['components'] = []
+
+    data['tts'] = tts
+    if ephemeral:
+        data['flags'] = 64
+
+    if allowed_mentions:
+        if previous_allowed_mentions is not None:
+            data['allowed_mentions'] = previous_allowed_mentions.merge(allowed_mentions).to_dict()
+        else:
+            data['allowed_mentions'] = allowed_mentions.to_dict()
+    elif previous_allowed_mentions is not None:
+        data['allowed_mentions'] = previous_allowed_mentions.to_dict()
+
+    if file is not MISSING:
+        files = [file]
+
+    multipart = []
+    payload: Dict[str, Any] = {
+        'data': data,
+        'type': InteractionResponseType.channel_message.value,
+    }
+
+    multipart.append({'name': 'payload_json', 'value': utils._to_json(payload)})
+
+    if files:
+        multipart.extend(generate_file_multipart(files))
+
+    return ExecuteWebhookParameters(payload=None, multipart=multipart, files=files)
 
 
 class Interaction(Generic[ClientT]):
@@ -459,15 +529,97 @@ class InteractionResponse:
             )
             self._responded = True
 
+    @overload
+    async def send_message(
+        self,
+        content: Optional[Any] = None,
+        *,
+        embed: Embed = MISSING,
+        view: View = MISSING,
+        tts: bool = False,
+        ephemeral: bool = False,
+        allowed_mentions: Optional[AllowedMentions] = None,
+    ) -> None: ...
+
+    @overload
+    async def send_message(
+        self,
+        content: Optional[Any] = None,
+        *,
+        embed: Embed = MISSING,
+        file: File = MISSING,
+        view: View = MISSING,
+        tts: bool = False,
+        ephemeral: bool = False,
+        allowed_mentions: Optional[AllowedMentions] = None,
+    ) -> None: ...
+
+    @overload
+    async def send_message(
+        self,
+        content: Optional[Any] = None,
+        *,
+        embed: Embed = MISSING,
+        files: List[File] = MISSING,
+        view: View = MISSING,
+        tts: bool = False,
+        ephemeral: bool = False,
+        allowed_mentions: Optional[AllowedMentions] = None,
+    ) -> None: ...
+
+    @overload
+    async def send_message(
+        self,
+        content: Optional[Any] = None,
+        *,
+        embeds: List[Embed] = MISSING,
+        view: View = MISSING,
+        tts: bool = False,
+        ephemeral: bool = False,
+        allowed_mentions: Optional[AllowedMentions] = None,
+    ) -> None:
+        ...
+
+    @overload
+    async def send_message(
+        self,
+        content: Optional[Any] = None,
+        *,
+        embeds: List[Embed] = MISSING,
+        file: File = MISSING,
+        view: View = MISSING,
+        tts: bool = False,
+        ephemeral: bool = False,
+        allowed_mentions: Optional[AllowedMentions] = None,
+    ) -> None:
+        ...
+
+    @overload
+    async def send_message(
+        self,
+        content: Optional[Any] = None,
+        *,
+        embeds: List[Embed] = MISSING,
+        files: List[File] = MISSING,
+        view: View = MISSING,
+        tts: bool = False,
+        ephemeral: bool = False,
+        allowed_mentions: Optional[AllowedMentions] = None,
+    ) -> None:
+        ...
+
     async def send_message(
         self,
         content: Optional[Any] = None,
         *,
         embed: Embed = MISSING,
         embeds: List[Embed] = MISSING,
+        file: File = MISSING,
+        files: List[File] = MISSING,
         view: View = MISSING,
         tts: bool = False,
         ephemeral: bool = False,
+        allowed_mentions: Optional[AllowedMentions] = None,
     ) -> None:
         """|coro|
 
@@ -482,7 +634,12 @@ class InteractionResponse:
             be mixed with the ``embed`` parameter.
         embed: :class:`Embed`
             The rich embed for the content to send. This cannot be mixed with
-            ``embeds`` parameter.
+            the ``embeds`` parameter.
+        file: :class:`~discord.File`
+            The file to upload. This cannot be mixed with the ``files`` parameter.
+        files: List[:class:`~discord.File`]
+            A list of files to upload. Must be a maximum of 10. This cannot
+            be mixed with the ``file`` parameter.
         tts: :class:`bool`
             Indicates if the message should be sent using text-to-speech.
         view: :class:`discord.ui.View`
@@ -491,54 +648,59 @@ class InteractionResponse:
             Indicates if the message should only be visible to the user who started the interaction.
             If a view is sent with an ephemeral message and it has no timeout set then the timeout
             is set to 15 minutes.
+        allowed_mentions: :class:`~discord.AllowedMentions`
+            Controls the mentions being processed in this message. If this is
+            passed, then the object is merged with :attr:`~discord.Client.allowed_mentions`.
+            The merging behaviour only overrides attributes that have been explicitly passed
+            to the object, otherwise it uses the attributes set in :attr:`~discord.Client.allowed_mentions`.
+            If no object is passed at all then the defaults given by :attr:`~discord.Client.allowed_mentions`
+            are used instead.
 
         Raises
         -------
         HTTPException
             Sending the message failed.
         TypeError
-            You specified both ``embed`` and ``embeds``.
+            You specified both ``embed`` and ``embeds`` or you specified both ``file`` and ``files``,
+            or ``embed`` or ``file`` were the wrong type, or ``embeds`` or ``file`` contained items of
+            the wrong type.
         ValueError
-            The length of ``embeds`` was invalid.
+            The length of ``embeds`` or ``files`` was invalid.
         InteractionResponded
             This interaction has already been responded to before.
         """
         if self._responded:
             raise InteractionResponded(self._parent)
 
-        payload: Dict[str, Any] = {
-            'tts': tts,
-        }
-
-        if embed is not MISSING and embeds is not MISSING:
-            raise TypeError('cannot mix embed and embeds keyword arguments')
-
-        if embed is not MISSING:
-            embeds = [embed]
-
-        if embeds:
-            if len(embeds) > 10:
-                raise ValueError('embeds cannot exceed maximum of 10 elements')
-            payload['embeds'] = [e.to_dict() for e in embeds]
-
-        if content is not None:
-            payload['content'] = str(content)
-
-        if ephemeral:
-            payload['flags'] = 64
-
-        if view is not MISSING:
-            payload['components'] = view.to_components()
-
+        previous_mentions: Optional[AllowedMentions] = self._parent._state.allowed_mentions
+        params = handle_create_interaction_response_message_parameters(
+            content=content,
+            embed=embed,
+            embeds=embeds,
+            file=file,
+            files=files,
+            view=view,
+            ephemeral=ephemeral,
+            tts=tts,
+            allowed_mentions=allowed_mentions,
+            previous_allowed_mentions=previous_mentions,
+        )
         parent = self._parent
         adapter = async_context.get()
-        await adapter.create_interaction_response(
-            parent.id,
-            parent.token,
-            session=parent._session,
-            type=InteractionResponseType.channel_message.value,
-            data=payload,
-        )
+        try:
+            await adapter.create_interaction_response(
+                parent.id,
+                parent.token,
+                session=parent._session,
+                type=InteractionResponseType.channel_message.value,
+                data=params.payload,
+                files=params.files,
+                multipart=params.multipart,
+            )
+        finally:
+            if params.files:
+                for file in params.files:
+                    file.close()
 
         if view is not MISSING:
             if ephemeral and view.timeout is None:

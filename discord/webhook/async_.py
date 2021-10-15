@@ -409,6 +409,8 @@ class AsyncWebhookAdapter:
         session: aiohttp.ClientSession,
         type: int,
         data: Optional[Dict[str, Any]] = None,
+        files: Optional[List[File]] = None,
+        multipart: Optional[List[Dict[str, Any]]] = None,
     ) -> Response[None]:
         payload: Dict[str, Any] = {
             'type': type,
@@ -424,7 +426,7 @@ class AsyncWebhookAdapter:
             webhook_token=token,
         )
 
-        return self.request(route, session=session, payload=payload)
+        return self.request(route, session, multipart=multipart, files=files)
 
     def get_original_interaction_response(
         self,
@@ -479,6 +481,32 @@ class ExecuteWebhookParameters(NamedTuple):
     payload: Optional[Dict[str, Any]]
     multipart: Optional[List[Dict[str, Any]]]
     files: Optional[List[File]]
+
+
+def generate_file_multipart(files: List[File]) -> List[Dict[str, Any]]:
+    multipart = []
+    if len(files) == 1:
+        file = files[0]
+        multipart.append(
+            {
+                'name': 'file',
+                'value': file.fp,
+                'filename': file.filename,
+                'content_type': 'application/octet-stream',
+            }
+        )
+    else:
+        for index, file in enumerate(files):
+            multipart.append(
+                {
+                    'name': f'file{index}',
+                    'value': file.fp,
+                    'filename': file.filename,
+                    'content_type': 'application/octet-stream',
+                }
+            )
+
+    return multipart
 
 
 def handle_message_parameters(
@@ -547,27 +575,8 @@ def handle_message_parameters(
 
     if files:
         multipart.append({'name': 'payload_json', 'value': utils._to_json(payload)})
+        multipart.extend(generate_file_multipart(files))
         payload = None
-        if len(files) == 1:
-            file = files[0]
-            multipart.append(
-                {
-                    'name': 'file',
-                    'value': file.fp,
-                    'filename': file.filename,
-                    'content_type': 'application/octet-stream',
-                }
-            )
-        else:
-            for index, file in enumerate(files):
-                multipart.append(
-                    {
-                        'name': f'file{index}',
-                        'value': file.fp,
-                        'filename': file.filename,
-                        'content_type': 'application/octet-stream',
-                    }
-                )
 
     return ExecuteWebhookParameters(payload=payload, multipart=multipart, files=files)
 

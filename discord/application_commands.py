@@ -47,6 +47,7 @@ from typing import (
     Generic,
     AsyncGenerator,
     Iterable,
+    overload,
 )
 
 from operator import attrgetter
@@ -117,6 +118,60 @@ if TYPE_CHECKING:
     from .message import Attachment
 
     class EditOriginalMessage(Protocol):
+        @overload
+        async def __call__(
+            self,
+            *,
+            content: Optional[str] = MISSING,
+            embed: Optional[Embed] = MISSING,
+            file: File = MISSING,
+            view: Optional[View] = MISSING,
+            allowed_mentions: Optional[AllowedMentions] = None,
+        ) -> InteractionMessage: ...
+        @overload
+        async def __call__(
+            self,
+            *,
+            content: Optional[str] = MISSING,
+            embed: Optional[Embed] = MISSING,
+            files: List[File] = MISSING,
+            view: Optional[View] = MISSING,
+            allowed_mentions: Optional[AllowedMentions] = None,
+        ) -> InteractionMessage: ...
+
+        @overload
+        async def __call__(
+            self,
+            *,
+            content: Optional[str] = MISSING,
+            embeds: List[Embed] = MISSING,
+            file: File = MISSING,
+            view: Optional[View] = MISSING,
+            allowed_mentions: Optional[AllowedMentions] = None,
+        ) -> InteractionMessage: ...
+
+        @overload
+        async def __call__(
+            self,
+            *,
+            content: Optional[str] = MISSING,
+            embed: Optional[Embed] = MISSING,
+            files: List[File] = MISSING,
+            view: Optional[View] = MISSING,
+            allowed_mentions: Optional[AllowedMentions] = None,
+        ) -> InteractionMessage: ...
+
+        @overload
+        async def __call__(
+            self,
+            *,
+            content: Optional[str] = MISSING,
+            embeds: List[Embed] = MISSING,
+            files: List[File] = MISSING,
+            view: Optional[View] = MISSING,
+            allowed_mentions: Optional[AllowedMentions] = None,
+        ) -> InteractionMessage: ...
+
         async def __call__(
             self,
             *,
@@ -130,15 +185,97 @@ if TYPE_CHECKING:
         ) -> InteractionMessage: ...
 
     class SendMessage(Protocol):
+        @overload
+        async def __call__(
+            self,
+            content: Optional[Any] = None,
+            *,
+            embed: Embed = MISSING,
+            view: View = MISSING,
+            tts: bool = False,
+            ephemeral: bool = False,
+            allowed_mentions: Optional[AllowedMentions] = None,
+        ) -> None: ...
+
+        @overload
+        async def __call__(
+            self,
+            content: Optional[Any] = None,
+            *,
+            embed: Embed = MISSING,
+            file: File = MISSING,
+            view: View = MISSING,
+            tts: bool = False,
+            ephemeral: bool = False,
+            allowed_mentions: Optional[AllowedMentions] = None,
+        ) -> None: ...
+
+        @overload
+        async def __call__(
+            self,
+            content: Optional[Any] = None,
+            *,
+            embed: Embed = MISSING,
+            files: List[File] = MISSING,
+            view: View = MISSING,
+            tts: bool = False,
+            ephemeral: bool = False,
+            allowed_mentions: Optional[AllowedMentions] = None,
+        ) -> None: ...
+
+        @overload
+        async def __call__(
+            self,
+            content: Optional[Any] = None,
+            *,
+            embeds: List[Embed] = MISSING,
+            view: View = MISSING,
+            tts: bool = False,
+            ephemeral: bool = False,
+            allowed_mentions: Optional[AllowedMentions] = None,
+        ) -> None:
+            ...
+
+        @overload
+        async def __call__(
+            self,
+            content: Optional[Any] = None,
+            *,
+            embeds: List[Embed] = MISSING,
+            file: File = MISSING,
+            view: View = MISSING,
+            tts: bool = False,
+            ephemeral: bool = False,
+            allowed_mentions: Optional[AllowedMentions] = None,
+        ) -> None:
+            ...
+
+        @overload
+        async def __call__(
+            self,
+            content: Optional[Any] = None,
+            *,
+            embeds: List[Embed] = MISSING,
+            files: List[File] = MISSING,
+            view: View = MISSING,
+            tts: bool = False,
+            ephemeral: bool = False,
+            allowed_mentions: Optional[AllowedMentions] = None,
+        ) -> None:
+            ...
+
         async def __call__(
             self,
             content: Optional[Any] = None,
             *,
             embed: Embed = MISSING,
             embeds: List[Embed] = MISSING,
+            file: File = MISSING,
+            files: List[File] = MISSING,
             view: View = MISSING,
             tts: bool = False,
             ephemeral: bool = False,
+            allowed_mentions: Optional[AllowedMentions] = None,
         ) -> None: ...
 
     class Defer(Protocol):
