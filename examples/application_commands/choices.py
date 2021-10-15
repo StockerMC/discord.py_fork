@@ -2,9 +2,6 @@ import typing
 import discord
 
 class MyClient(discord.Client):
-    def __init__(self):
-        super().__init__()
-
     async def on_ready(self):
         print(f'Logged in as {self.user} (ID: {self.user.id})')
         print('------')
