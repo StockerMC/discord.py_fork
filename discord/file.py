@@ -23,7 +23,7 @@ DEALINGS IN THE SOFTWARE.
 """
 
 from __future__ import annotations
-from typing import Optional, TYPE_CHECKING, Union
+from typing import Optional, TYPE_CHECKING, Union, Callable
 
 import os
 import io
@@ -75,8 +75,6 @@ class File:
 
     if TYPE_CHECKING:
         fp: io.BufferedIOBase
-        filename: Optional[str]
-        spoiler: bool
 
     def __init__(
         self,
@@ -89,19 +87,21 @@ class File:
             if not (fp.seekable() and fp.readable()):
                 raise ValueError(f'File buffer {fp!r} must be seekable and readable')
             self.fp = fp
-            self._original_pos = fp.tell()
-            self._owner = False
+            self._original_pos: int = fp.tell()
+            self._owner: bool = False
         else:
             self.fp = open(fp, 'rb')
-            self._original_pos = 0
-            self._owner = True
+            self._original_pos: int = 0
+            self._owner: bool = True
 
         # aiohttp only uses two methods from IOBase
         # read and close, since I want to control when the files
         # close, I need to stub it so it doesn't close unless
         # I tell it to
-        self._closer = self.fp.close
+        self._closer: Callable[[], None] = self.fp.close
         self.fp.close = lambda: None
+
+        self.filename: Optional[str]
 
         if filename is None:
             if isinstance(fp, str):
@@ -114,7 +114,7 @@ class File:
         if spoiler and self.filename is not None and not self.filename.startswith('SPOILER_'):
             self.filename = 'SPOILER_' + self.filename
 
-        self.spoiler = spoiler or (self.filename is not None and self.filename.startswith('SPOILER_'))
+        self.spoiler: bool = spoiler or (self.filename is not None and self.filename.startswith('SPOILER_'))
 
     def reset(self, *, seek: Union[int, bool] = True) -> None:
         # The `seek` parameter is needed because
