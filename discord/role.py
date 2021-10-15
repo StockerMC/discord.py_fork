@@ -329,7 +329,7 @@ class Role(Hashable):
         """Optional[:class:`Asset`]: Returns the role's icon asset, if available."""
         if self._icon is None:
             return None
-        return Asset._from_role_icon(self._state, self.id, self._icon)
+        return Asset._from_icon(self._state, self.id, self._icon, 'role')
 
     async def _move(self, position: int, reason: Optional[str]) -> None:
         if position <= 0:
