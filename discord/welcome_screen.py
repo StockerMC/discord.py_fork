@@ -72,7 +72,7 @@ class WelcomeScreen:
         'welcome_channels',
         'enabled',
         'guild',
-        '_state'
+        '_state',
     )
 
     def __init__(self, *, state: ConnectionState, data: WelcomeScreenPayload, guild: Union[Guild, PartialInviteGuild, Object]) -> None:
@@ -86,7 +86,7 @@ class WelcomeScreen:
 
     def _update(self, data: WelcomeScreenPayload) -> None:
         self.description: str = data['description']
-        self.welcome_channels: List[WelcomeScreenChannel] = [WelcomeScreenChannel.from_state(state=self._state, data=x) for x in data['welcome_channels']]
+        self.welcome_channels: List[WelcomeScreenChannel] = [WelcomeScreenChannel.from_data(state=self._state, data=x) for x in data['welcome_channels']]
 
     async def edit(
         self,
@@ -171,7 +171,6 @@ class WelcomeScreenChannel:
 
     def __init__(self, *, channel_id: int, description: str, emoji: Optional[PartialEmoji] = None) -> None:
         self.channel_id: int = channel_id
-        # the channel will either be a TextChannel or None
         self._state: Optional[ConnectionState] = None
         self.description: str = description
 
@@ -189,7 +188,7 @@ class WelcomeScreenChannel:
         return self._state.get_channel(self.channel_id) if self._state is not None else None # type: ignore
 
     @classmethod
-    def from_state(cls: Type[WCT], *, state: ConnectionState, data: WelcomeScreenChannelPayload) -> WCT:
+    def from_data(cls: Type[WCT], *, state: ConnectionState, data: WelcomeScreenChannelPayload) -> WCT:
         channel_id = int(data.pop('channel_id'))
         description = data.pop('description')
         emoji = PartialEmoji.from_dict(data) if data else None # type: ignore

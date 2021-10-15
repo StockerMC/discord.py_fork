@@ -80,7 +80,7 @@ from .stage_instance import StageInstance
 from .threads import Thread, ThreadMember
 from .sticker import GuildSticker
 from .file import File
-from .welcome_screen import WelcomeScreen
+from .welcome_screen import WelcomeScreen, WelcomeScreenChannel
 
 
 __all__ = (
@@ -107,6 +107,7 @@ if TYPE_CHECKING:
     from .types.sticker import CreateGuildSticker
     from .types.template import CreateTemplate
     from .types.widget import EditWidget
+    from .types.welcome_screen import EditWelcomeScreen
     from .types import channel
 
     from .permissions import Permissions
@@ -3094,14 +3095,63 @@ class Guild(Hashable):
         -------
         Forbidden
             You do not have the proper permissions to get this.
+        NotFound
+            The guild does not have a welcome screen.
         HTTPException
             Retrieving the welcome screen failed.
 
         Returns
         --------
-        Optional[:class:`WelcomeScreen`]
-            The welcome screen. If this is ``None``, the guild does not
-            have a welcome screen.
+        :class:`WelcomeScreen`
+            The welcome screen.
         """
         data = await self._state.http.get_guild_welcome_screen(self.id)
+        return WelcomeScreen(state=self._state, data=data, guild=self)
+
+    async def edit_welcome_screen(
+        self,
+        *,
+        enabled: Optional[bool] = MISSING,
+        description: Optional[str] = MISSING,
+        welcome_channels: Optional[List[WelcomeScreenChannel]] = MISSING,
+    ) -> WelcomeScreen:
+        """|coro|
+
+        Edits the guild's welcome screen.
+
+        The guild must have ``COMMUNITY`` in :attr:`~Guild.features`.
+
+        You must have the :attr:`~Permissions.manage_guild` permission to use
+        this as well.
+
+        .. versionadded:: 2.0
+
+        Raises
+        -------
+        Forbidden
+            You do not have the proper permissions to edit the welcome screen.
+        NotFound
+            The guild does not have a welcome screen.
+        HTTPException
+            Editing the welcome screen failed.
+
+        Returns
+        --------
+        :class:`WelcomeScreen`
+            The edited welcome screen.
+        """
+        payload: EditWelcomeScreen = {}
+        if enabled is not MISSING:
+            payload['enabled'] = enabled
+
+        if description is not MISSING:
+            payload['description'] = description
+
+        if welcome_channels is not MISSING:
+            if welcome_channels is None:
+                payload['welcome_channels'] = None
+            else:
+                payload['welcome_channels'] = [welcome_channel.to_dict() for welcome_channel in welcome_channels]
+
+        data = await self._state.http.modify_guild_welcome_screen(self.id, payload)
         return WelcomeScreen(state=self._state, data=data, guild=self)
