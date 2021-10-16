@@ -71,7 +71,7 @@ if TYPE_CHECKING:
         ApplicationCommandOption as ApplicationCommandOptionPayload,
         InteractionData,
         ApplicationCommandInteractionDataResolved,
-        ApplicationCommandInteractionData,
+        # ApplicationCommandInteractionData,
         ApplicationCommandInteractionDataOption,
     )
 
@@ -411,15 +411,15 @@ class ApplicationCommandOption:
         The description of the option.
     required: :class:`bool`
         Whether the option is required or not.
-    choices: Optional[List[:class:`ApplicationCommandOptionChoice`]]
+    choices: List[:class:`ApplicationCommandOptionChoice`]
         The choices of the option.
-    options: Optional[List[:class:`ApplicationCommandOption`]]
+    options: List[:class:`ApplicationCommandOption`]
         The parameters of the option if it's a subcommand or subcommand group type.
     default: Optional[:class:`ApplicationCommandOptionDefault`]
         The default for the option, if any.
 
         This is for when the option is accessed with it's relevant :class:`ApplicationCommandOptions` instance.
-    channel_types: List[:class:`ChannelType`]
+    channel_types: Optional[List[:class:`ChannelType`]]
         The valid channel types for this option. This is only valid for options that have a type of :attr:`ApplicationCommandOptionType.channel`.
     autocomplete: Callable[[:class:`AutocompleteResponse`], Any]
         The callable for responses to when a user is typing an autocomplete option. This can be an :data:`typing.AsyncIterator`
@@ -446,19 +446,19 @@ class ApplicationCommandOption:
         name: str,
         description: str,
         required: bool = MISSING,
-        choices: List[ApplicationCommandOptionChoice] = [],
+        choices: Optional[List[ApplicationCommandOptionChoice]] = None,
         options: Optional[List[ApplicationCommandOption]] = None,
         default: Optional[Union[ApplicationCommandOptionDefault, Any]] = None,
-        channel_types: List[ChannelType] = [],
+        channel_types: Optional[List[ChannelType]] = None,
     ) -> None:
         self.type: ApplicationCommandOptionType = type
         self.name: str = name
         self.description: str = description
         self.required: bool = required
-        self.choices: List[ApplicationCommandOptionChoice] = choices
-        self.options: Optional[List[ApplicationCommandOption]] = options
+        self.choices: List[ApplicationCommandOptionChoice] = choices or []
+        self.options: List[ApplicationCommandOption] = options or []
         self.default: Optional[Union[ApplicationCommandOptionDefault, Any]] = default
-        self.channel_types: List[ChannelType] = channel_types
+        self.channel_types: List[ChannelType] = channel_types or []
         self._autocomplete: Optional[AutocompleteCallback] = None
 
     def __repr__(self) -> str:
@@ -515,13 +515,13 @@ class ApplicationCommandOption:
         if self.required is not MISSING:
             ret['required'] = self.required
 
-        if self.choices is not None:
+        if self.choices:
             ret['choices'] = [choice.to_dict() for choice in self.choices]
 
         if self.options is not None:
             ret['options'] = [option.to_dict() for option in self.options]
 
-        if self.channel_types is not None:
+        if self.channel_types:
             ret['channel_types'] = [type.value for type in self.channel_types]
 
         if self._autocomplete is not None:
@@ -536,9 +536,9 @@ def application_command_option(
     name: str = MISSING,
     type: Union[ApplicationCommandOptionType, ValidOptionTypes] = MISSING,
     required: bool = True,
-    choices: List[ApplicationCommandOptionChoice] = [],
+    choices: Optional[List[ApplicationCommandOptionChoice]] = None,
     default: Optional[Union[ApplicationCommandOptionDefault, Type[ApplicationCommandOptionDefault], Any]] = None,
-    channel_types: List[Union[ChannelType, ChannelTypes]] = [],
+    channel_types: Optional[List[Union[ChannelType, ChannelTypes]]] = None,
 ) -> Any:
     r"""Used for creating an option for an application command.
 
@@ -566,8 +566,8 @@ def application_command_option(
     required: :class:`bool`
         Whether the option is required or not.
         Defaults to ``True``.
-    choices: List[:class:`ApplicationCommandOptionChoice`]
-        The choices of the option.
+    choices: Optional[List[:class:`ApplicationCommandOptionChoice`]]
+        The choices of the option, if any.
     default: Optional[Union[:class:`ApplicationCommandOptionDefault`, Type[:class:`ApplicationCommandOptionDefault`]]]
         The default of the option for when it's accessed with it's relevant :class:`ApplicationCommandOptions` instance.
     channel_types: List[Union[:class:`ChannelType`, Type]]
@@ -595,7 +595,10 @@ def application_command_option(
         if hasattr(default, '__discord_application_command_option_default__') and inspect.isclass(default):
             default = default()
 
-    resolved_channel_types = [CHANNEL_TO_CHANNEL_TYPE[channel_type] if not isinstance(channel_type, ChannelType) else channel_type for channel_type in channel_types]
+    if channel_types is not None:
+        resolved_channel_types = [CHANNEL_TO_CHANNEL_TYPE[channel_type] if not isinstance(channel_type, ChannelType) else channel_type for channel_type in channel_types]
+    else:
+        resolved_channel_types = channel_types
 
     return ApplicationCommandOption(
         name=name,
@@ -989,7 +992,7 @@ class BaseApplicationCommand:
         parent: Optional[Type[BaseApplicationCommand]] = None,  # make this SlashCommand?
         type: ApplicationCommandType = MISSING,
         default_permission: bool = True,
-        guild_ids: List[int] = [],
+        guild_ids: Optional[List[int]] = None,
         global_command: bool = MISSING,
         group: bool = False,
     ) -> None:
@@ -1050,7 +1053,7 @@ class BaseApplicationCommand:
         cls.__application_command_parent__ = parent  # type: ignore
         cls.__application_command_type__ = type
         cls.__application_command_default_permission__ = bool(default_permission)
-        cls.__application_command_guild_ids__ = guild_ids
+        cls.__application_command_guild_ids__ = guild_ids or []
         if global_command is MISSING:
             global_command = False if guild_ids else True
 
