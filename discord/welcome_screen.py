@@ -115,7 +115,7 @@ class WelcomeScreen:
                 This *replaces* the old welcome channels.
         description: Optional[:class:`str`]
             The server description shown in the welcome screen.
-        reason: :class:`str`
+        reason: Optional[:class:`str`]
             The reason for editing the welcome screen. Shows up on the audit log.
 
         Raises
