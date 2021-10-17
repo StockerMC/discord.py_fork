@@ -33,6 +33,7 @@ if TYPE_CHECKING:
     from .state import ConnectionState
     from .channel import TextChannel
     from .guild import Guild
+    from .emoji import Emoji
 
     from .types.welcome_screen import (
         WelcomeScreen as WelcomeScreenPayload,
