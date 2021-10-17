@@ -128,6 +128,7 @@ if TYPE_CHECKING:
             view: Optional[View] = MISSING,
             allowed_mentions: Optional[AllowedMentions] = None,
         ) -> InteractionMessage: ...
+
         @overload
         async def __call__(
             self,
@@ -705,9 +706,23 @@ def _get_options(
 class ApplicationCommandOptions:
     """Represents the received options of an application command.
 
-    The attributes of a ``ApplicationCommandOptions`` instance are the options of the
+    This type can be accessed from :attr:`SlashCommandResponse.options`.
+
+    The attributes of an ``ApplicationCommandOptions`` instance are the options of the
     application command it is for. If an option is not required and was not provided,
     it will be ``None``.
+
+    For example:
+
+    .. code-block:: python3
+
+        class Avatar(discord.SlashCommand):
+            user: discord.Member = discord.application_command_option(description='The user to get the avatar from')
+
+            async def callback(self, response: discord.SlashCommandResponse):
+                user = response.options.user
+                # user will be a `discord.Member` or `discord.User` in DMs with the bot
+                await response.send_message(user.display_avatar, ephemeral=True)
     """
     def __init__(
         self,
