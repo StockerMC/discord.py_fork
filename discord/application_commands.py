@@ -419,7 +419,7 @@ class ApplicationCommandOption:
         The default for the option, if any.
 
         This is for when the option is accessed with it's relevant :class:`ApplicationCommandOptions` instance.
-    channel_types: Optional[List[:class:`ChannelType`]]
+    channel_types: List[:class:`ChannelType`]
         The valid channel types for this option. This is only valid for options that have a type of :attr:`ApplicationCommandOptionType.channel`.
     autocomplete: Callable[[:class:`AutocompleteResponse`], Any]
         The callable for responses to when a user is typing an autocomplete option. This can be an :data:`typing.AsyncIterator`
