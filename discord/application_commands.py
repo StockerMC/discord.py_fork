@@ -71,7 +71,7 @@ if TYPE_CHECKING:
         ApplicationCommandOption as ApplicationCommandOptionPayload,
         InteractionData,
         ApplicationCommandInteractionDataResolved,
-        # ApplicationCommandInteractionData,
+        ApplicationCommandInteractionData,
         ApplicationCommandInteractionDataOption,
     )
 
