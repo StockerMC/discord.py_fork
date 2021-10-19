@@ -412,12 +412,15 @@ class AsyncWebhookAdapter:
         files: Optional[List[File]] = None,
         multipart: Optional[List[Dict[str, Any]]] = None,
     ) -> Response[None]:
-        payload: Dict[str, Any] = {
+        payload: Optional[Dict[str, Any]] = {
             'type': type,
         }
 
         if data is not None:
             payload['data'] = data
+
+        if multipart is not None:
+            payload = None
 
         route = Route(
             'POST',
@@ -426,7 +429,7 @@ class AsyncWebhookAdapter:
             webhook_token=token,
         )
 
-        return self.request(route, session, multipart=multipart, files=files)
+        return self.request(route, session, payload=payload, multipart=multipart, files=files)
 
     def get_original_interaction_response(
         self,
