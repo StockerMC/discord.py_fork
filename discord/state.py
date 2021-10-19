@@ -359,10 +359,6 @@ class ConnectionState:
     def _remove_voice_client(self, guild_id: int) -> None:
         self._voice_clients.pop(guild_id, None)
 
-    def _update_references(self, ws: DiscordWebSocket) -> None:
-        for vc in self.voice_clients:
-            vc.main_ws = ws  # type: ignore
-
     def store_user(self, data: Union[UserPayload, PartialUserPayload]) -> User:
         user_id = int(data['id'])
         try:
@@ -1661,6 +1657,6 @@ class AutoShardedConnectionState(ConnectionState):
         if self._ready_task is None:
             self._ready_task = asyncio.create_task(self._delay_ready())
 
-    def parse_resumed(self, data: Dict[str, int]) -> None:
+    def parse_resumed(self, data: Dict[str, Any]) -> None:
         self.dispatch('resumed')
         self.dispatch('shard_resumed', data['__shard_id__'])

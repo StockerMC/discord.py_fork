@@ -401,8 +401,6 @@ class DiscordWebSocket:
             ws.send = ws.debug_send
             ws.log_receive = ws.debug_log_receive
 
-        client._connection._update_references(ws)
-
         log.debug('Created websocket connected to %s', gateway)
 
         # poll event for OP Hello
