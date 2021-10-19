@@ -80,7 +80,7 @@ class Component:
         return f'<{self.__class__.__name__} {attrs}>'
 
     @classmethod
-    def _raw_construct(cls: Type[C], **kwargs) -> C:
+    def _raw_construct(cls: Type[C], **kwargs: Any) -> C:
         self: C = cls.__new__(cls)
         for slot in get_slots(cls):
             try:
@@ -116,7 +116,7 @@ class ActionRow(Component):
 
     __repr_info__: ClassVar[Tuple[str, ...]] = __slots__
 
-    def __init__(self, data: ComponentPayload):
+    def __init__(self, data: ActionRowPayload) -> None:
         self.type: ComponentType = try_enum(ComponentType, data['type'])
         self.children: List[Component] = [_component_factory(d) for d in data.get('components', [])]
 
@@ -167,7 +167,7 @@ class Button(Component):
 
     __repr_info__: ClassVar[Tuple[str, ...]] = __slots__
 
-    def __init__(self, data: ButtonComponentPayload):
+    def __init__(self, data: ButtonComponentPayload) -> None:
         self.type: ComponentType = try_enum(ComponentType, data['type'])
         self.style: ButtonStyle = try_enum(ButtonStyle, data['style'])
         self.custom_id: Optional[str] = data.get('custom_id')
@@ -374,7 +374,7 @@ class SelectOption:
 def _component_factory(data: ComponentPayload) -> Component:
     component_type = data['type']
     if component_type == 1:
-        return ActionRow(data)
+        return ActionRow(data)  # type: ignore
     elif component_type == 2:
         return Button(data)  # type: ignore
     elif component_type == 3:

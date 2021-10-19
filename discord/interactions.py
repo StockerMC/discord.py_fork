@@ -54,7 +54,13 @@ if TYPE_CHECKING:
     from .types.webhook import (
         Webhook as WebhookPayload
     )
+    from .types.user import (
+        User as UserPayload,
+        PartialUser as PartialUserPayload,
+    )
+
     from .guild import Guild
+    from .http import HTTPClient
     from .state import ConnectionState
     from .file import File
     from .mentions import AllowedMentions
@@ -810,20 +816,20 @@ class _InteractionMessageState:
         self._interaction: Interaction[Any] = interaction
         self._parent: ConnectionState = parent
 
-    def _get_guild(self, guild_id):
+    def _get_guild(self, guild_id: Optional[int]) -> Optional[Guild]:
         return self._parent._get_guild(guild_id)
 
-    def store_user(self, data):
+    def store_user(self, data: Union[UserPayload, PartialUserPayload]) -> User:
         return self._parent.store_user(data)
 
-    def create_user(self, data):
+    def create_user(self, data: Union[UserPayload, PartialUserPayload]) -> User:
         return self._parent.create_user(data)
 
     @property
-    def http(self):
+    def http(self) -> HTTPClient:
         return self._parent.http
 
-    def __getattr__(self, attr):
+    def __getattr__(self, attr: str) -> Any:
         return getattr(self._parent, attr)
 
 

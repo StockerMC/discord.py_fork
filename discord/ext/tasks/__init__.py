@@ -43,7 +43,6 @@ from typing import (
 import aiohttp
 import discord
 import inspect
-import logging
 import sys
 import traceback
 
@@ -79,7 +78,7 @@ class SleepHandle:
 
     def __init__(self, dt: datetime.datetime, *, loop: asyncio.AbstractEventLoop) -> None:
         self.loop: asyncio.AbstractEventLoop = loop
-        self.future: asyncio.Future = loop.create_future()
+        self.future: asyncio.Future[bool] = loop.create_future()
         relative_delta = discord.utils.compute_timedelta(dt)
         self.handle: asyncio.TimerHandle = loop.call_later(relative_delta, self.future.set_result, True)
 
@@ -88,7 +87,7 @@ class SleepHandle:
         relative_delta = discord.utils.compute_timedelta(dt)
         self.handle = self.loop.call_later(relative_delta, self.future.set_result, True)
 
-    def wait(self) -> asyncio.Future:
+    def wait(self) -> asyncio.Future[bool]:
         return self.future
 
     def done(self) -> bool:
@@ -120,7 +119,7 @@ class Loop(Generic[C, P, T]):
         self.count: Optional[int] = count
         self._current_loop: int = 0
         self._handle: SleepHandle = MISSING
-        self._task: Optional[asyncio.Task] = None
+        self._task: Optional[asyncio.Task[None]] = None
         self._injected: Optional[C] = None
         self._valid_exception: Tuple[Type[BaseException], ...] = (
             OSError,
