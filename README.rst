@@ -126,8 +126,11 @@ Slash Command Example
         async def default(self, response: discord.SlashCommandResponse):
             return response.user
 
+    client = MyClient()
+
     # setting `guild_ids` in development is better when possible because
     # registering global commands has a 1 hour delay
+    @client.application_command
     class Avatar(discord.SlashCommand, guild_ids=[123]):
         """Get information about yourself or the provided user."""
 
@@ -139,8 +142,6 @@ Slash Command Example
             avatar = response.options.user.display_avatar.url
             await response.interaction.response.send_message(avatar, ephemeral=True)
 
-    client = MyClient()
-    client.add_application_command(Avatar())
     client.run('token')
 
 You can find more examples in the examples directory.
