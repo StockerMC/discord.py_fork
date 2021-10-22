@@ -74,6 +74,7 @@ if TYPE_CHECKING:
     from .abc import Snowflake, SnowflakeTime
     from .message import Message, PartialMessage
     from .webhook import Webhook
+    from .webhook.async_ import _WebhookState
     from .state import ConnectionState
     from .user import ClientUser, User, BaseUser
     from .guild import Guild, GuildChannel as GuildChannelType
@@ -2003,8 +2004,8 @@ class PartialMessageable(discord.abc.Messageable, Hashable):
         The channel type associated with this partial messageable, if given.
     """
 
-    def __init__(self, state: ConnectionState, id: int, type: Optional[ChannelType] = None):
-        self._state: ConnectionState = state
+    def __init__(self, state: Union[ConnectionState, _WebhookState], id: int, type: Optional[ChannelType] = None):
+        self._state: Union[ConnectionState, _WebhookState] = state
         self._channel: Object = Object(id=id)
         self.id: int = id
         self.type: Optional[ChannelType] = type
