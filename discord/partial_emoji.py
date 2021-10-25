@@ -198,7 +198,7 @@ class PartialEmoji(_EmojiTag, AssetMixin):
 
     def _as_reaction(self) -> str:
         if self.id is None:
-            return self.name  # type: ignore
+            return self.name or ''
         return f'{self.name}:{self.id}'
 
     @property
