@@ -1318,7 +1318,6 @@ class ConnectionState:
             _log.debug('GUILD_ROLE_UPDATE referencing an unknown guild ID: %s. Discarding.', data['guild_id'])
 
     def parse_guild_members_chunk(self, data: GuildMembersChunkEvent) -> None:
-        print(data)
         guild_id = int(data['guild_id'])
         guild = self._get_guild(guild_id)
         presences = data.get('presences', [])
