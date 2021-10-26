@@ -31,9 +31,9 @@ class Fruit(discord.SlashCommand):
     # when using the `autocomplete` decorator
     fruit = discord.application_command_option(description='The fruit to choose', type=str)
 
-    # this can also return an iterable of strings, integers or floats
+    # this function must be async and can also return an iterable of strings, integers or floats
     @fruit.autocomplete
-    async def fruit_autocomplete(self, response: discord.AutocompleteResponse) -> typing.Iterator[str]:
+    async def fruit_autocomplete(self, response: discord.AutocompleteResponse) -> typing.AsyncIterator[str]:
         for fruit in FRUITS:
             if response.value.lower() in fruit.lower():
                 yield fruit
