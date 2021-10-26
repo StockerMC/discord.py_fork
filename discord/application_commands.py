@@ -865,7 +865,7 @@ class BaseApplicationCommandResponse(Generic[ClientT]):
         user: Optional[Union[User, Member]]
         client: ClientT
         # properties
-        guild: Guild
+        guild: Optional[Guild]
         channel: Optional[InteractionChannel]
         permissions: Permissions
         response: InteractionResponse
@@ -965,9 +965,9 @@ class AutocompleteResponse(BaseApplicationCommandResponse[ClientT]):
         self.command: SlashCommand = command
 
 
-def _traverse_mro_for_attr(cls: Type[object], attr_name: str, default: T = MISSING) -> Union[Any, T]:
+def _traverse_mro_for_attr(cls: Type[object], attr_name: str, default: T = MISSING) -> Union[T, Any]:
     attr = default
-    for base in cls.__mro__[:-1]:
+    for base in reversed(cls.__mro__):
         attr = getattr(base, attr_name, default)
         if attr is default:
             continue
