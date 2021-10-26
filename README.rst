@@ -82,7 +82,6 @@ Quick Example
             print(f'Logged in as {self.user} (ID: {self.user.id})')
             print('------')
 
-
         async def on_message(self, message: discord.Message):
             # don't respond to ourselves
             if message.author == self.user:
