@@ -244,6 +244,13 @@ class Client:
         To enable these events, this must be set to ``True``. Defaults to ``False``.
 
         .. versionadded:: 2.0
+    register_application_commands_on_startup: :class:`bool`
+        Whether :meth:`register_application_commands` should be called in :meth:`login`.
+        It is recommended to set this to ``False`` when the application commands
+        added to the client are the same (having the exact same name and options) as the previous
+        time they were added. Defaults to ``True``.
+
+        .. versionadded:: 2.0
 
     Attributes
     -----------
@@ -268,6 +275,7 @@ class Client:
         self.owner_ids: Optional[collections.abc.Collection[int]] = options.get('owner_ids', set())
         self.application_command_guild_ids: Optional[List[int]] = options.get('application_command_guild_ids')
         self.extra_events: Dict[str, List[CoroFunc]] = {}
+        self.register_application_commands_on_startup: bool = options.get('register_application_commands_on_startup', True)
 
         if self.owner_id and self.owner_ids:
             raise TypeError('Both owner_id and owner_ids are set.')
@@ -556,6 +564,9 @@ class Client:
         data = await self.http.static_login(token.strip())
         self._connection.user = ClientUser(state=self._connection, data=data)
 
+        if self.register_application_commands_on_startup:
+            await self.register_application_commands()
+
     async def connect(self, *, reconnect: bool = True) -> None:
         """|coro|
 
@@ -698,34 +709,6 @@ class Client:
             An unexpected keyword argument was received.
         """
         await self.login(token)
-
-        if self.application_commands:
-            application_id = self.application_id
-            if application_id is None:
-                app = await self.application_info()
-                # cache the information from application_info
-                self._connection.application_id = application_id = app.id
-                if app.team and not self.owner_ids:
-                    self.owner_ids = {m.id for m in app.team.members}
-                elif not self.owner_id:
-                    self.owner_id = app.owner.id
-
-            guild_payloads = collections.defaultdict(list)
-            global_payload = []
-            for command in self._application_commands.values():
-                command_payload = command.to_dict()
-                for guild_id in command.__application_command_guild_ids__:
-                    guild_payloads[guild_id].append(command_payload)
-
-                if command.__application_command_global_command__:
-                    global_payload.append(command_payload)
-
-            if global_payload:
-                await self.http.bulk_upsert_global_commands(application_id, global_payload)
-
-            for guild_id, commands in guild_payloads.items():
-                await self.http.bulk_upsert_guild_commands(application_id, guild_id, commands)
-
         await self.connect(reconnect=reconnect)
 
     def run(self, token: str, *, reconnect: bool = True) -> None:
@@ -1793,8 +1776,7 @@ class Client:
         elif self.owner_ids:
             return user.id in self.owner_ids
         else:
-
-            app = await self.application_info()  # type: ignore
+            app = await self.application_info()
             if app.team:
                 self.owner_ids = ids = {m.id for m in app.team.members}
                 return user.id in ids
@@ -2372,3 +2354,56 @@ class Client:
 
         self.add_application_command(cls())
         return cls
+
+    async def register_application_commands(self) -> None:
+        """|coro|
+        
+        Registers all application commands added to the client. This will
+        be called in :meth:`login` is called if :attr:`.register_application_commands_on_startup`
+        is ``True``.
+
+        .. note::
+
+            This overwrites existing application commands. For example, if an existing
+            slash command has the same name as the one you are registering, it will be
+            overwritten.
+
+        .. note::
+
+            Global commands may take 1 hour to register in all guilds.
+
+        Raises
+        ------
+        :exc:`.HTTPException`
+            Registering the application commands failed.
+        """
+
+        application_commands = self._application_commands.values()
+        if not application_commands:
+            return
+
+        application_id = self.application_id
+        if application_id is None:
+            app = await self.application_info()
+            # cache the information from application_info
+            self._connection.application_id = application_id = app.id
+            if app.team and self.owner_ids is None:
+                self.owner_ids = {m.id for m in app.team.members}
+            elif self.owner_id is None:
+                self.owner_id = app.owner.id
+
+        guild_payloads = collections.defaultdict(list)
+        global_payload = []
+        for command in application_commands:
+            command_payload = command.to_dict()
+            for guild_id in command.__application_command_guild_ids__:
+                guild_payloads[guild_id].append(command_payload)
+
+            if command.__application_command_global_command__:
+                global_payload.append(command_payload)
+
+        if global_payload:
+            await self.http.bulk_upsert_global_commands(application_id, global_payload)
+
+        for guild_id, commands in guild_payloads.items():
+            await self.http.bulk_upsert_guild_commands(application_id, guild_id, commands)
