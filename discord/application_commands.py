@@ -107,6 +107,7 @@ if TYPE_CHECKING:
     ]
     AutocompleteCallback = Callable[['SlashCommand', 'AutocompleteResponse'], Union[AsyncGenerator[Union[str, int, float], None], Iterable[str]]]
     AutocompleteCallbackT = TypeVar('AutocompleteCallbackT', bound=AutocompleteCallback)
+    FuncT = TypeVar('FuncT', bound=Callable[..., Any])
 
     # these protocols are to help typehint the inherited methods from Interaction/InteractionResponse
     # for BaseApplicationCommandResponse
@@ -978,6 +979,14 @@ def _traverse_mro_for_attr(cls: Type[object], attr_name: str, default: T = MISSI
     return attr
 
 
+def _application_command_special_method(func: FuncT) -> FuncT:
+    func.__application_command_special_method__ = None
+    return func
+
+def _get_overridden_method(method: FuncT) -> Optional[FuncT]:
+    """Return None if the method is not overridden. Otherwise returns the overridden method."""
+    return getattr(method.__func__, '__application_command_special_method__', method)
+
 class BaseApplicationCommand:
     if TYPE_CHECKING:
         __application_command_options__: ClassVar[Dict[str, ApplicationCommandOption]]
@@ -987,7 +996,7 @@ class BaseApplicationCommand:
         __application_command_default_permission__: ClassVar[bool]
         __application_command_group_command__: ClassVar[bool]
         __application_command_subcommands__: ClassVar[Dict[str, Union[BaseApplicationCommand]]]
-        __application_command_parent__: Union[Type[BaseApplicationCommand], BaseApplicationCommand]
+        __application_command_parent__: Optional[Union[Type[BaseApplicationCommand], BaseApplicationCommand]]
         __application_command_guild_ids__: List[int]
         __application_command_global_command__: bool
 
@@ -1065,8 +1074,7 @@ class BaseApplicationCommand:
         cls.__application_command_name__ = name
 
         cls.__application_command_description__ = description
-        # it gets set as an instance later
-        cls.__application_command_parent__ = parent  # type: ignore
+        cls.__application_command_parent__ = parent
         cls.__application_command_type__ = type
         cls.__application_command_default_permission__ = bool(default_permission)
         cls.__application_command_guild_ids__ = guild_ids or []
@@ -1164,9 +1172,17 @@ class BaseApplicationCommand:
                     if not cog_allow:
                         return
 
-            allow = await self.command_check(response)
-            if not allow:
-                return
+            command_check = _get_overridden_method(self.command_check)
+            parent = self.__application_command_parent__
+            while command_check is None and parent is not None:
+                command_check = _get_overridden_method(parent.command_check)
+                parent = parent.__application_command_parent__
+
+            if command_check is not None:
+                # parents of the command will be instances, so we don't have to provide self
+                allow = await command_check(response)  # type: ignore
+                if not allow:
+                    return
 
             await self.callback(response)
             if not response.response._responded:
@@ -1180,7 +1196,15 @@ class BaseApplicationCommand:
                         await cog_error_handler(response, e)  # type: ignore
             finally:
                 client.dispatch('application_command_error', response, e)
-                await self.on_error(response, e)
+                on_error = _get_overridden_method(self.on_error)
+                parent = self.__application_command_parent__
+                while on_error is None and parent is not None:
+                    on_error = _get_overridden_method(parent.on_error)
+                    parent = parent.__application_command_parent__
+
+                if on_error is not None:
+                    # parents of the command will be instances, so we don't have to provide self
+                    await on_error(response, e)  # type: ignore
 
     @classmethod
     def set_name(cls, name: str) -> None:
@@ -1209,9 +1233,11 @@ class BaseApplicationCommand:
     async def callback(self, response: BaseApplicationCommandResponse[Any]) -> None:
         pass
 
+    @_application_command_special_method
     async def command_check(self, response: BaseApplicationCommandResponse[Any]) -> bool:
         return True
 
+    @_application_command_special_method
     async def on_error(self, response: BaseApplicationCommandResponse[Any], error: Exception) -> None:
         pass
 
@@ -1278,6 +1304,7 @@ class SlashCommand(BaseApplicationCommand, type=ApplicationCommandType.slash):
         """
         pass
 
+    @_application_command_special_method
     async def command_check(self, response: SlashCommandResponse[Any]) -> bool:
         """|coro|
 
@@ -1288,8 +1315,9 @@ class SlashCommand(BaseApplicationCommand, type=ApplicationCommandType.slash):
 
         .. note::
 
-            If an exception occurs within the body then the check
-            is considered a failure and :meth:`on_error` is called.
+            If an exception occurs within the body then the check is considered
+            a failure and :meth:`on_error`, `:meth:`Client.on_application_command_error`
+            and :meth:`Cog.cog_application_command_error` (if applicable) is called.
 
         Parameters
         -----------
@@ -1303,7 +1331,8 @@ class SlashCommand(BaseApplicationCommand, type=ApplicationCommandType.slash):
         """
         return True
 
-    async def on_error(self, error: Exception, response: SlashCommandResponse[Any]) -> None:
+    @_application_command_special_method
+    async def on_error(self, response: SlashCommandResponse[Any], error: Exception) -> None:
         """|coro|
 
         A callback that is called when a slash command's callback or :meth:`command_check`
@@ -1410,6 +1439,7 @@ class MessageCommand(BaseApplicationCommand, type=ApplicationCommandType.message
         """
         pass
 
+    @_application_command_special_method
     async def command_check(self, response: MessageCommandResponse[Any]) -> bool:
         """|coro|
 
@@ -1420,8 +1450,9 @@ class MessageCommand(BaseApplicationCommand, type=ApplicationCommandType.message
 
         .. note::
 
-            If an exception occurs within the body then the check
-            is considered a failure and :meth:`on_error` is called.
+            If an exception occurs within the body then the check is considered
+            a failure and :meth:`on_error`, `:meth:`Client.on_application_command_error`
+            and :meth:`Cog.cog_application_command_error` (if applicable) is called.
 
         Parameters
         -----------
@@ -1435,7 +1466,8 @@ class MessageCommand(BaseApplicationCommand, type=ApplicationCommandType.message
         """
         return True
 
-    async def on_error(self, error: Exception, response: MessageCommandResponse[Any]) -> None:
+    @_application_command_special_method
+    async def on_error(self, response: MessageCommandResponse[Any], error: Exception) -> None:
         """|coro|
 
         A callback that is called when a message command's callback or :meth:`command_check`
@@ -1483,8 +1515,9 @@ class UserCommand(BaseApplicationCommand, type=ApplicationCommandType.user):
 
         .. note::
 
-            If an exception occurs within the body then the check
-            is considered a failure and :meth:`on_error` is called.
+            If an exception occurs within the body then the check is considered
+            a failure and :meth:`on_error`, `:meth:`Client.on_application_command_error`
+            and :meth:`Cog.cog_application_command_error` (if applicable) is called.
 
         Parameters
         -----------
@@ -1498,7 +1531,7 @@ class UserCommand(BaseApplicationCommand, type=ApplicationCommandType.user):
         """
         return True
 
-    async def on_error(self, error: Exception, response: UserCommandResponse[Any]) -> None:
+    async def on_error(self, response: UserCommandResponse[Any], error: Exception) -> None:
         """|coro|
 
         A callback that is called when a user command's callback or :meth:`command_check`
