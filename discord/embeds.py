@@ -172,6 +172,9 @@ class Embed:
         'description',
     )
 
+    if TYPE_CHECKING:
+        _colour: Union[int, Colour, _EmptyEmbed]
+
     Empty: Final = EmptyEmbed
 
     def __init__(
@@ -185,8 +188,7 @@ class Embed:
         description: MaybeEmpty[Any] = EmptyEmbed,
         timestamp: Optional[datetime.datetime] = None,
     ):
-
-        self._colour: Union[int, Colour, _EmptyEmbed] = colour if colour is not EmptyEmbed else color
+        self.colour = colour if colour is not EmptyEmbed else color
         self.title: MaybeEmpty[str] = title
         self.type: EmbedType = type
         self.url: MaybeEmpty[str] = url
