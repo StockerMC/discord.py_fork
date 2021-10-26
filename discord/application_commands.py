@@ -305,6 +305,7 @@ __all__ = (
     'ApplicationCommandOption',
     'ApplicationCommandOptionChoice',
     'ApplicationCommandOptionDefault',
+    'ApplicationCommandOptions',
     'application_command_option',
 )
 
@@ -544,7 +545,7 @@ def application_command_option(
     r"""Used for creating an option for an application command.
 
     To avoid type checker errors when using this with typehints,
-    the return type is ``Any``.        
+    the return type is ``Any``.
 
     .. note::
 
@@ -897,7 +898,7 @@ class SlashCommandResponse(BaseApplicationCommandResponse[ClientT]):
     """
     def __init__(self, interaction: Interaction[ClientT], options: ApplicationCommandOptions, command: SlashCommand) -> None:
         self.interaction: Interaction[ClientT] = interaction
-        self.options: Any = options  # we typehint it as `Any` to avoid type checker errors when accessing attributes
+        self.options: ApplicationCommandOptions = options
         self.command: SlashCommand = command
 
 
