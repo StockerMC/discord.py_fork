@@ -1034,13 +1034,15 @@ class BaseApplicationCommand:
             doc = cls.__doc__
             if doc is not None:
                 description = inspect.cleandoc(doc)
+            elif type is ApplicationCommandType.slash:
+                raise TypeError('Slash commands must have a description.')
 
         if parent is not None:
             if parent.__application_command_type__ is not ApplicationCommandType.slash:
                 raise TypeError(f'parent must derive from SlashCommand not {parent.__name__}')
 
             if type is not ApplicationCommandType.slash:
-                raise TypeError('only slash commands can have parents')
+                raise TypeError('Only slash commands can have parents')
 
         if type is not MISSING and not isinstance(type, ApplicationCommandType):
             raise TypeError(f'type must be an ApplicationCommandType member not {type.__class__.__name__}') # is member the right word here
