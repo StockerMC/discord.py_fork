@@ -748,8 +748,10 @@ class ApplicationCommandOptions:
                 options.extend(nested_options)
                 continue
 
-            # we already check if options is present and continue, so value will be present
-            value = option['value']  # type: ignore
+            value = option.get('value')
+            # the option is a subcommand
+            if value is None:
+                continue
 
             if option['type'] == 6:  # user
                 resolved_user = resolved_data['users'][value]  # type: ignore
@@ -787,15 +789,14 @@ class ApplicationCommandOptions:
         yield from self.__application_command_options__.items()
 
 
-def _get_used_subcommand(options: Union[ApplicationCommandPayload, ApplicationCommandOptionPayload]) -> Optional[str]:
-    subcommands = options.get('options', [options])
-    while subcommands:
-        subcommand = subcommands.pop(0)
-        if subcommand['type'] == 1:
-            return subcommand['name']
+def _get_used_subcommand(options: List[ApplicationCommandInteractionDataOption]) -> Optional[str]:
+    while options:
+        option = options.pop(0)
+        if option['type'] == 1:
+            return option['name']
 
-        if subcommand['type'] == 2:
-            return _get_used_subcommand(subcommand)
+        if option['type'] == 2:
+            return _get_used_subcommand([option])
 
         return None
 
@@ -1107,8 +1108,7 @@ class BaseApplicationCommand:
     @classmethod
     def _recursively_get_subcommand(cls, name: str) -> Optional[BaseApplicationCommand]:
         subcommands = list(cls.__application_command_subcommands__.values())
-        while subcommands:
-            subcommand = subcommands.pop(0)
+        for subcommand in subcommands:
             if subcommand.__application_command_name__ == name:
                 return subcommand
 
@@ -1123,14 +1123,18 @@ class BaseApplicationCommand:
             return None
 
         options = application_command_data.get('options')
-        used_subcommand = None
-        if self.__application_command_parent__ or self.__application_command_subcommands__ and options:
-            used_subcommand = _get_used_subcommand(application_command_data)  # type: ignore
+        if options is not None:
+            if self.__application_command_subcommands__:
+                used_subcommand = _get_used_subcommand(options.copy())
+                if used_subcommand is not None:
+                    return self._recursively_get_subcommand(used_subcommand)
+            else:
+                # a subcommand was used, but this command object doesn't have any subcomands
+                return None
 
-        if used_subcommand is not None:
-            return self._recursively_get_subcommand(used_subcommand)
-
-        if self.__application_command_name__ != application_command_data['name'] or int(self.__application_command_type__) != application_command_data['type']:  # type: ignore
+        command_name = application_command_data['name']
+        command_type = application_command_data['type']
+        if self.__application_command_name__ != command_name or int(self.__application_command_type__) != command_type:
             return None
 
         return self
