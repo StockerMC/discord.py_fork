@@ -379,9 +379,11 @@ class ConnectionState:
     def deref_user_no_intents(self, user_id: int) -> None:
         return
 
-    def get_user(self, id: Optional[int]) -> Optional[User]:
-        # the keys of self._users are ints
-        return self._users.get(id)  # type: ignore
+    def get_user(self, user_id: Optional[int]) -> Optional[User]:
+        if user_id is None:
+            return None
+
+        return self._users.get(user_id)
 
     def store_emoji(self, guild: Guild, data: EmojiPayload) -> Emoji:
         # the id will be present here
@@ -435,30 +437,38 @@ class ConnectionState:
         return list(self._stickers.values())
 
     def get_emoji(self, emoji_id: Optional[int]) -> Optional[Emoji]:
-        # the keys of self._emojis are ints
-        return self._emojis.get(emoji_id)  # type: ignore
+        if emoji_id is None:
+            return None
+
+        return self._emojis.get(emoji_id)
 
     def get_sticker(self, sticker_id: Optional[int]) -> Optional[GuildSticker]:
-        # the keys of self._stickers are ints
-        return self._stickers.get(sticker_id)  # type: ignore
+        if sticker_id is None:
+            return None
+
+        return self._stickers.get(sticker_id)
 
     @property
     def private_channels(self) -> List[PrivateChannel]:
         return list(self._private_channels.values())
 
     def _get_private_channel(self, channel_id: Optional[int]) -> Optional[PrivateChannel]:
+        if channel_id is None:
+            return None
+
         try:
-            # the keys of self._private_channels are ints
-            value = self._private_channels[channel_id]  # type: ignore
+            value = self._private_channels[channel_id]
         except KeyError:
             return None
         else:
-            self._private_channels.move_to_end(channel_id)  # type: ignore
+            self._private_channels.move_to_end(channel_id)
             return value
 
     def _get_private_channel_by_user(self, user_id: Optional[int]) -> Optional[DMChannel]:
-        # the keys of self._private_channels are ints
-        return self._private_channels_by_user.get(user_id)  # type: ignore
+        if user_id is None:
+            return None
+
+        return self._private_channels_by_user.get(user_id)
 
     def _add_private_channel(self, channel: PrivateChannel) -> None:
         channel_id = channel.id
@@ -488,8 +498,8 @@ class ConnectionState:
     def _get_message(self, msg_id: Optional[int]) -> Optional[Message]:
         return utils.find(lambda m: m.id == msg_id, reversed(self._messages)) if self._messages else None
 
-    def _add_guild_from_data(self, data: GuildPayload) -> Guild:
-        guild = Guild(data=data, state=self)
+    def _add_guild_from_data(self, data: Union[GuildPayload, UnavailableGuildPayload]) -> Guild:
+        guild = Guild(data=data, state=self)  # type: ignore
         self._add_guild(guild)
         return guild
 
@@ -601,7 +611,7 @@ class ConnectionState:
                 self.application_flags: ApplicationFlags = ApplicationFlags._from_value(application['flags'])  # type: ignore
 
         for guild_data in data['guilds']:
-            self._add_guild_from_data(guild_data)  # type: ignore
+            self._add_guild_from_data(guild_data)
 
         self.dispatch('connect')
         self._ready_task = asyncio.create_task(self._delay_ready())
@@ -748,6 +758,8 @@ class ConnectionState:
             application_command_type = application_command_data['type']
             resolved_data = application_command_data.get('resolved')
             target_id = application_command_data.get('target_id')
+            options = application_command_data.get('options')
+
             for command in client._application_commands.values():
                 used_command = command._get_used_command(application_command_data, guild_id)
                 if used_command is None:
@@ -759,7 +771,7 @@ class ConnectionState:
                     command_options = list(used_command.__application_command_options__.values())
                     options = ApplicationCommandOptions(
                         guild_id=guild_id,
-                        options=application_command_data.get('options'),
+                        options=options,
                         resolved_data=resolved_data,
                         state=self,
                         command_options=command_options,
