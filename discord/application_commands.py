@@ -1034,8 +1034,6 @@ class BaseApplicationCommand:
             doc = cls.__doc__
             if doc is not None:
                 description = inspect.cleandoc(doc)
-            elif type is ApplicationCommandType.slash:
-                raise TypeError('Slash commands must have a description.')
 
         if parent is not None:
             if parent.__application_command_type__ is not ApplicationCommandType.slash:
@@ -1254,7 +1252,7 @@ class BaseApplicationCommand:
         if cls.__application_command_type__ is ApplicationCommandType.slash:
             description = cls.__application_command_description__
             if description is MISSING:
-                raise TypeError('slash commands must have a description')
+                raise TypeError('Slash commands must have a description.')
 
             ret['description'] = description
 
