@@ -1645,7 +1645,7 @@ class AutoShardedConnectionState(ConnectionState):
 
         self.user: ClientUser = ClientUser(state=self, data=data['user'])
         # self._users is a list of Users, we're setting a ClientUser
-        self._users[user.id] = self.user  # type: ignore
+        self._users[self.user.id] = self.user  # type: ignore
 
         if self.application_id is None:
             try:
