@@ -496,14 +496,14 @@ class Cog(metaclass=CogMeta):
         client_no_commands = "Client doesn't support ext.commands commands."
 
         # circular import
-        from .ext.commands.bot import Bot
+        from .ext.commands.bot import BotBase
 
         # realistically, the only thing that can cause loading errors
         # is essentially just the command loading, which raises if there are
         # duplicates. When this condition is met, we want to undo all what
         # we've added so far for some form of atomic loading.
         for index, command in enumerate(self.__cog_commands__):
-            if not isinstance(client, Bot):
+            if not isinstance(client, BotBase):
                 raise TypeError(client_no_commands)
 
             command.cog = self
@@ -519,13 +519,13 @@ class Cog(metaclass=CogMeta):
 
         # check if we're overriding the default
         if cls.bot_check is not Cog.bot_check:
-            if not isinstance(client, Bot):
+            if not isinstance(client, BotBase):
                 raise TypeError(client_no_commands)
 
             client.add_check(self.bot_check)
 
         if cls.bot_check_once is not Cog.bot_check_once:
-            if not isinstance(client, Bot):
+            if not isinstance(client, BotBase):
                 raise TypeError(client_no_commands)
 
             client.add_check(self.bot_check_once, call_once=True)
@@ -542,7 +542,7 @@ class Cog(metaclass=CogMeta):
 
         for command in self.__cog_application_commands__.values():
             command._cog = self
-            client.add_application_command(command)  # type: ignore
+            client.add_application_command(command)
 
         return self
 
@@ -550,13 +550,13 @@ class Cog(metaclass=CogMeta):
         cls = self.__class__
 
         # circular import
-        from .ext.commands.bot import Bot
+        from .ext.commands.bot import BotBase
 
         try:
             client_no_commands = "Client doesn't support ext.commands commands."
             application_commands = self.__cog_application_commands__
 
-            if isinstance(client, Bot):
+            if isinstance(client, BotBase):
                 for command in self.__cog_commands__:
                     if command.parent is None:
                         client.remove_command(command.name)
@@ -565,13 +565,13 @@ class Cog(metaclass=CogMeta):
                 client.remove_listener(getattr(self, method_name))
 
             if cls.bot_check is not Cog.bot_check:
-                if not isinstance(client, Bot):
+                if not isinstance(client, BotBase):
                     raise TypeError(client_no_commands)
 
                 client.remove_check(self.bot_check)
 
             if cls.bot_check_once is not Cog.bot_check_once:
-                if not isinstance(client, Bot):
+                if not isinstance(client, BotBase):
                     raise TypeError(client_no_commands)
 
                 client.remove_check(self.bot_check_once, call_once=True)
