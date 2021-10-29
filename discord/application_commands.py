@@ -313,7 +313,7 @@ __all__ = (
 ClientT = TypeVar('ClientT', bound='Client')
 PY_310: Final[bool] = sys.version_info >= (3, 10)
 
-OPTION_TYPE_MAPPING: Final[Dict[Union[ValidOptionTypes], ApplicationCommandOptionType]] = {
+OPTION_TYPE_MAPPING: Final[Dict[ValidOptionTypes, ApplicationCommandOptionType]] = {
     str: ApplicationCommandOptionType.string,
     int: ApplicationCommandOptionType.integer,
     float: ApplicationCommandOptionType.number,
@@ -779,6 +779,10 @@ class ApplicationCommandOptions:
 
             self.__application_command_options__[option['name']] = value
 
+    def __repr__(self) -> str:
+        inner = ', '.join([f'{k}={v!r}' for k, v in self.__application_command_options__.items()])
+        return f'{self.__class__.__name__}({inner})'
+
     def __getattr__(self, name: str) -> Any:
         try:
             return self.__application_command_options__[name]
@@ -788,7 +792,6 @@ class ApplicationCommandOptions:
     def __iter__(self) -> Iterator[Tuple[str, Any]]:
         yield from self.__application_command_options__.items()
 
-
 def _get_used_subcommand(options: List[ApplicationCommandInteractionDataOption]) -> Optional[str]:
     while options:
         option = options.pop(0)
@@ -796,7 +799,8 @@ def _get_used_subcommand(options: List[ApplicationCommandInteractionDataOption])
             return option['name']
 
         if option['type'] == 2:
-            return _get_used_subcommand([option])
+            options.append(option.get('options'))  # type: ignore
+            continue
 
         return None
 
@@ -996,7 +1000,7 @@ class BaseApplicationCommand:
         __application_command_type__: ClassVar[ApplicationCommandType]
         __application_command_default_permission__: ClassVar[bool]
         __application_command_group_command__: ClassVar[bool]
-        __application_command_subcommands__: ClassVar[Dict[str, Union[BaseApplicationCommand]]]
+        __application_command_subcommands__: ClassVar[Dict[str, BaseApplicationCommand]]
         __application_command_parent__: Optional[Union[Type[BaseApplicationCommand], BaseApplicationCommand]]
         __application_command_guild_ids__: List[int]
         __application_command_global_command__: bool
@@ -1128,9 +1132,6 @@ class BaseApplicationCommand:
                 used_subcommand = _get_used_subcommand(options.copy())
                 if used_subcommand is not None:
                     return self._recursively_get_subcommand(used_subcommand)
-            else:
-                # a subcommand was used, but this command object doesn't have any subcomands
-                return None
 
         command_name = application_command_data['name']
         command_type = application_command_data['type']
