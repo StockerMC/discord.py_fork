@@ -166,7 +166,7 @@ class PartialEmoji(_EmojiTag, AssetMixin):
 
     def __str__(self) -> str:
         if self.id is None:
-            return self.name  # type: ignore
+            return self.name or ''
         if self.animated:
             return f'<a:{self.name}:{self.id}>'
         return f'<:{self.name}:{self.id}>'
