@@ -47,6 +47,7 @@ from typing import (
     Generic,
     AsyncGenerator,
     Iterable,
+    TypeAlias,
     overload,
 )
 
@@ -100,7 +101,6 @@ if TYPE_CHECKING:
         ChannelTypes,
         Type[GuildChannel],
     ]
-    ACOT = TypeVar('ACOT', bound=Union[ApplicationCommandOptionType, ValidOptionTypes])
     ApplicationCommandKey = Tuple[str, int, Optional['ApplicationCommandKey']]  # name, type, parent
     InteractionChannel = Union[
         VoiceChannel, StageChannel, TextChannel, CategoryChannel, StoreChannel, Thread, PartialMessageable
@@ -108,6 +108,7 @@ if TYPE_CHECKING:
     AutocompleteCallback = Callable[['SlashCommand', 'AutocompleteResponse'], Union[AsyncGenerator[Union[str, int, float], None], Iterable[str]]]
     AutocompleteCallbackT = TypeVar('AutocompleteCallbackT', bound=AutocompleteCallback)
     FuncT = TypeVar('FuncT', bound=Callable[..., Any])
+    ApplicationCommandOptionChoiceT = TypeVar('ApplicationCommandOptionChoiceT', bound=Union[str, int, float])
 
     # these protocols are to help typehint the inherited methods from Interaction/InteractionResponse
     # for BaseApplicationCommandResponse
@@ -311,6 +312,8 @@ __all__ = (
 )
 
 ClientT = TypeVar('ClientT', bound='Client')
+ApplicationCommandOptionChoiceType = TypeVar('ApplicationCommandOptionChoiceType', bound=Union[str, int, float])
+
 PY_310: Final[bool] = sys.version_info >= (3, 10)
 
 OPTION_TYPE_MAPPING: Final[Dict[ValidOptionTypes, ApplicationCommandOptionType]] = {
@@ -331,12 +334,7 @@ CHANNEL_TO_CHANNEL_TYPE: Final[Dict[ChannelTypes, ChannelType]] = {
     Thread: ChannelType.public_thread,  # is public_thread correct?
 }
 
-_channel_type = None
-
-for _channel_type in CHANNEL_TO_CHANNEL_TYPE.keys():
-    OPTION_TYPE_MAPPING[_channel_type] = ApplicationCommandOptionType.channel
-
-del _channel_type
+OPTION_TYPE_MAPPING.update(dict.fromkeys(CHANNEL_TO_CHANNEL_TYPE.keys(), ApplicationCommandOptionType.channel))  # type: ignore
 
 def _resolve_option_type(option: Union[ValidOptionTypes, ApplicationCommandOptionType]) -> ApplicationCommandOptionType:
     if isinstance(option, ApplicationCommandOptionType):
@@ -353,7 +351,7 @@ class ApplicationCommandOptionDefault:
     """Used for creating defaults for a :class:`ApplicationCommandOption` when it's accessed with
     it's relevant :class:`ApplicationCommandOptions` instance.
 
-    Classes that derive from this should override the :meth:`~.ApplicationCommandOptionDefault.default`
+    Classes that derive from this should override the :meth:`.default`
     method to handle its default logic. This method must be a :ref:`coroutine <coroutine>`.
     """
 
@@ -372,7 +370,7 @@ class ApplicationCommandOptionDefault:
         raise NotImplementedError('Derived classes need to implement this.')
 
 
-class ApplicationCommandOptionChoice:
+class ApplicationCommandOptionChoice(Generic[ApplicationCommandOptionChoiceType]):
     """Represents a choice of an option of an application command.
 
     .. versionadded:: 2.0
@@ -385,9 +383,9 @@ class ApplicationCommandOptionChoice:
         The value of the choice. This is what you will receive if the choice is selected.
         The type of this should be the same type of the option it is for.
     """
-    def __init__(self, *, name: str, value: Union[str, int, float]) -> None:
+    def __init__(self, *, name: str, value: ApplicationCommandOptionChoiceType) -> None:
         self.name: str = name
-        self.value: Union[str, int, float] = value
+        self.value: ApplicationCommandOptionChoiceType = value
 
     def __repr__(self) -> str:
         return f'<ApplicationCommandOptionChoice name={self.name!r} value={self.value!r}>'
@@ -421,13 +419,20 @@ class ApplicationCommandOption:
     default: Optional[:class:`ApplicationCommandOptionDefault`]
         The default for the option, if any.
 
-        This is for when the option is accessed with it's relevant :class:`ApplicationCommandOptions` instance.
+        This is for when the option is accessed with it's relevant :class:`ApplicationCommandOptions` instance
+        and the option was not provided by the user.
     channel_types: List[:class:`ChannelType`]
-        The valid channel types for this option. This is only valid for options that have a type of :attr:`ApplicationCommandOptionType.channel`.
+        The valid channel types for this option. This is only valid for options of type :attr:`ApplicationCommandOptionType.channel`.
     autocomplete: Callable[[:class:`AutocompleteResponse`], Any]
         The callable for responses to when a user is typing an autocomplete option. This can be an :data:`typing.AsyncIterator`
         that yields choices with types of :class:`str`, :class:`int` or `:class:`float`. This can also be a
         :ref:`coroutine <coroutine>` that returns an iterable of choices with types of :class:`str`, :class:`int` or `:class:`float`.
+    min_value: Optional[:class:`int`]
+        The minimum value permitted for this option.
+        This is only valid for options of type :attr:`ApplicationCommandOptionType.integer`.
+    max_value: Optional[:class:`int`]
+        The maximum value permitted for this option.
+        This is only valid for options of type :attr:`ApplicationCommandOptionType.integer`.
     """
 
     __slots__= (
@@ -439,9 +444,10 @@ class ApplicationCommandOption:
         'options',
         'default',
         'channel_types',
+        'min_value',
+        'max_value',
         '_autocomplete',
     )
-
     def __init__(
         self,
         *,
@@ -449,10 +455,12 @@ class ApplicationCommandOption:
         name: str,
         description: str,
         required: bool = MISSING,
-        choices: Optional[List[ApplicationCommandOptionChoice]] = None,
+        choices: Optional[List[ApplicationCommandOptionChoice[Any]]] = None,
         options: Optional[List[ApplicationCommandOption]] = None,
         default: Optional[Union[ApplicationCommandOptionDefault, Any]] = None,
         channel_types: Optional[List[ChannelType]] = None,
+        min_value: Optional[Union[int, float]] = None,
+        max_value: Optional[Union[int, float]] = None,
     ) -> None:
         self.type: ApplicationCommandOptionType = type
         self.name: str = name
@@ -462,6 +470,8 @@ class ApplicationCommandOption:
         self.options: List[ApplicationCommandOption] = options or []
         self.default: Optional[Union[ApplicationCommandOptionDefault, Any]] = default
         self.channel_types: List[ChannelType] = channel_types or []
+        self.min_value: Optional[Union[int, float]] = min_value
+        self.max_value: Optional[Union[int, float]] = max_value
         self._autocomplete: Optional[AutocompleteCallback] = None
 
     def __repr__(self) -> str:
@@ -527,11 +537,111 @@ class ApplicationCommandOption:
         if self.channel_types:
             ret['channel_types'] = [type.value for type in self.channel_types]
 
+        if self.max_value:
+            ret['max_value'] = self.max_value
+
+        if self.min_value:
+            ret['min_value'] = self.min_value
+
         if self._autocomplete is not None:
             ret['autocomplete'] = True
 
         return ret
 
+
+@overload
+def application_command_option(
+    *,
+    description: str,
+    name: str = ...,
+    type: Union[Literal[ApplicationCommandOptionType.channel], ChannelTypes, Type[GuildChannel]],
+    required: bool = ...,
+    default: Optional[Union[ApplicationCommandOptionDefault, Type[ApplicationCommandOptionDefault], Any]] = ...,
+    channel_types: Optional[List[Union[ChannelType, ChannelTypes]]] = ...,
+) -> ApplicationCommandOption: ...
+
+@overload
+def application_command_option(
+    *,
+    description: str,
+    name: str = ...,
+    type: Union[Literal[ApplicationCommandOptionType.integer], Type[int]],
+    required: bool = ...,
+    choices: Optional[List[ApplicationCommandOptionChoice[int]]] = ...,
+    default: Optional[Union[ApplicationCommandOptionDefault, Type[ApplicationCommandOptionDefault], Any]] = ...,
+    min_value: Optional[int] = ...,
+    max_value: Optional[int] = ...,
+) -> ApplicationCommandOption: ...
+
+@overload
+def application_command_option(
+    *,
+    description: str,
+    name: str = ...,
+    type: Union[Literal[ApplicationCommandOptionType.number], Type[float]],
+    required: bool = ...,
+    choices: Optional[List[ApplicationCommandOptionChoice[float]]] = ...,
+    default: Optional[Union[ApplicationCommandOptionDefault, Type[ApplicationCommandOptionDefault], Any]] = ...,
+    min_value: Optional[float] = ...,
+    max_value: Optional[float] = ...,
+) -> ApplicationCommandOption: ...
+
+@overload
+def application_command_option(
+    *,
+    description: str,
+    name: str = ...,
+    type: Union[Literal[ApplicationCommandOptionType.string], Type[str]],
+    required: bool = ...,
+    choices: Optional[List[ApplicationCommandOptionChoice[str]]] = ...,
+    default: Optional[Union[ApplicationCommandOptionDefault, Type[ApplicationCommandOptionDefault], Any]] = ...,
+) -> ApplicationCommandOption: ...
+
+@overload
+def application_command_option(
+    *,
+    description: str,
+    name: str = ...,
+    type: Union[Type[Member], Type[User], Type[Role]],
+    required: bool = ...,
+    default: Optional[Union[ApplicationCommandOptionDefault, Type[ApplicationCommandOptionDefault], Any]] = ...,
+) -> Any: ...
+
+@overload
+def application_command_option(
+    *,
+    description: str,
+    name: str = ...,
+    type: Union[ApplicationCommandOptionType, ValidOptionTypes] = ...,
+    required: bool = ...,
+    choices: Optional[Union[
+        List[ApplicationCommandOptionChoice[int]],
+        List[ApplicationCommandOptionChoice[float]],
+        List[ApplicationCommandOptionChoice[str]],
+    ]] = ...,
+    default: Optional[Union[ApplicationCommandOptionDefault, Type[ApplicationCommandOptionDefault], Any]] = ...,
+    channel_types: Optional[List[Union[ChannelType, ChannelTypes]]] = ...,
+    min_value: Optional[Union[int, float]] = ...,
+    max_value: Optional[Union[int, float]] = ...,
+) -> Any: ...
+
+@overload
+def application_command_option(
+    *,
+    description: str,
+    name: str = ...,
+    type: Union[ApplicationCommandOptionType, ValidOptionTypes] = ...,
+    required: bool = ...,
+    choices: Optional[Union[
+        List[ApplicationCommandOptionChoice[int]],
+        List[ApplicationCommandOptionChoice[float]],
+        List[ApplicationCommandOptionChoice[str]],
+    ]] = ...,
+    default: Optional[Union[ApplicationCommandOptionDefault, Type[ApplicationCommandOptionDefault], Any]] = ...,
+    channel_types: Optional[List[Union[ChannelType, ChannelTypes]]] = ...,
+    min_value: Optional[Union[int, float]] = ...,
+    max_value: Optional[Union[int, float]] = ...,
+) -> Any: ...
 
 def application_command_option(
     *,
@@ -539,14 +649,21 @@ def application_command_option(
     name: str = MISSING,
     type: Union[ApplicationCommandOptionType, ValidOptionTypes] = MISSING,
     required: bool = True,
-    choices: Optional[List[ApplicationCommandOptionChoice]] = None,
+    choices: Optional[Union[
+        List[ApplicationCommandOptionChoice[int]],
+        List[ApplicationCommandOptionChoice[float]],
+        List[ApplicationCommandOptionChoice[str]],
+    ]] = None,
     default: Optional[Union[ApplicationCommandOptionDefault, Type[ApplicationCommandOptionDefault], Any]] = None,
     channel_types: Optional[List[Union[ChannelType, ChannelTypes]]] = None,
+    min_value: Optional[Union[int, float]] = None,
+    max_value: Optional[Union[int, float]] = None,
 ) -> Any:
     r"""Used for creating an option for an application command.
 
     To avoid type checker errors when using this with typehints,
-    the return type is ``Any``.
+    the return type is ``Any`` if the ``type`` parameter is not
+    set.
 
     .. note::
 
@@ -574,10 +691,16 @@ def application_command_option(
     default: Optional[Union[:class:`ApplicationCommandOptionDefault`, Type[:class:`ApplicationCommandOptionDefault`]]]
         The default of the option for when it's accessed with it's relevant :class:`ApplicationCommandOptions` instance.
     channel_types: List[Union[:class:`ChannelType`, Type]]
-        The valid channel types for this option. This is only valid for options that have a type of :attr:`ApplicationCommandOptionType.channel`
+        The valid channel types for this option. This is only valid for options of type :attr:`ApplicationCommandOptionType.channel`
 
         This can be a list including the following: :class:`ChannelType` members, :class:`TextChannel`, :class:`VoiceChannel`,
         :class:`StageChannel`, :class:`CategoryChannel` and :class:`Thread`.
+    min_value: Optional[:class:`int`]
+        The minimum value permitted for this option.
+        This is only valid for options of type :attr:`ApplicationCommandOptionType.integer`.
+    max_value: Optional[:class:`int`]
+        The maximum value permitted for this option.
+        This is only valid for options of type :attr:`ApplicationCommandOptionType.integer`.
 
     Returns
     --------
@@ -611,6 +734,8 @@ def application_command_option(
         choices=choices,
         default=default,
         channel_types=resolved_channel_types,
+        min_value=min_value,
+        max_value=max_value,
     )
 
 def _transform_literal_choices(
@@ -1068,7 +1193,7 @@ class BaseApplicationCommand:
         finally:
             del frame
 
-        cls_dict = dict(cls.__dict__)
+        cls_dict = dict(cls.__dict__)  # make a copy
         attrs_to_remove = ['__module__', '__doc__', '__annotations__']
         for attr in attrs_to_remove:
             cls_dict.pop(attr, None)
@@ -1510,6 +1635,7 @@ class UserCommand(BaseApplicationCommand, type=ApplicationCommandType.user):
         """
         pass
 
+    @_application_command_special_method
     async def command_check(self, response: UserCommandResponse[Any]) -> bool:
         """|coro|
 
@@ -1536,6 +1662,7 @@ class UserCommand(BaseApplicationCommand, type=ApplicationCommandType.user):
         """
         return True
 
+    @_application_command_special_method
     async def on_error(self, response: UserCommandResponse[Any], error: Exception) -> None:
         """|coro|
 
