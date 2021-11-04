@@ -1150,8 +1150,8 @@ class ConnectionState:
         before_emojis = guild.emojis
         for emoji in before_emojis:
             self._emojis.pop(emoji.id, None)
-        # guild won't be None here
-        guild.emojis = tuple(map(lambda d: self.store_emoji(guild, d), data['emojis']))  # type: ignore
+
+        guild.emojis = tuple(map(lambda d: self.store_emoji(guild, d), data['emojis']))
         self.dispatch('guild_emojis_update', guild, before_emojis, guild.emojis)
 
     def parse_guild_stickers_update(self, data: GuildStickersUpdateEvent) -> None:
@@ -1163,7 +1163,8 @@ class ConnectionState:
         before_stickers = guild.stickers
         for emoji in before_stickers:
             self._stickers.pop(emoji.id, None)
-        # guild won't be None here
+
+        # the stickers key will be present
         guild.stickers = tuple(map(lambda d: self.store_sticker(guild, d), data['stickers']))  # type: ignore
         self.dispatch('guild_stickers_update', guild, before_stickers, guild.stickers)
 
@@ -1442,16 +1443,15 @@ class ConnectionState:
             if int(data['user_id']) == self_id:
                 voice = self._get_voice_client(guild.id)
                 if voice is not None:
-                    coro = voice.on_voice_state_update(data)  # type: ignore
+                    coro = voice.on_voice_state_update(data)
                     asyncio.create_task(logging_coroutine(coro, info='Voice Protocol voice state update handler'))
 
-            member, before, after = guild._update_voice_state(data, channel_id)  # type: ignore
+            member, before, after = guild._update_voice_state(data, channel_id)
             if member is not None:
                 if flags.voice:
                     if channel_id is None and flags._voice_only and member.id != self_id:
                         # Only remove from cache if we only have the voice flag enabled
-                        # Member doesn't meet the Snowflake protocol currently
-                        guild._remove_member(member)  # type: ignore
+                        guild._remove_member(member)
                     elif channel_id is not None:
                         guild._add_member(member)
 
@@ -1501,7 +1501,7 @@ class ConnectionState:
             return channel.guild.get_member(user_id)
         return self.get_user(user_id)
 
-    def get_reaction_emoji(self, data: Union[EmojiPayload, PartialEmojiPayload]) -> Union[Emoji, PartialEmoji]:
+    def get_reaction_emoji(self, data: Union[EmojiPayload, PartialEmojiPayload]) -> Union[Emoji, PartialEmoji, str]:
         emoji_id = utils._get_as_snowflake(data, 'id')
 
         if not emoji_id:
@@ -1657,7 +1657,7 @@ class AutoShardedConnectionState(ConnectionState):
                 self.application_flags: ApplicationFlags = ApplicationFlags._from_value(application['flags'])  # type: ignore
 
         for guild_data in data['guilds']:
-            self._add_guild_from_data(guild_data)  # type: ignore
+            self._add_guild_from_data(guild_data)
 
         if self._messages:
             self._update_message_references()

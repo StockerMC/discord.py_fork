@@ -311,7 +311,7 @@ class Encoder(_OpusStruct):
         _OpusStruct.get_opus_version()
 
         self.application: int = application
-        self._state: EncoderStruct = self._create_state()
+        self._state: Optional[EncoderStruct] = self._create_state()
         self.set_bitrate(128)
         self.set_fec(True)
         self.set_expected_packet_loss_percent(0.15)
@@ -322,7 +322,7 @@ class Encoder(_OpusStruct):
         if hasattr(self, '_state'):
             _lib.opus_encoder_destroy(self._state)
             # This is a destructor, so it's okay to assign None
-            self._state = None # type: ignore
+            self._state = None
 
     def _create_state(self) -> EncoderStruct:
         ret = ctypes.c_int()
@@ -352,7 +352,7 @@ class Encoder(_OpusStruct):
         _lib.opus_encoder_ctl(self._state, CTL_SET_FEC, 1 if enabled else 0)
 
     def set_expected_packet_loss_percent(self, percentage: float) -> None:
-        _lib.opus_encoder_ctl(self._state, CTL_SET_PLP, min(100, max(0, int(percentage * 100)))) # type: ignore
+        _lib.opus_encoder_ctl(self._state, CTL_SET_PLP, min(100, max(0, int(percentage * 100))))
 
     def encode(self, pcm: bytes, frame_size: int) -> bytes:
         max_data_bytes = len(pcm)
@@ -362,20 +362,19 @@ class Encoder(_OpusStruct):
 
         ret = _lib.opus_encode(self._state, pcm_ptr, frame_size, data, max_data_bytes)
 
-        # array can be initialized with bytes but mypy doesn't know
-        return array.array('b', data[:ret]).tobytes() # type: ignore
+        return array.array('b', data[:ret]).tobytes()
 
 class Decoder(_OpusStruct):
     def __init__(self):
         _OpusStruct.get_opus_version()
 
-        self._state: DecoderStruct = self._create_state()
+        self._state: Optional[DecoderStruct] = self._create_state()
 
     def __del__(self) -> None:
         if hasattr(self, '_state'):
             _lib.opus_decoder_destroy(self._state)
             # This is a destructor, so it's okay to assign None
-            self._state = None # type: ignore
+            self._state = None
 
     def _create_state(self) -> DecoderStruct:
         ret = ctypes.c_int()

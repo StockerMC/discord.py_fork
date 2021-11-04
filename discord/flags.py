@@ -108,7 +108,7 @@ class BaseFlags:
             setattr(self, key, value)
 
     @classmethod
-    def _from_value(cls, value):
+    def _from_value(cls: Type[BF], value: int) -> BF:
         self = cls.__new__(cls)
         self.value = value
         return self

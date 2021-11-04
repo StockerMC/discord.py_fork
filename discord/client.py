@@ -2258,7 +2258,8 @@ class Client:
             subcommand.__application_command_parent__ = parent
 
             if inspect.isclass(subcommand):
-                parent.__application_command_subcommands__[name] = subcommand()
+                # parent won't be None
+                parent.__application_command_subcommands__[name] = subcommand()  # type: ignore
 
             subcommands.extend(subcommand.__application_command_subcommands__.items())
 

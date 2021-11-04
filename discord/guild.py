@@ -101,7 +101,7 @@ if TYPE_CHECKING:
     from .types.threads import (
         Thread as ThreadPayload,
     )
-    from .types.voice import GuildVoiceState
+    from .types.voice import GuildVoiceState, VoiceState as VoiceStatePayload
     from .types.integration import IntegrationType
     from .types.snowflake import SnowflakeList, Snowflake as _Snowflake
     from .types.sticker import CreateGuildSticker
@@ -378,9 +378,11 @@ class Guild(Hashable):
         inner = ' '.join('%s=%r' % t for t in attrs)
         return f'<Guild {inner}>'
 
-    def _update_voice_state(self, data: GuildVoiceState, channel_id: int) -> Tuple[Optional[Member], VoiceState, VoiceState]:
+    def _update_voice_state(
+        self, data: Union[GuildVoiceState, VoiceStatePayload], channel_id: Optional[int]
+    ) -> Tuple[Optional[Member], VoiceState, VoiceState]:
         user_id = int(data['user_id'])
-            # channel will be the correct type
+        # channel will be the correct type
         channel: VocalGuildChannel = self.get_channel(channel_id)  # type: ignore
         try:
             # check if we should remove the voice state from cache

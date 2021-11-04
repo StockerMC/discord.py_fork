@@ -45,9 +45,8 @@ from typing import (
     Literal,
     Iterator,
     Generic,
-    AsyncGenerator,
+    AsyncIterator,
     Iterable,
-    TypeAlias,
     overload,
 )
 
@@ -105,10 +104,15 @@ if TYPE_CHECKING:
     InteractionChannel = Union[
         VoiceChannel, StageChannel, TextChannel, CategoryChannel, StoreChannel, Thread, PartialMessageable
     ]
-    AutocompleteCallback = Callable[['SlashCommand', 'AutocompleteResponse'], Union[AsyncGenerator[Union[str, int, float], None], Iterable[str]]]
+    AutocompleteCallback = Callable[['SlashCommand', 'AutocompleteResponse[Any]'], Union[AsyncIterator[Union[str, int, float]], Iterable[str]]]
     AutocompleteCallbackT = TypeVar('AutocompleteCallbackT', bound=AutocompleteCallback)
     FuncT = TypeVar('FuncT', bound=Callable[..., Any])
     ApplicationCommandOptionChoiceT = TypeVar('ApplicationCommandOptionChoiceT', bound=Union[str, int, float])
+    ApplicationCommandOptionChoiceTypes = Union[
+        List['ApplicationCommandOptionChoice[int]'],
+        List['ApplicationCommandOptionChoice[float]'],
+        List['ApplicationCommandOptionChoice[str]'],
+    ]
 
     # these protocols are to help typehint the inherited methods from Interaction/InteractionResponse
     # for BaseApplicationCommandResponse
@@ -149,17 +153,6 @@ if TYPE_CHECKING:
             content: Optional[str] = MISSING,
             embeds: List[Embed] = MISSING,
             file: File = MISSING,
-            view: Optional[View] = MISSING,
-            allowed_mentions: Optional[AllowedMentions] = None,
-        ) -> InteractionMessage: ...
-
-        @overload
-        async def __call__(
-            self,
-            *,
-            content: Optional[str] = MISSING,
-            embed: Optional[Embed] = MISSING,
-            files: List[File] = MISSING,
             view: Optional[View] = MISSING,
             allowed_mentions: Optional[AllowedMentions] = None,
         ) -> InteractionMessage: ...
@@ -455,7 +448,11 @@ class ApplicationCommandOption:
         name: str,
         description: str,
         required: bool = MISSING,
-        choices: Optional[List[ApplicationCommandOptionChoice[Any]]] = None,
+        choices: Optional[Union[
+            List[ApplicationCommandOptionChoice[int]],
+            List[ApplicationCommandOptionChoice[float]],
+            List[ApplicationCommandOptionChoice[str]],
+        ]] = None,
         options: Optional[List[ApplicationCommandOption]] = None,
         default: Optional[Union[ApplicationCommandOptionDefault, Any]] = None,
         channel_types: Optional[List[ChannelType]] = None,
@@ -466,7 +463,11 @@ class ApplicationCommandOption:
         self.name: str = name
         self.description: str = description
         self.required: bool = required
-        self.choices: List[ApplicationCommandOptionChoice] = choices or []
+        self.choices: Union[
+            List[ApplicationCommandOptionChoice[int]],
+            List[ApplicationCommandOptionChoice[float]],
+            List[ApplicationCommandOptionChoice[str]],
+        ] = choices or []
         self.options: List[ApplicationCommandOption] = options or []
         self.default: Optional[Union[ApplicationCommandOptionDefault, Any]] = default
         self.channel_types: List[ChannelType] = channel_types or []
@@ -500,6 +501,7 @@ class ApplicationCommandOption:
             return
 
         result = self._autocomplete(command, response)
+        choices: List[Union[str, int, float]]
         if inspect.isasyncgen(result):
             choices = [choice async for choice in result]
         else:
@@ -612,17 +614,11 @@ def application_command_option(
     *,
     description: str,
     name: str = ...,
-    type: Union[ApplicationCommandOptionType, ValidOptionTypes] = ...,
     required: bool = ...,
-    choices: Optional[Union[
-        List[ApplicationCommandOptionChoice[int]],
-        List[ApplicationCommandOptionChoice[float]],
-        List[ApplicationCommandOptionChoice[str]],
-    ]] = ...,
+    min_value: Optional[int] = ...,
+    max_value: Optional[int] = ...,
+    choices: List[ApplicationCommandOptionChoice[int]] = ...,
     default: Optional[Union[ApplicationCommandOptionDefault, Type[ApplicationCommandOptionDefault], Any]] = ...,
-    channel_types: Optional[List[Union[ChannelType, ChannelTypes]]] = ...,
-    min_value: Optional[Union[int, float]] = ...,
-    max_value: Optional[Union[int, float]] = ...,
 ) -> Any: ...
 
 @overload
@@ -630,17 +626,21 @@ def application_command_option(
     *,
     description: str,
     name: str = ...,
-    type: Union[ApplicationCommandOptionType, ValidOptionTypes] = ...,
     required: bool = ...,
-    choices: Optional[Union[
-        List[ApplicationCommandOptionChoice[int]],
-        List[ApplicationCommandOptionChoice[float]],
-        List[ApplicationCommandOptionChoice[str]],
-    ]] = ...,
+    choices: List[ApplicationCommandOptionChoice[float]] = ...,
     default: Optional[Union[ApplicationCommandOptionDefault, Type[ApplicationCommandOptionDefault], Any]] = ...,
-    channel_types: Optional[List[Union[ChannelType, ChannelTypes]]] = ...,
-    min_value: Optional[Union[int, float]] = ...,
-    max_value: Optional[Union[int, float]] = ...,
+    min_value: Optional[float] = ...,
+    max_value: Optional[float] = ...,
+) -> Any: ...
+
+@overload
+def application_command_option(
+    *,
+    description: str,
+    name: str = ...,
+    required: bool = ...,
+    choices: List[ApplicationCommandOptionChoice[str]],
+    default: Optional[Union[ApplicationCommandOptionDefault, Type[ApplicationCommandOptionDefault], Any]] = ...,
 ) -> Any: ...
 
 def application_command_option(
@@ -649,11 +649,7 @@ def application_command_option(
     name: str = MISSING,
     type: Union[ApplicationCommandOptionType, ValidOptionTypes] = MISSING,
     required: bool = True,
-    choices: Optional[Union[
-        List[ApplicationCommandOptionChoice[int]],
-        List[ApplicationCommandOptionChoice[float]],
-        List[ApplicationCommandOptionChoice[str]],
-    ]] = None,
+    choices: Optional[ApplicationCommandOptionChoiceTypes] = None,
     default: Optional[Union[ApplicationCommandOptionDefault, Type[ApplicationCommandOptionDefault], Any]] = None,
     channel_types: Optional[List[Union[ChannelType, ChannelTypes]]] = None,
     min_value: Optional[Union[int, float]] = None,
@@ -742,9 +738,9 @@ def _transform_literal_choices(
     attr_name: str,
     attr_type: ApplicationCommandOptionType,
     annotation: Any
-) -> Tuple[Type[Any], List[ApplicationCommandOptionChoice]]:
+) -> Tuple[Type[Any], ApplicationCommandOptionChoiceTypes]:
     annotation_type = MISSING
-    choices: List[ApplicationCommandOptionChoice] = []
+    choices: ApplicationCommandOptionChoiceTypes = []
     for arg in annotation.__args__:
         arg_type = type(arg)
         if arg_type not in (str, int, float):
@@ -796,7 +792,8 @@ def _get_options(
                     if nested_origin is Literal:
                         choices = _transform_literal_choices(attr_name, attr.type, arg)
                         annotation = choices[0]
-                        attr.choices.extend(choices[1])
+                        # fix this `type: ignore` eventually
+                        attr.choices.extend(choices[1])  # type: ignore
 
                     channel_type = CHANNEL_TO_CHANNEL_TYPE.get(arg)
                     if channel_type is not None:
@@ -807,7 +804,7 @@ def _get_options(
             elif origin is Literal:
                 choices = _transform_literal_choices(attr_name, attr.type, annotation)
                 annotation = choices[0]
-                attr.choices.extend(choices[1])
+                attr.choices.extend(choices[1])  # type: ignore
 
             resolved_option_type = _resolve_option_type(annotation)
 
@@ -933,8 +930,10 @@ def _get_used_subcommand(options: List[ApplicationCommandInteractionDataOption])
 
 
 # original function is flatten_user in member.py
-def flatten(original_cls: Type[Any], original_attr: str) -> Callable[[Type[BaseApplicationCommandResponse]], Type[BaseApplicationCommandResponse]]:
-    def decorator(cls: Type[BaseApplicationCommandResponse]) -> Type[BaseApplicationCommandResponse]:
+def flatten(
+    original_cls: Type[Any], original_attr: str
+) -> Callable[[Type[BaseApplicationCommandResponse[Any]]], Type[BaseApplicationCommandResponse[Any]]]:
+    def decorator(cls: Type[BaseApplicationCommandResponse[Any]]) -> Type[BaseApplicationCommandResponse[Any]]:
         for attr, value in original_cls.__dict__.items():
 
             # ignore private/special methods
