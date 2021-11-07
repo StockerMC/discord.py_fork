@@ -168,18 +168,6 @@ if TYPE_CHECKING:
             allowed_mentions: Optional[AllowedMentions] = None,
         ) -> InteractionMessage: ...
 
-        async def __call__(
-            self,
-            *,
-            content: Optional[str] = MISSING,
-            embeds: List[Embed] = MISSING,
-            embed: Optional[Embed] = MISSING,
-            file: File = MISSING,
-            files: List[File] = MISSING,
-            view: Optional[View] = MISSING,
-            allowed_mentions: Optional[AllowedMentions] = None,
-        ) -> InteractionMessage: ...
-
     class SendMessage(Protocol):
         @overload
         async def __call__(
@@ -260,20 +248,6 @@ if TYPE_CHECKING:
         ) -> None:
             ...
 
-        async def __call__(
-            self,
-            content: Optional[Any] = None,
-            *,
-            embed: Embed = MISSING,
-            embeds: List[Embed] = MISSING,
-            file: File = MISSING,
-            files: List[File] = MISSING,
-            view: View = MISSING,
-            tts: bool = False,
-            ephemeral: bool = False,
-            allowed_mentions: Optional[AllowedMentions] = None,
-        ) -> None: ...
-
     class Defer(Protocol):
         async def __call__(self, *, ephemeral: bool = False) -> None: ...
 
@@ -319,7 +293,7 @@ OPTION_TYPE_MAPPING: Final[Dict[ValidOptionTypes, ApplicationCommandOptionType]]
     Role: ApplicationCommandOptionType.role,
 }
 
-CHANNEL_TO_CHANNEL_TYPE: Final[Dict[ChannelTypes, ChannelType]] = {
+CHANNEL_TYPE_MAPPING: Final[Dict[ChannelTypes, ChannelType]] = {
     TextChannel: ChannelType.text,
     VoiceChannel: ChannelType.voice,
     StageChannel: ChannelType.stage_voice,
@@ -327,7 +301,7 @@ CHANNEL_TO_CHANNEL_TYPE: Final[Dict[ChannelTypes, ChannelType]] = {
     Thread: ChannelType.public_thread,  # is public_thread correct?
 }
 
-OPTION_TYPE_MAPPING.update(dict.fromkeys(CHANNEL_TO_CHANNEL_TYPE.keys(), ApplicationCommandOptionType.channel))  # type: ignore
+OPTION_TYPE_MAPPING.update(dict.fromkeys(CHANNEL_TYPE_MAPPING.keys(), ApplicationCommandOptionType.channel))
 
 def _resolve_option_type(option: Union[ValidOptionTypes, ApplicationCommandOptionType]) -> ApplicationCommandOptionType:
     if isinstance(option, ApplicationCommandOptionType):
@@ -718,7 +692,7 @@ def application_command_option(
             default = default()
 
     if channel_types is not None:
-        resolved_channel_types = [CHANNEL_TO_CHANNEL_TYPE[channel_type] if not isinstance(channel_type, ChannelType) else channel_type for channel_type in channel_types]
+        resolved_channel_types = [CHANNEL_TYPE_MAPPING[channel_type] if not isinstance(channel_type, ChannelType) else channel_type for channel_type in channel_types]
     else:
         resolved_channel_types = channel_types
 
@@ -795,7 +769,7 @@ def _get_options(
                         # fix this `type: ignore` eventually
                         attr.choices.extend(choices[1])  # type: ignore
 
-                    channel_type = CHANNEL_TO_CHANNEL_TYPE.get(arg)
+                    channel_type = CHANNEL_TYPE_MAPPING.get(arg)
                     if channel_type is not None:
                         attr.channel_types.append(channel_type)
 
@@ -811,7 +785,7 @@ def _get_options(
             if attr.type is MISSING:
                 attr.type = resolved_option_type
 
-                channel_type = CHANNEL_TO_CHANNEL_TYPE.get(annotation)
+                channel_type = CHANNEL_TYPE_MAPPING.get(annotation)
                 if channel_type is not None:
                     attr.channel_types.append(channel_type)
 
