@@ -26,7 +26,17 @@ from __future__ import annotations
 
 from typing import Optional, Any, TYPE_CHECKING, List, Callable, Type, Tuple, Union
 
-from discord.errors import ClientException, DiscordException
+from discord.errors import (
+    ClientException,
+    DiscordException,
+    # for backwards compatibility
+    ExtensionError,
+    ExtensionAlreadyLoaded,
+    ExtensionNotLoaded,
+    NoEntryPointError,
+    ExtensionFailed,
+    ExtensionNotFound,
+)
 
 if TYPE_CHECKING:
     from inspect import Parameter
@@ -92,6 +102,12 @@ __all__ = (
     'MissingFlagArgument',
     'TooManyFlags',
     'MissingRequiredFlag',
+    'ExtensionError',
+    'ExtensionAlreadyLoaded',
+    'ExtensionNotLoaded',
+    'NoEntryPointError',
+    'ExtensionFailed',
+    'ExtensionNotFound',
 )
 
 class CommandError(DiscordException):
