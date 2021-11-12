@@ -23,8 +23,10 @@ FRUITS = [
 
 client = MyClient()
 
+# setting `guild_ids` in development is better when possible because
+# registering global commands has a 1 hour delay
 @client.application_command
-class Fruit(discord.SlashCommand):
+class Fruit(discord.SlashCommand, guild_ids=[123]):
     """Choose a fruit!"""
 
     # we set the type kwarg instead of typehinting to avoid type checker errors
