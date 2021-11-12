@@ -336,6 +336,50 @@ class Interaction(Generic[ClientT]):
         self._original_message = message
         return message
 
+    @overload
+    async def edit_original_message(
+        self,
+        *,
+        content: Optional[str] = MISSING,
+        embed: Optional[Embed] = MISSING,
+        file: File = MISSING,
+        view: Optional[View] = MISSING,
+        allowed_mentions: Optional[AllowedMentions] = None,
+    ) -> InteractionMessage: ...
+
+    @overload
+    async def edit_original_message(
+        self,
+        *,
+        content: Optional[str] = MISSING,
+        embed: Optional[Embed] = MISSING,
+        files: List[File] = MISSING,
+        view: Optional[View] = MISSING,
+        allowed_mentions: Optional[AllowedMentions] = None,
+    ) -> InteractionMessage: ...
+
+    @overload
+    async def edit_original_message(
+        self,
+        *,
+        content: Optional[str] = MISSING,
+        embeds: List[Embed] = MISSING,
+        file: File = MISSING,
+        view: Optional[View] = MISSING,
+        allowed_mentions: Optional[AllowedMentions] = None,
+    ) -> InteractionMessage: ...
+
+    @overload
+    async def edit_original_message(
+        self,
+        *,
+        content: Optional[str] = MISSING,
+        embeds: List[Embed] = MISSING,
+        files: List[File] = MISSING,
+        view: Optional[View] = MISSING,
+        allowed_mentions: Optional[AllowedMentions] = None,
+    ) -> InteractionMessage: ...
+
     async def edit_original_message(
         self,
         *,
@@ -416,8 +460,9 @@ class Interaction(Generic[ClientT]):
             files=params.files,
         )
 
-        # The message channel types should always match
-        message = InteractionMessage(state=self._state, channel=self.channel, data=data)  # type: ignore
+        state = _InteractionMessageState(self, self._state)
+        # The state is artificial and the message channel types should always match
+        message = InteractionMessage(state=state, channel=self.channel, data=data)  # type: ignore
         if view and not view.is_finished():
             self._state.store_view(view, message.id)
         return message
@@ -716,6 +761,26 @@ class InteractionResponse:
 
         self._responded = True
 
+    @overload
+    async def edit_message(
+        self,
+        *,
+        content: Optional[Any] = MISSING,
+        embed: Optional[Embed] = MISSING,
+        attachments: List[Attachment] = MISSING,
+        view: Optional[View] = MISSING,
+    ) -> None: ...
+
+    @overload
+    async def edit_message(
+        self,
+        *,
+        content: Optional[Any] = MISSING,
+        embeds: List[Embed] = MISSING,
+        attachments: List[Attachment] = MISSING,
+        view: Optional[View] = MISSING,
+    ) -> None: ...
+
     async def edit_message(
         self,
         *,
@@ -848,6 +913,50 @@ class InteractionMessage(Message):
     __slots__ = ()
     _state: _InteractionMessageState
 
+    @overload
+    async def edit(
+        self,
+        *,
+        content: Optional[str] = MISSING,
+        embed: Optional[Embed] = MISSING,
+        file: File = MISSING,
+        view: Optional[View] = MISSING,
+        allowed_mentions: Optional[AllowedMentions] = None,
+    ) -> InteractionMessage: ...
+
+    @overload
+    async def edit(
+        self,
+        *,
+        content: Optional[str] = MISSING,
+        embed: Optional[Embed] = MISSING,
+        files: List[File] = MISSING,
+        view: Optional[View] = MISSING,
+        allowed_mentions: Optional[AllowedMentions] = None,
+    ) -> InteractionMessage: ...
+
+    @overload
+    async def edit(
+        self,
+        *,
+        content: Optional[str] = MISSING,
+        embeds: List[Embed] = MISSING,
+        file: File = MISSING,
+        view: Optional[View] = MISSING,
+        allowed_mentions: Optional[AllowedMentions] = None,
+    ) -> InteractionMessage: ...
+
+    @overload
+    async def edit(
+        self,
+        *,
+        content: Optional[str] = MISSING,
+        embeds: List[Embed] = MISSING,
+        files: List[File] = MISSING,
+        view: Optional[View] = MISSING,
+        allowed_mentions: Optional[AllowedMentions] = None,
+    ) -> InteractionMessage: ...
+
     async def edit(
         self,
         content: Optional[str] = MISSING,
@@ -907,7 +1016,7 @@ class InteractionMessage(Message):
             files=files,
             view=view,
             allowed_mentions=allowed_mentions,
-        )
+        )  # type: ignore
 
     async def delete(self, *, delay: Optional[float] = None) -> None:
         """|coro|
