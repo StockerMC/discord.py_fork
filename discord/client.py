@@ -254,8 +254,8 @@ class Client:
 
             If this is set to ``True``, :meth:`register_application_commands` will be created as a task,
             which means that the bot may connect to the gateway before all application commands are registered.
-            :func:`on_ready` and :meth:`wait_until_ready` will be delayed to wait for all application commands
-            to be registered.
+            :func:`on_ready` and :meth:`wait_until_ready` will be delayed to wait for
+            :meth:`Client.register_application_commands` to finish, regardless of whether an error was raised in it or not.
 
         .. versionadded:: 2.0
 
