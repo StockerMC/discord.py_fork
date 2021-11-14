@@ -46,6 +46,7 @@ from typing import (
     Generic,
     AsyncIterator,
     Iterable,
+    Set,
     overload,
 )
 
@@ -152,6 +153,7 @@ OPTION_TYPE_MAPPING: Final[Dict[ValidOptionTypes, ApplicationCommandOptionType]]
     User: ApplicationCommandOptionType.user,
     Member: ApplicationCommandOptionType.user,
     Role: ApplicationCommandOptionType.role,
+    GuildChannel: ApplicationCommandOptionType.channel,
 }
 
 CHANNEL_TYPE_MAPPING: Final[Dict[ChannelTypes, ChannelType]] = {
@@ -302,7 +304,7 @@ class ApplicationCommandOption(Generic[ApplicationCommandOptionChoiceType]):
         ]] = list(choices) if choices is not None else []
         self.options: Iterable[ApplicationCommandOption] = options if options is not None else []
         self.default: Optional[Union[ApplicationCommandOptionDefault, Any]] = default
-        self.channel_types: List[ChannelType] = list(channel_types) if channel_types is not None else []
+        self.channel_types: Set[ChannelType] = set(channel_types) if channel_types is not None else set()
         self.min_value: Optional[Union[int, float]] = min_value
         self.max_value: Optional[Union[int, float]] = max_value
         self._autocomplete: Optional[AutocompleteCallback] = None
@@ -639,7 +641,7 @@ def _get_options(
 
                     channel_type = CHANNEL_TYPE_MAPPING.get(arg)
                     if channel_type is not None:
-                        attr.channel_types.append(channel_type)
+                        attr.channel_types.add(channel_type)
 
                 annotation = args[0]
 
@@ -655,7 +657,7 @@ def _get_options(
 
                 channel_type = CHANNEL_TYPE_MAPPING.get(annotation)
                 if channel_type is not None:
-                    attr.channel_types.append(channel_type)
+                    attr.channel_types.add(channel_type)
 
         if attr.name is MISSING:
             attr.name = attr_name
@@ -687,8 +689,40 @@ class ApplicationCommandOptions:
 
             async def callback(self, response: discord.SlashCommandResponse):
                 user = response.options.user
-                # user will be a `discord.Member` or `discord.User` in DMs with the bot
+                # user will be a `discord.Member`, or a `discord.User` in DMs with the bot
                 await response.send_message(user.display_avatar, ephemeral=True)
+
+    .. container:: operations
+
+        .. describe:: x == y
+
+            Checks if two :class:`ApplicationCommandOptions` are equal. This checks if both instances 
+            have the same provided options with the same values.
+
+        .. describe:: x != y
+
+            Checks if two :class:`ApplicationCommandOptions` are not equal.
+
+        .. describe:: bool(x)
+
+            Returns whether any options were provided.
+
+        .. describe:: hash(x)
+
+            Return the :class:`ApplicationCommandOptions`'s hash.
+
+        .. describe:: iter(x)
+
+            Returns an iterator of ``(option, value)`` pairs. This allows it
+            to be, for example, constructed as a dict or a list of pairs.
+
+        .. describe:: len(x)
+
+            Returns the number of options provided.
+
+        .. describe:: y in x
+
+            Checks if the option name ``y`` was provided.
     """
     def __init__(
         self,
@@ -752,6 +786,24 @@ class ApplicationCommandOptions:
             return self.__application_command_options__[name]
         except KeyError:
             raise AttributeError(name) from None
+
+    def __eq__(self, other: Any) -> bool:
+        return isinstance(other, self.__class__) and self.__application_command_options__ == other.__application_command_options__
+
+    def __ne__(self, other: Any) -> bool:
+        return not self.__eq__(other)
+
+    def __bool__(self) -> bool:
+        return bool(self.__len__())
+
+    def __hash__(self) -> int:
+        return hash(self.__application_command_options__)
+
+    def __len__(self) -> int:
+        return len([v for v in self.__application_command_options__.values() if v is not None])
+
+    def __contains__(self, option: str) -> bool:
+        return option in self.__application_command_options__
 
     def __iter__(self) -> Iterator[Tuple[str, Any]]:
         yield from self.__application_command_options__.items()
