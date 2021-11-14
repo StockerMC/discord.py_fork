@@ -853,7 +853,7 @@ class InteractionResponse:
             payload['attachments'] = [a.to_dict() for a in attachments]
 
         if view is not MISSING:
-            state.prevent_view_updates_for(message_id)  # type: ignore
+            state.prevent_view_updates_for(message_id)
             if view is None:
                 payload['components'] = []
             else:

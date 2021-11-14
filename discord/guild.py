@@ -41,7 +41,6 @@ from typing import (
     Union,
     Coroutine,
     TypeVar,
-    Protocol,
     overload,
 )
 
@@ -125,15 +124,6 @@ if TYPE_CHECKING:
     VocalGuildChannel = Union[VoiceChannel, StageChannel]
     GuildChannel = Union[VoiceChannel, StageChannel, TextChannel, CategoryChannel, StoreChannel]
     ByCategoryItem = Tuple[Optional[CategoryChannel], List[GuildChannel]]
-
-    class CreateCategory(Protocol):
-        async def __call__(self,
-            name: str,
-            *,
-            overwrites: Dict[Union[Role, Member], PermissionOverwrite] = MISSING,
-            reason: Optional[str] = None,
-            position: int = MISSING,
-        ) -> CategoryChannel: ...
 
 
 class BanEntry(NamedTuple):
@@ -1404,7 +1394,14 @@ class Guild(Hashable):
         return channel
 
     if TYPE_CHECKING:
-        create_category_channel: CreateCategory
+        async def create_category_channel(
+            self,
+            name: str,
+            *,
+            overwrites: Dict[Union[Role, Member], PermissionOverwrite] = MISSING,
+            reason: Optional[str] = None,
+            position: int = MISSING,
+        ) -> CategoryChannel: ...
     else:
         create_category_channel = create_category
 

@@ -120,7 +120,7 @@ class AllowedMentions:
 
     def to_dict(self) -> AllowedMentionsPayload:
         parse = []
-        data = {}
+        data: AllowedMentionsPayload = {}  # type: ignore
 
         if self.everyone:
             parse.append('everyone')
@@ -139,7 +139,7 @@ class AllowedMentions:
             data['replied_user'] = True
 
         data['parse'] = parse
-        return data  # type: ignore
+        return data
 
     def merge(self, other: AllowedMentions) -> AllowedMentions:
         # Creates a new AllowedMentions by merging from another one.

@@ -28,7 +28,7 @@ from typing import Any, List, Optional, TYPE_CHECKING, Union
 
 from .utils import snowflake_time, _get_as_snowflake, resolve_invite
 from .user import BaseUser
-from .activity import Activity, BaseActivity, Spotify, create_activity
+from .activity import BaseActivity, Spotify, create_activity
 from .invite import Invite
 from .enums import Status, try_enum
 
@@ -271,10 +271,10 @@ class Widget:
             connected_channel = _get_as_snowflake(member, 'channel_id')
             if connected_channel in channels:
                 connected_channel = channels[connected_channel]  # type: ignore
-            elif connected_channel:
+            elif connected_channel is not None:
                 connected_channel = WidgetChannel(id=connected_channel, name='', position=0)
 
-            self.members.append(WidgetMember(state=self._state, data=member, connected_channel=connected_channel))  # type: ignore
+            self.members.append(WidgetMember(state=self._state, data=member, connected_channel=connected_channel))
 
     def __str__(self) -> str:
         return self.json_url

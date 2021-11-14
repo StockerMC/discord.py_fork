@@ -520,7 +520,10 @@ class ViewStore:
     def is_message_tracked(self, message_id: int) -> bool:
         return message_id in self._synced_message_views
 
-    def remove_message_tracking(self, message_id: int) -> Optional[View]:
+    def remove_message_tracking(self, message_id: Optional[int]) -> Optional[View]:
+        if message_id is None:
+            return None
+
         return self._synced_message_views.pop(message_id, None)
 
     def update_from_message(self, message_id: int, components: List[ComponentPayload]) -> None:

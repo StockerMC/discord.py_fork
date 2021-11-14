@@ -140,7 +140,7 @@ if TYPE_CHECKING:
     from .template import Template
 
     from aiohttp import ClientResponse
-    from requests import Response
+    from requests import Response  # type: ignore
 
     _RequestLike = Union[ClientResponse, Response]
 
@@ -183,7 +183,7 @@ class classproperty(Generic[T_co]):
     def __init__(self, fget: Callable[[Any], T_co]) -> None:
         self.fget: Callable[[Any], T_co] = fget
 
-    def __get__(self, instance: Optional[Any], owner: Type[Any]) -> T_co:
+    def __get__(self, instance: Optional[Any], owner: type) -> T_co:
         return self.fget(owner)
 
     def __set__(self, instance: Any, value: Any) -> NoReturn:
@@ -246,7 +246,7 @@ def parse_time(timestamp: Optional[str]) -> Optional[datetime.datetime]:
     return None
 
 
-def copy_doc(original: Callable) -> Callable[[T], T]:
+def copy_doc(original: Callable[..., Any]) -> Callable[[T], T]:
     def decorator(overriden: T) -> T:
         overriden.__doc__ = original.__doc__
         overriden.__signature__ = _signature(original)  # type: ignore
@@ -472,7 +472,7 @@ def _get_as_snowflake(data: Any, key: str) -> Optional[int]:
         return value and int(value)
 
 
-def _get_mime_type_for_image(data: bytes):
+def _get_mime_type_for_image(data: bytes) -> str:
     if data.startswith(b'\x89\x50\x4E\x47\x0D\x0A\x1A\x0A'):
         return 'image/png'
     elif data[0:3] == b'\xff\xd8\xff' or data[6:10] in (b'JFIF', b'Exif'):
@@ -494,7 +494,7 @@ def _bytes_to_base64_data(data: bytes) -> str:
 
 if HAS_ORJSON:
 
-    def _to_json(obj: Any) -> str:  # type: ignore
+    def _to_json(obj: Any) -> str:
         return orjson.dumps(obj).decode('utf-8')
 
     _from_json = orjson.loads  # type: ignore
@@ -550,7 +550,7 @@ async def sane_wait_for(futures: Iterable[Awaitable[T]], *, timeout: Optional[fl
     return done
 
 
-def get_slots(cls: Type[Any]) -> Iterator[str]:
+def get_slots(cls: type) -> Iterator[str]:
     for mro in reversed(cls.__mro__):
         try:
             yield from mro.__slots__

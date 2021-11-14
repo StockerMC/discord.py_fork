@@ -1035,11 +1035,11 @@ def get_converter(param: inspect.Parameter) -> Any:
 _GenericAlias = type(List[T])
 
 
-def is_generic_type(tp: Any, *, _GenericAlias: Type[Any] = _GenericAlias) -> bool:
-    return isinstance(tp, type) and issubclass(tp, Generic) or isinstance(tp, _GenericAlias)  # type: ignore
+def is_generic_type(tp: Any, *, _GenericAlias: type = _GenericAlias) -> bool:
+    return isinstance(tp, type) and issubclass(tp, Generic) or isinstance(tp, _GenericAlias)
 
 
-CONVERTER_MAPPING: Dict[Type[Any], Any] = {
+CONVERTER_MAPPING: Dict[type, Any] = {
     discord.Object: ObjectConverter,
     discord.Member: MemberConverter,
     discord.User: UserConverter,
@@ -1063,7 +1063,7 @@ CONVERTER_MAPPING: Dict[Type[Any], Any] = {
 }
 
 
-async def _actual_conversion(ctx: Context[Any], converter, argument: str, param: inspect.Parameter):
+async def _actual_conversion(ctx: Context[Any], converter: Any, argument: str, param: inspect.Parameter) -> Any:
     if converter is bool:
         return _convert_to_bool(argument)
 

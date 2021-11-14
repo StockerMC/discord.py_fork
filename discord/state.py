@@ -91,6 +91,7 @@ if TYPE_CHECKING:
     from .types.invite import GatewayInviteCreate, GatewayInviteDelete
     from .types.threads import Thread as ThreadPayload, ThreadMember as ThreadMemberPayload
     from .types.voice import VoiceState as VoiceStatePayload
+    from .types.snowflake import Snowflake
     from .types.events import (
         ReadyEvent,
         MessageDeleteEvent,
@@ -353,8 +354,10 @@ class ConnectionState:
         return list(self._voice_clients.values())
 
     def _get_voice_client(self, guild_id: Optional[int]) -> Optional[VoiceProtocol]:
-        # the keys of self._voice_clients are ints
-        return self._voice_clients.get(guild_id)  # type: ignore
+        if guild_id is None:
+            return None
+
+        return self._voice_clients.get(guild_id)
 
     def _add_voice_client(self, guild_id: int, voice: VoiceProtocol) -> None:
         self._voice_clients[guild_id] = voice
@@ -402,7 +405,7 @@ class ConnectionState:
     def store_view(self, view: View, message_id: Optional[int] = None) -> None:
         self._view_store.add_view(view, message_id)
 
-    def prevent_view_updates_for(self, message_id: int) -> Optional[View]:
+    def prevent_view_updates_for(self, message_id: Optional[int]) -> Optional[View]:
         return self._view_store.remove_message_tracking(message_id)
 
     @property
@@ -414,8 +417,10 @@ class ConnectionState:
         return list(self._guilds.values())
 
     def _get_guild(self, guild_id: Optional[int]) -> Optional[Guild]:
-        # the keys of self._guilds are ints
-        return self._guilds.get(guild_id)  # type: ignore
+        if guild_id is None:
+            return None
+
+        return self._guilds.get(guild_id)
 
     def _add_guild(self, guild: Guild) -> None:
         self._guilds[guild.id] = guild
@@ -1009,7 +1014,7 @@ class ConnectionState:
         thread_id = int(data['id'])
         thread = guild.get_thread(thread_id)
         if thread is not None:
-            guild._remove_thread(thread)  # type: ignore
+            guild._remove_thread(thread)
             self.dispatch('thread_delete', thread)
 
     def parse_thread_list_sync(self, data: ThreadListSyncEvent) -> None:
@@ -1124,7 +1129,7 @@ class ConnectionState:
             user_id = int(data['user']['id'])
             member = guild.get_member(user_id)
             if member is not None:
-                guild._remove_member(member)  # type: ignore
+                guild._remove_member(member)
                 self.dispatch('member_remove', member)
         else:
             _log.debug('GUILD_MEMBER_REMOVE referencing an unknown guild ID: %s. Discarding.', data['guild_id'])
@@ -1357,11 +1362,11 @@ class ConnectionState:
         _log.debug('Processed a chunk for %s members in guild ID %s.', len(members), guild_id)
 
         if presences:
-            member_dict = {str(member.id): member for member in members}
+            member_dict: Dict[Snowflake, Member] = {str(member.id): member for member in members}
             for presence in presences:
                 user = presence['user']
                 member_id = user['id']
-                member = member_dict.get(member_id)  # type: ignore
+                member = member_dict.get(member_id)
                 if member is not None:
                     member._presence_update(presence, user)
 
