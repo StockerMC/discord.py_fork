@@ -39,7 +39,6 @@ from typing import (
     ClassVar,
     Tuple,
     Callable,
-    Protocol,
     Coroutine,
     Final,
     Literal,
@@ -80,6 +79,11 @@ if TYPE_CHECKING:
     from .permissions import Permissions
     from .client import Client
     from .cog import Cog
+    from .embeds import Embed
+    from .file import File
+    from .ui.view import View
+    from .mentions import AllowedMentions
+    from .message import Attachment
 
     T = TypeVar('T')
     Coro = Coroutine[Any, Any, T]
@@ -104,163 +108,20 @@ if TYPE_CHECKING:
     InteractionChannel = Union[
         VoiceChannel, StageChannel, TextChannel, CategoryChannel, StoreChannel, Thread, PartialMessageable
     ]
-    AutocompleteCallback = Callable[['SlashCommand', 'AutocompleteResponse[Any]'], Union[AsyncIterator[Union[str, int, float]], Iterable[str]]]
-    AutocompleteCallbackT = TypeVar('AutocompleteCallbackT', bound=AutocompleteCallback)
-    FuncT = TypeVar('FuncT', bound=Callable[..., Any])
-    ApplicationCommandOptionChoiceT = TypeVar('ApplicationCommandOptionChoiceT', bound=Union[str, int, float])
     ApplicationCommandOptionChoiceTypes = Union[
-        List['ApplicationCommandOptionChoice[int]'],
-        List['ApplicationCommandOptionChoice[float]'],
-        List['ApplicationCommandOptionChoice[str]'],
+        Iterable['ApplicationCommandOptionChoice[int]'],
+        Iterable['ApplicationCommandOptionChoice[float]'],
+        Iterable['ApplicationCommandOptionChoice[str]'],
     ]
-
-    # these protocols are to help typehint the inherited methods from Interaction/InteractionResponse
-    # for BaseApplicationCommandResponse
-
-    from .embeds import Embed
-    from .file import File
-    from .ui.view import View
-    from .mentions import AllowedMentions
-    from .message import Attachment
-
-    class EditOriginalMessage(Protocol):
-        @overload
-        async def __call__(
-            self,
-            *,
-            content: Optional[str] = MISSING,
-            embed: Optional[Embed] = MISSING,
-            file: File = MISSING,
-            view: Optional[View] = MISSING,
-            allowed_mentions: Optional[AllowedMentions] = None,
-        ) -> InteractionMessage: ...
-
-        @overload
-        async def __call__(
-            self,
-            *,
-            content: Optional[str] = MISSING,
-            embed: Optional[Embed] = MISSING,
-            files: List[File] = MISSING,
-            view: Optional[View] = MISSING,
-            allowed_mentions: Optional[AllowedMentions] = None,
-        ) -> InteractionMessage: ...
-
-        @overload
-        async def __call__(
-            self,
-            *,
-            content: Optional[str] = MISSING,
-            embeds: List[Embed] = MISSING,
-            file: File = MISSING,
-            view: Optional[View] = MISSING,
-            allowed_mentions: Optional[AllowedMentions] = None,
-        ) -> InteractionMessage: ...
-
-        @overload
-        async def __call__(
-            self,
-            *,
-            content: Optional[str] = MISSING,
-            embeds: List[Embed] = MISSING,
-            files: List[File] = MISSING,
-            view: Optional[View] = MISSING,
-            allowed_mentions: Optional[AllowedMentions] = None,
-        ) -> InteractionMessage: ...
-
-    class SendMessage(Protocol):
-        @overload
-        async def __call__(
-            self,
-            content: Optional[Any] = None,
-            *,
-            embed: Embed = MISSING,
-            view: View = MISSING,
-            tts: bool = False,
-            ephemeral: bool = False,
-            allowed_mentions: Optional[AllowedMentions] = None,
-        ) -> None: ...
-
-        @overload
-        async def __call__(
-            self,
-            content: Optional[Any] = None,
-            *,
-            embed: Embed = MISSING,
-            file: File = MISSING,
-            view: View = MISSING,
-            tts: bool = False,
-            ephemeral: bool = False,
-            allowed_mentions: Optional[AllowedMentions] = None,
-        ) -> None: ...
-
-        @overload
-        async def __call__(
-            self,
-            content: Optional[Any] = None,
-            *,
-            embed: Embed = MISSING,
-            files: List[File] = MISSING,
-            view: View = MISSING,
-            tts: bool = False,
-            ephemeral: bool = False,
-            allowed_mentions: Optional[AllowedMentions] = None,
-        ) -> None: ...
-
-        @overload
-        async def __call__(
-            self,
-            content: Optional[Any] = None,
-            *,
-            embeds: List[Embed] = MISSING,
-            view: View = MISSING,
-            tts: bool = False,
-            ephemeral: bool = False,
-            allowed_mentions: Optional[AllowedMentions] = None,
-        ) -> None:
-            ...
-
-        @overload
-        async def __call__(
-            self,
-            content: Optional[Any] = None,
-            *,
-            embeds: List[Embed] = MISSING,
-            file: File = MISSING,
-            view: View = MISSING,
-            tts: bool = False,
-            ephemeral: bool = False,
-            allowed_mentions: Optional[AllowedMentions] = None,
-        ) -> None:
-            ...
-
-        @overload
-        async def __call__(
-            self,
-            content: Optional[Any] = None,
-            *,
-            embeds: List[Embed] = MISSING,
-            files: List[File] = MISSING,
-            view: View = MISSING,
-            tts: bool = False,
-            ephemeral: bool = False,
-            allowed_mentions: Optional[AllowedMentions] = None,
-        ) -> None:
-            ...
-
-    class Defer(Protocol):
-        async def __call__(self, *, ephemeral: bool = False) -> None: ...
-
-    class EditMessage(Protocol):
-        async def edit_message(
-            self,
-            *,
-            content: Optional[Any] = MISSING,
-            embed: Optional[Embed] = MISSING,
-            embeds: List[Embed] = MISSING,
-            attachments: List[Attachment] = MISSING,
-            view: Optional[View] = MISSING,
-        ) -> None: ...
+    SlashCommandT = TypeVar('SlashCommandT', bound='SlashCommand')
+    AutocompleteCallback = Callable[
+        [SlashCommandT, 'AutocompleteResponse[Any]'],
+        Union[
+            AsyncIterator[Union['ApplicationCommandOptionChoiceType', 'ApplicationCommandOptionChoice[ApplicationCommandOptionChoiceType]']],
+            Coro[Iterable[Union['ApplicationCommandOptionChoiceType', 'ApplicationCommandOptionChoice[ApplicationCommandOptionChoiceType]']]]
+        ]
+    ]
+    FuncT = TypeVar('FuncT', bound=Callable[..., Any])
 
 
 __all__ = (
@@ -301,7 +162,7 @@ CHANNEL_TYPE_MAPPING: Final[Dict[ChannelTypes, ChannelType]] = {
     Thread: ChannelType.public_thread,  # is public_thread correct?
 }
 
-OPTION_TYPE_MAPPING.update(dict.fromkeys(CHANNEL_TYPE_MAPPING.keys(), ApplicationCommandOptionType.channel))
+OPTION_TYPE_MAPPING.update(dict.fromkeys(CHANNEL_TYPE_MAPPING, ApplicationCommandOptionType.channel))
 
 def _resolve_option_type(option: Union[ValidOptionTypes, ApplicationCommandOptionType]) -> ApplicationCommandOptionType:
     if isinstance(option, ApplicationCommandOptionType):
@@ -351,6 +212,9 @@ class ApplicationCommandOptionChoice(Generic[ApplicationCommandOptionChoiceType]
         The type of this should be the same type of the option it is for.
     """
     def __init__(self, *, name: str, value: ApplicationCommandOptionChoiceType) -> None:
+        if not isinstance(value, (str, int, float)):
+            raise TypeError(f'The choice of the option {name!r} must be either a str, int or float not {type(value)!r}.')
+
         self.name: str = name
         self.value: ApplicationCommandOptionChoiceType = value
 
@@ -364,7 +228,7 @@ class ApplicationCommandOptionChoice(Generic[ApplicationCommandOptionChoiceType]
         }
 
 
-class ApplicationCommandOption:
+class ApplicationCommandOption(Generic[ApplicationCommandOptionChoiceType]):
     """Represents an option of a Discord application command.
 
     .. versionadded:: 2.0
@@ -379,16 +243,16 @@ class ApplicationCommandOption:
         The description of the option.
     required: :class:`bool`
         Whether the option is required or not.
-    choices: List[:class:`ApplicationCommandOptionChoice`]
+    choices: Iterable[:class:`ApplicationCommandOptionChoice`]
         The choices of the option.
-    options: List[:class:`ApplicationCommandOption`]
+    options: Iterable[:class:`ApplicationCommandOption`]
         The parameters of the option if it's a subcommand or subcommand group type.
     default: Optional[:class:`ApplicationCommandOptionDefault`]
         The default for the option, if any.
 
         This is for when the option is accessed with it's relevant :class:`ApplicationCommandOptions` instance
         and the option was not provided by the user.
-    channel_types: List[:class:`ChannelType`]
+    channel_types: Iterable[:class:`ChannelType`]
         The valid channel types for this option. This is only valid for options of type :attr:`ApplicationCommandOptionType.channel`.
     autocomplete: Callable[[:class:`AutocompleteResponse`], Any]
         The callable for responses to when a user is typing an autocomplete option. This can be an :data:`typing.AsyncIterator`
@@ -422,14 +286,10 @@ class ApplicationCommandOption:
         name: str,
         description: str,
         required: bool = MISSING,
-        choices: Optional[Union[
-            List[ApplicationCommandOptionChoice[int]],
-            List[ApplicationCommandOptionChoice[float]],
-            List[ApplicationCommandOptionChoice[str]],
-        ]] = None,
-        options: Optional[List[ApplicationCommandOption]] = None,
+        choices: Optional[ApplicationCommandOptionChoiceTypes] = None,
+        options: Optional[Iterable[ApplicationCommandOption]] = None,
         default: Optional[Union[ApplicationCommandOptionDefault, Any]] = None,
-        channel_types: Optional[List[ChannelType]] = None,
+        channel_types: Optional[Iterable[ChannelType]] = None,
         min_value: Optional[Union[int, float]] = None,
         max_value: Optional[Union[int, float]] = None,
     ) -> None:
@@ -437,14 +297,12 @@ class ApplicationCommandOption:
         self.name: str = name
         self.description: str = description
         self.required: bool = required
-        self.choices: Union[
-            List[ApplicationCommandOptionChoice[int]],
-            List[ApplicationCommandOptionChoice[float]],
-            List[ApplicationCommandOptionChoice[str]],
-        ] = choices or []
-        self.options: List[ApplicationCommandOption] = options or []
+        self.choices: List[Union[
+            ApplicationCommandOptionChoice[int], ApplicationCommandOptionChoice[str], ApplicationCommandOptionChoice[float]
+        ]] = list(choices) if choices is not None else []
+        self.options: Iterable[ApplicationCommandOption] = options if options is not None else []
         self.default: Optional[Union[ApplicationCommandOptionDefault, Any]] = default
-        self.channel_types: List[ChannelType] = channel_types or []
+        self.channel_types: List[ChannelType] = list(channel_types) if channel_types is not None else []
         self.min_value: Optional[Union[int, float]] = min_value
         self.max_value: Optional[Union[int, float]] = max_value
         self._autocomplete: Optional[AutocompleteCallback] = None
@@ -452,11 +310,15 @@ class ApplicationCommandOption:
     def __repr__(self) -> str:
         return f'<{self.__class__.__name__} type={self.type!r} name={self.name!r} description={self.description!r} required={self.required!r}>'
 
-    def autocomplete(self, func: AutocompleteCallbackT) -> AutocompleteCallbackT:
+    def autocomplete(
+        self, func: AutocompleteCallback[SlashCommandT, ApplicationCommandOptionChoiceType]
+    ) -> AutocompleteCallback[SlashCommandT, ApplicationCommandOptionChoiceType]:
         """A decorator that registers a callback for an autocomplete option.
 
-        Functions being registered can be :data:`typing.AsyncIterator` that yields choices with types of :class:`str`, :class:`int` or `:class:`float`.
-        This can also be a :ref:`coroutine <coroutine>` that returns an iterable of choices with types of :class:`str`, :class:`int` or `:class:`float`.
+        Functions being registered can be :data:`typing.AsyncIterator` that yields choices of type :class:`str`.
+        This can also be a :ref:`coroutine <coroutine>` that returns an iterable of choices of type :class:`str`.
+
+        If a choice is an :class:`ApplicationCommandOptionChoice`, the value must be of type :class:`str` as well.
         
         Raises
         -------
@@ -464,7 +326,7 @@ class ApplicationCommandOption:
             The function being listened to is not a coroutine function or async generator function.
         """
 
-        if not inspect.iscoroutinefunction(func) or not inspect.isasyncgenfunction(func):
+        if not inspect.iscoroutinefunction(func) and not inspect.isasyncgenfunction(func):
             raise TypeError('Autocomplete option callbacks must be a coroutine function or async generator function.')
 
         self._autocomplete = func
@@ -475,16 +337,24 @@ class ApplicationCommandOption:
             return
 
         result = self._autocomplete(command, response)
-        choices: List[Union[str, int, float]]
+        choices: Iterable[Union[str, ApplicationCommandOptionChoiceTypes]]
         if inspect.isasyncgen(result):
             choices = [choice async for choice in result]
         else:
             choices = await result  # type: ignore
 
-        if not all(isinstance(choice, (str, int, float)) for choice in choices):
-            raise TypeError('the types of the choices returned from an autocomplete callback must be a str, int or float.')
+        data: Dict[str, Any] = {'choices': []}
+        for choice in choices:
+            if isinstance(choice, ApplicationCommandOptionChoice):
+                name = choice.name
+                value = choice.value
+            else:
+                value = name = choice
 
-        data: Dict[str, Any] = {'choices': [{'name': str(choice), 'value': choice} for choice in choices]}
+            if not isinstance(value, (str, int, float)):
+                raise TypeError(f'The value of an autocomplete result choice must be either a str, int, or float not {type(value)!r}')
+            
+            data['choices'].append({'name': name, 'value': value})
 
         adapter = async_context.get()
         autocomplete_type = InteractionResponseType.application_command_autocomplete_result.value
@@ -492,7 +362,6 @@ class ApplicationCommandOption:
         await adapter.create_interaction_response(
             interaction.id, token=interaction.token, session=interaction._session, type=autocomplete_type, data=data
         )
-
 
     def to_dict(self) -> ApplicationCommandOptionPayload:
         ret: ApplicationCommandOptionPayload = {
@@ -533,8 +402,8 @@ def application_command_option(
     type: Union[Literal[ApplicationCommandOptionType.channel], ChannelTypes, Type[GuildChannel]],
     required: bool = ...,
     default: Optional[Union[ApplicationCommandOptionDefault, Type[ApplicationCommandOptionDefault], Any]] = ...,
-    channel_types: Optional[List[Union[ChannelType, ChannelTypes]]] = ...,
-) -> ApplicationCommandOption: ...
+    channel_types: Optional[Iterable[Union[ChannelType, ChannelTypes]]] = ...,
+) -> ApplicationCommandOption[Any]: ...
 
 @overload
 def application_command_option(
@@ -547,7 +416,7 @@ def application_command_option(
     default: Optional[Union[ApplicationCommandOptionDefault, Type[ApplicationCommandOptionDefault], Any]] = ...,
     min_value: Optional[int] = ...,
     max_value: Optional[int] = ...,
-) -> ApplicationCommandOption: ...
+) -> ApplicationCommandOption[int]: ...
 
 @overload
 def application_command_option(
@@ -560,7 +429,7 @@ def application_command_option(
     default: Optional[Union[ApplicationCommandOptionDefault, Type[ApplicationCommandOptionDefault], Any]] = ...,
     min_value: Optional[float] = ...,
     max_value: Optional[float] = ...,
-) -> ApplicationCommandOption: ...
+) -> ApplicationCommandOption[float]: ...
 
 @overload
 def application_command_option(
@@ -571,7 +440,7 @@ def application_command_option(
     required: bool = ...,
     choices: Optional[List[ApplicationCommandOptionChoice[str]]] = ...,
     default: Optional[Union[ApplicationCommandOptionDefault, Type[ApplicationCommandOptionDefault], Any]] = ...,
-) -> ApplicationCommandOption: ...
+) -> ApplicationCommandOption[str]: ...
 
 @overload
 def application_command_option(
@@ -625,7 +494,7 @@ def application_command_option(
     required: bool = True,
     choices: Optional[ApplicationCommandOptionChoiceTypes] = None,
     default: Optional[Union[ApplicationCommandOptionDefault, Type[ApplicationCommandOptionDefault], Any]] = None,
-    channel_types: Optional[List[Union[ChannelType, ChannelTypes]]] = None,
+    channel_types: Optional[Iterable[Union[ChannelType, ChannelTypes]]] = None,
     min_value: Optional[Union[int, float]] = None,
     max_value: Optional[Union[int, float]] = None,
 ) -> Any:
@@ -656,14 +525,14 @@ def application_command_option(
     required: :class:`bool`
         Whether the option is required or not.
         Defaults to ``True``.
-    choices: Optional[List[:class:`ApplicationCommandOptionChoice`]]
+    choices: Optional[Iterable[:class:`ApplicationCommandOptionChoice`]]
         The choices of the option, if any.
     default: Optional[Union[:class:`ApplicationCommandOptionDefault`, Type[:class:`ApplicationCommandOptionDefault`]]]
         The default of the option for when it's accessed with it's relevant :class:`ApplicationCommandOptions` instance.
-    channel_types: List[Union[:class:`ChannelType`, Type]]
+    channel_types: Iterable[Union[:class:`ChannelType`, Type]]
         The valid channel types for this option. This is only valid for options of type :attr:`ApplicationCommandOptionType.channel`
 
-        This can be a list including the following: :class:`ChannelType` members, :class:`TextChannel`, :class:`VoiceChannel`,
+        This can including the following: :class:`ChannelType` members, :class:`TextChannel`, :class:`VoiceChannel`,
         :class:`StageChannel`, :class:`CategoryChannel` and :class:`Thread`.
     min_value: Optional[:class:`int`]
         The minimum value permitted for this option.
@@ -712,13 +581,13 @@ def _transform_literal_choices(
     attr_name: str,
     attr_type: ApplicationCommandOptionType,
     annotation: Any
-) -> Tuple[Type[Any], ApplicationCommandOptionChoiceTypes]:
+) -> Tuple[Type, ApplicationCommandOptionChoiceTypes]:
     annotation_type = MISSING
     choices: ApplicationCommandOptionChoiceTypes = []
     for arg in annotation.__args__:
         arg_type = type(arg)
         if arg_type not in (str, int, float):
-            raise TypeError(f'The choice of the option {attr_name!r} must be either a str, int or float not {type(arg_type)!r}.')
+            raise TypeError(f'The choice of the option {attr_name!r} must be either a str, int, or float not {type(arg_type)!r}.')
 
         if annotation_type is not MISSING and arg_type is not annotation_type:
             raise TypeError(f'The choices for the option {attr_name!r} must be the same type (str, int or float).')
@@ -766,8 +635,7 @@ def _get_options(
                     if nested_origin is Literal:
                         choices = _transform_literal_choices(attr_name, attr.type, arg)
                         annotation = choices[0]
-                        # fix this `type: ignore` eventually
-                        attr.choices.extend(choices[1])  # type: ignore
+                        attr.choices.extend(choices[1])
 
                     channel_type = CHANNEL_TYPE_MAPPING.get(arg)
                     if channel_type is not None:
@@ -778,7 +646,7 @@ def _get_options(
             elif origin is Literal:
                 choices = _transform_literal_choices(attr_name, attr.type, annotation)
                 annotation = choices[0]
-                attr.choices.extend(choices[1])  # type: ignore
+                attr.choices.extend(choices[1])
 
             resolved_option_type = _resolve_option_type(annotation)
 
@@ -903,9 +771,9 @@ def _get_used_subcommand(options: List[ApplicationCommandInteractionDataOption])
     return None
 
 
-# original function is flatten_user in member.py
+# the original function is flatten_user in member.py
 def flatten(
-    original_cls: Type[Any], original_attr: str
+    original_cls: Union[Type[Interaction], Type[InteractionResponse]], original_attr: str
 ) -> Callable[[Type[BaseApplicationCommandResponse[Any]]], Type[BaseApplicationCommandResponse[Any]]]:
     def decorator(cls: Type[BaseApplicationCommandResponse[Any]]) -> Type[BaseApplicationCommandResponse[Any]]:
         for attr, value in original_cls.__dict__.items():
@@ -970,20 +838,149 @@ class BaseApplicationCommandResponse(Generic[ClientT]):
         user: Optional[Union[User, Member]]
         client: ClientT
         # properties
-        guild: Optional[Guild]
-        channel: Optional[InteractionChannel]
-        permissions: Permissions
-        response: InteractionResponse
-        followup: Webhook
+        @property
+        def guild(self) -> Optional[Guild]: ...
+        def channel(self) -> Optional[InteractionChannel]: ...
+        @property
+        def permissions(self) -> Permissions: ...
+        @property
+        def response(self) -> InteractionResponse: ...
+        @property
+        def followup(self) -> Webhook: ...
         # interaction/interaction response methods
-        original_message: Callable[[], Coro[InteractionMessage]]
-        edit_original_message: EditOriginalMessage
-        delete_original_message: Callable[[], Coro[None]]
-        is_done: Callable[[], bool]
-        defer: Defer
-        pong: Callable[[], Coro[None]]
-        send_message: SendMessage
-        edit_message: EditMessage
+        async def original_message(self) -> InteractionMessage: ...
+        @overload
+        async def edit_original_message(  # type: ignore
+            self,
+            *,
+            content: Optional[str] = MISSING,
+            embed: Optional[Embed] = MISSING,
+            file: File = MISSING,
+            view: Optional[View] = MISSING,
+            allowed_mentions: Optional[AllowedMentions] = None,
+        ) -> InteractionMessage: ...
+        @overload
+        async def edit_original_message(
+            self,
+            *,
+            content: Optional[str] = MISSING,
+            embed: Optional[Embed] = MISSING,
+            files: List[File] = MISSING,
+            view: Optional[View] = MISSING,
+            allowed_mentions: Optional[AllowedMentions] = None,
+        ) -> InteractionMessage: ...
+        @overload
+        async def edit_original_message(
+            self,
+            *,
+            content: Optional[str] = MISSING,
+            embeds: List[Embed] = MISSING,
+            file: File = MISSING,
+            view: Optional[View] = MISSING,
+            allowed_mentions: Optional[AllowedMentions] = None,
+        ) -> InteractionMessage: ...
+        @overload
+        async def edit_original_message(
+            self,
+            *,
+            content: Optional[str] = MISSING,
+            embeds: List[Embed] = MISSING,
+            files: List[File] = MISSING,
+            view: Optional[View] = MISSING,
+            allowed_mentions: Optional[AllowedMentions] = None,
+        ) -> InteractionMessage: ...
+        async def delete_original_message(self) -> None: ...
+        def is_done(self) -> bool: ...
+        async def defer(self, *, ephemeral: bool = False) -> None: ...
+        async def pong(self) -> None: ...
+        @overload
+        async def send_message(  # type: ignore
+            self,
+            content: Optional[Any] = None,
+            *,
+            embed: Embed = MISSING,
+            view: View = MISSING,
+            tts: bool = False,
+            ephemeral: bool = False,
+            allowed_mentions: Optional[AllowedMentions] = None,
+        ) -> None: ...
+        @overload
+        async def send_message(
+            self,
+            content: Optional[Any] = None,
+            *,
+            embed: Embed = MISSING,
+            file: File = MISSING,
+            view: View = MISSING,
+            tts: bool = False,
+            ephemeral: bool = False,
+            allowed_mentions: Optional[AllowedMentions] = None,
+        ) -> None: ...
+        @overload
+        async def send_message(
+            self,
+            content: Optional[Any] = None,
+            *,
+            embed: Embed = MISSING,
+            files: List[File] = MISSING,
+            view: View = MISSING,
+            tts: bool = False,
+            ephemeral: bool = False,
+            allowed_mentions: Optional[AllowedMentions] = None,
+        ) -> None: ...
+        @overload
+        async def send_message(
+            self,
+            content: Optional[Any] = None,
+            *,
+            embeds: List[Embed] = MISSING,
+            view: View = MISSING,
+            tts: bool = False,
+            ephemeral: bool = False,
+            allowed_mentions: Optional[AllowedMentions] = None,
+        ) -> None: ...
+        @overload
+        async def send_message(
+            self,
+            content: Optional[Any] = None,
+            *,
+            embeds: List[Embed] = MISSING,
+            file: File = MISSING,
+            view: View = MISSING,
+            tts: bool = False,
+            ephemeral: bool = False,
+            allowed_mentions: Optional[AllowedMentions] = None,
+        ) -> None: ...
+        @overload
+        async def send_message(
+            self,
+            content: Optional[Any] = None,
+            *,
+            embeds: List[Embed] = MISSING,
+            files: List[File] = MISSING,
+            view: View = MISSING,
+            tts: bool = False,
+            ephemeral: bool = False,
+            allowed_mentions: Optional[AllowedMentions] = None,
+        ) -> None: ...
+        @overload
+        async def edit_message(  # type: ignore
+            self,
+            *,
+            content: Optional[Any] = MISSING,
+            embed: Optional[Embed] = MISSING,
+            attachments: List[Attachment] = MISSING,
+            view: Optional[View] = MISSING,
+        ) -> None: ...
+        @overload
+        async def edit_message(
+            self,
+            *,
+            content: Optional[Any] = MISSING,
+            embeds: List[Embed] = MISSING,
+            attachments: List[Attachment] = MISSING,
+            view: Optional[View] = MISSING,
+        ) -> None: ...
 
 
 class SlashCommandResponse(BaseApplicationCommandResponse[ClientT]):
@@ -1070,7 +1067,7 @@ class AutocompleteResponse(BaseApplicationCommandResponse[ClientT]):
         self.command: SlashCommand = command
 
 
-def _traverse_mro_for_attr(cls: Type[object], attr_name: str, default: T = MISSING) -> Union[T, Any]:
+def _traverse_mro_for_attr(cls: type, attr_name: str, default: T = MISSING) -> Union[T, Any]:
     attr = default
     for base in reversed(cls.__mro__):
         attr = getattr(base, attr_name, default)
