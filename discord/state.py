@@ -30,6 +30,8 @@ import datetime
 import itertools
 import logging
 import copy
+import sys
+import traceback
 from typing import Dict, Optional, TYPE_CHECKING, Union, Callable, Any, List, TypeVar, Coroutine, Sequence, Tuple, Literal, Deque, overload
 import inspect
 
@@ -187,7 +189,7 @@ class ConnectionState:
     def __init__(
         self,
         *,
-        dispatch: Callable,
+        dispatch: Callable[..., None],
         handlers: Dict[str, Callable],
         hooks: Dict[str, Callable],
         http: HTTPClient,
@@ -205,6 +207,7 @@ class ConnectionState:
         self.hooks: Dict[str, Callable] = hooks
         self.shard_count: Optional[int] = None
         self._ready_task: Optional[asyncio.Task[None]] = None
+        self._application_command_task: Optional[asyncio.Task[None]] = None
         self.application_id: Optional[int] = utils._get_as_snowflake(options, 'application_id')
         self.heartbeat_timeout: float = options.get('heartbeat_timeout', 60.0)
         self.guild_ready_timeout: float = options.get('guild_ready_timeout', 2.0)
@@ -236,7 +239,7 @@ class ConnectionState:
         intents = options.get('intents', None)
         if intents is not None:
             if not isinstance(intents, Intents):
-                raise TypeError(f'intents parameter must be Intent not {type(intents)!r}')
+                raise TypeError(f'intents parameter must be Intents not {type(intents)!r}')
         else:
             intents = Intents.default()
 
@@ -399,7 +402,7 @@ class ConnectionState:
     def store_view(self, view: View, message_id: Optional[int] = None) -> None:
         self._view_store.add_view(view, message_id)
 
-    def prevent_view_updates_for(self, message_id: int) -> Optional[View]:
+    def prevent_view_updates_for(self, message_id: Optional[int]) -> Optional[View]:
         return self._view_store.remove_message_tracking(message_id)
 
     @property
@@ -546,6 +549,15 @@ class ConnectionState:
             _log.warning('Timed out waiting for chunks with query %r and limit %d for guild_id %d', query, limit, guild_id)
             raise
 
+    async def _register_application_commands(self) -> None:
+        # this method will only be called from Client.login
+        try:
+            client = self._get_client()
+            await client.register_application_commands()
+        except Exception as e:
+            print('An error occured when registering application commmands:', file=sys.stderr)
+            traceback.print_exception(type(e), e, e.__traceback__, file=sys.stderr)
+
     async def _delay_ready(self) -> None:
         try:
             states = []
@@ -586,6 +598,11 @@ class ConnectionState:
         except asyncio.CancelledError:
             pass
         else:
+            # wait for all application commands to be registered
+            if self._application_command_task is not None:
+                await self._application_command_task
+                self._application_command_task = None
+
             # dispatch the event
             self.call_handlers('ready')
             self.dispatch('ready')
@@ -596,7 +613,7 @@ class ConnectionState:
         if self._ready_task is not None:
             self._ready_task.cancel()
 
-        self._ready_state = asyncio.Queue()
+        self._ready_state: asyncio.Queue[Guild] = asyncio.Queue()
         self.clear(views=False)
         self.user = ClientUser(state=self, data=data['user'])
         self.store_user(data['user'])
@@ -1634,6 +1651,11 @@ class AutoShardedConnectionState(ConnectionState):
 
         # clear the current task
         self._ready_task = None
+
+        # wait for all application commands to be registered
+        if self._application_command_task is not None:
+            await self._application_command_task
+            self._application_command_task = None
 
         # dispatch the event
         self.call_handlers('ready')

@@ -250,6 +250,13 @@ class Client:
         added to the client are the same (having the exact same name and options) as the previous
         time they were added. Defaults to ``True``.
 
+        .. note::
+
+            If this is set to ``True``, :meth:`register_application_commands` will be created as a task,
+            which means that the bot may connect to the gateway before all application commands are registered.
+            :func:`on_ready` and :meth:`wait_until_ready` will be delayed to wait for all application commands
+            to be registered.
+
         .. versionadded:: 2.0
 
     Attributes
@@ -565,7 +572,9 @@ class Client:
         self._connection.user = ClientUser(state=self._connection, data=data)
 
         if self.register_application_commands_on_startup:
-            await self.register_application_commands()
+            self._connection._application_command_task = asyncio.create_task(
+                self._connection._register_application_commands(), name='discord-register-application-commands'
+            )
 
     async def connect(self, *, reconnect: bool = True) -> None:
         """|coro|
