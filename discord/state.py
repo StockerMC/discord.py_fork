@@ -189,7 +189,7 @@ class ConnectionState:
     def __init__(
         self,
         *,
-        dispatch: Callable[..., None],
+        dispatch: Callable,
         handlers: Dict[str, Callable],
         hooks: Dict[str, Callable],
         http: HTTPClient,
@@ -239,7 +239,7 @@ class ConnectionState:
         intents = options.get('intents', None)
         if intents is not None:
             if not isinstance(intents, Intents):
-                raise TypeError(f'intents parameter must be Intents not {type(intents)!r}')
+                raise TypeError(f'intents parameter must be Intent not {type(intents)!r}')
         else:
             intents = Intents.default()
 
@@ -402,7 +402,7 @@ class ConnectionState:
     def store_view(self, view: View, message_id: Optional[int] = None) -> None:
         self._view_store.add_view(view, message_id)
 
-    def prevent_view_updates_for(self, message_id: Optional[int]) -> Optional[View]:
+    def prevent_view_updates_for(self, message_id: int) -> Optional[View]:
         return self._view_store.remove_message_tracking(message_id)
 
     @property
@@ -613,7 +613,7 @@ class ConnectionState:
         if self._ready_task is not None:
             self._ready_task.cancel()
 
-        self._ready_state: asyncio.Queue[Guild] = asyncio.Queue()
+        self._ready_state = asyncio.Queue()
         self.clear(views=False)
         self.user = ClientUser(state=self, data=data['user'])
         self.store_user(data['user'])
