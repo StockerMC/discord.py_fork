@@ -80,6 +80,7 @@ from .threads import Thread, ThreadMember
 from .sticker import GuildSticker
 from .file import File
 from .welcome_screen import WelcomeScreen, WelcomeScreenChannel
+from .scheduled_events import ScheduledEvent
 
 
 __all__ = (
@@ -296,6 +297,7 @@ class Guild(Hashable):
         '_public_updates_channel_id',
         '_stage_instances',
         '_threads',
+        '_scheduled_events',
     )
 
     _PREMIUM_GUILD_LIMITS: ClassVar[Dict[Optional[int], _GuildLimit]] = {
@@ -311,6 +313,7 @@ class Guild(Hashable):
         self._members: Dict[int, Member] = {}
         self._voice_states: Dict[int, VoiceState] = {}
         self._threads: Dict[int, Thread] = {}
+        self._scheduled_events: Dict[int, ScheduledEvent] = {}
         self._state: ConnectionState = state
         self._from_data(data)
 
@@ -934,6 +937,83 @@ class Guild(Hashable):
     def created_at(self) -> datetime.datetime:
         """:class:`datetime.datetime`: Returns the guild's creation time in UTC."""
         return utils.snowflake_time(self.id)
+
+    @property
+    def scheduled_events(self) -> List[ScheduledEvent]:
+        """List[:class:`ScheduledEvent`]: The events scheduled in this guild.
+
+        .. note::
+
+            Since scheduled events aren't sent with guild objects from discord, this may be an
+            incomplete list. Scheduled events added to this list are when they are created or updated.
+
+        .. versionadded:: 2.0
+        """
+        return list(self._scheduled_events.values())
+
+    def get_scheduled_event(self, scheduled_event_id: int, /) -> Optional[ScheduledEvent]:
+        """Returns a scheduled event with the given ID.
+
+        Parameters
+        -----------
+        scheduled_event_id: :class:`int`
+            The ID to search for.
+
+        Returns
+        --------
+        Optional[:class:`ScheduledEvent`]
+            The scheduled event or ``None`` if not found.
+        """
+
+        return self._scheduled_events.get(scheduled_event_id)
+
+    async def fetch_scheduled_event(self, scheduled_event_id: int, /) -> ScheduledEvent:
+        """|coro|
+
+        Retrieves a :class:`ScheduledEvent` with the specified ID.
+
+        .. note::
+
+            This method is an API call. If you have :attr:`Intents.guilds`, consider using
+            :meth:`get_scheduled_event` and checking if it returns ``None`` before calling this method.
+
+        Parameters
+        -----------
+        scheduled_event_id: :class:`int`
+            The scheduled event's ID to fetch from.
+
+        Raises
+        -------
+        Forbidden
+            You do not have access to the guild.
+        HTTPException
+            Fetching the scheduled event failed.
+
+        Returns
+        --------
+        :class:`ScheduledEvent`
+            The scheduled event from the scheduled event ID.
+        """
+        data = await self._state.http.get_scheduled_event(self.id, scheduled_event_id)
+        return ScheduledEvent(data=data, state=self._state)
+
+    async def fetch_scheduled_events(self) -> List[ScheduledEvent]:
+        """|coro|
+
+        Retrieves all :class:`ScheduledEvent` that the guild has.
+
+        Raises
+        -------
+        HTTPException
+            Retrieving the scheduled events failed.
+
+        Returns
+        --------
+        :class:`ScheduledEvent`
+            The scheduled event from the scheduled event ID.
+        """
+        data = await self._state.http.get_scheduled_events(self.id)
+        return [ScheduledEvent(data=d, state=self._state) for d in data]
 
     def get_member_named(self, name: str, /) -> Optional[Member]:
         """Returns the first member found that matches the name provided.

@@ -31,6 +31,7 @@ from .guild import InviteGuild, _GuildPreviewUnique
 from .channel import PartialChannel
 from .user import PartialUser
 from .appinfo import PartialAppInfo
+from .scheduled_events import ScheduledEvent
 
 InviteTargetType = Literal[1, 2]
 
@@ -41,6 +42,7 @@ class _InviteOptional(TypedDict, total=False):
     target_user: PartialUser
     target_type: InviteTargetType
     target_application: PartialAppInfo
+    guild_scheduled_event: ScheduledEvent
 
 
 class _InviteMetadata(TypedDict, total=False):
