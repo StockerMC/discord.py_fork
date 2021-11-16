@@ -28,10 +28,8 @@ import datetime
 from typing import TYPE_CHECKING, Optional, Union, List, Dict
 
 from .mixins import Hashable
-from .abc import Snowflake
 from .utils import MISSING, _get_as_snowflake, snowflake_time, parse_time
 from .user import User
-from .member import Member
 from .enums import (
     ScheduledEventPrivacyLevel,
     ScheduledEventEntityType,
@@ -46,6 +44,8 @@ if TYPE_CHECKING:
         ScheduledEventMetaData,
     )
 
+    from .abc import Snowflake
+    from .member import Member
     from .state import ConnectionState
     from .guild import Guild
     from .channel import StageChannel, VoiceChannel
