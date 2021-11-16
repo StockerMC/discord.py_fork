@@ -24,7 +24,7 @@ DEALINGS IN THE SOFTWARE.
 
 from __future__ import annotations
 
-from typing import List, Optional, Type, TypeVar, Union, Final, TYPE_CHECKING
+from typing import List, Optional, Type, TypeVar, Union, ClassVar, TYPE_CHECKING
 from .asset import Asset
 from .utils import parse_time, snowflake_time, _get_as_snowflake
 from .object import Object
@@ -342,7 +342,7 @@ class Invite(Hashable):
         '_state',
     )
 
-    BASE: Final[str] = 'https://discord.gg'
+    BASE: ClassVar[str] = 'https://discord.gg'
 
     def __init__(
         self,
