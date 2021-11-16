@@ -29,7 +29,6 @@ from typing import TYPE_CHECKING, Optional, Union, List, Dict
 
 from .mixins import Hashable
 from .utils import MISSING, _get_as_snowflake, snowflake_time, parse_time
-from .user import User
 from .enums import (
     ScheduledEventPrivacyLevel,
     ScheduledEventEntityType,
@@ -46,6 +45,7 @@ if TYPE_CHECKING:
 
     from .abc import Snowflake
     from .member import Member
+    from .user import User
     from .state import ConnectionState
     from .guild import Guild
     from .channel import StageChannel, VoiceChannel
@@ -136,6 +136,9 @@ class ScheduledEvent(Hashable):
         self._creator: Optional[User] = None
         self.creator_id: Optional[int] = None
         try:
+            # circular import
+            from .user import User
+
             creator_data = data['creator']
             self._creator = User(state=self._state, data=creator_data)
             self.creator_id = _get_as_snowflake(creator_data, 'channel_id')
