@@ -2588,6 +2588,64 @@ of :class:`enum.Enum`.
 
         Alias for :attr:`.closed`
 
+.. class:: ScheduledEventPrivacyLevel
+
+    Represents a scheduled event's privacy level.
+
+    .. versionadded:: 2.0
+
+    .. attribute:: public
+
+        The scheduled event is public and available in discovery.
+
+    .. attribute:: guild_only
+
+        The scheduled event is only accessible to guild members.
+
+.. class:: ScheduledEventEntityType
+
+    Represents a scheduled event's entity type.
+
+    .. versionadded:: 2.0
+
+    .. attribute:: none
+
+        The scheduled event does not have an entity set.
+
+    .. attribute:: stage_instance
+
+        The scheduled event's entity is a stage channel.
+
+    .. attribute:: voice
+
+        The scheduled event's entity is a voice channel.
+
+    .. attribute:: external
+
+        The scheduled event's entity type is set to external, and has a location set.
+
+.. class:: ScheduledEventStatus
+
+    Represents a scheduled event's status.
+
+    .. versionadded:: 2.0
+
+    .. attribute:: scheduled
+
+        The scheduled event is scheduled to happen.
+
+    .. attribute:: active
+
+        The scheduled event is currently live.
+
+    .. attribute:: completed
+
+        The scheduled event has completed.
+
+    .. attribute:: canceled
+
+        The scheduled event was cancelled.
+
 .. class:: NSFWLevel
 
     Represents the NSFW level of a guild.
