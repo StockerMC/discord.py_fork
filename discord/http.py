@@ -1571,7 +1571,7 @@ class HTTPClient:
         self, guild_id: Snowflake, *, with_user_count: bool = False
     ) -> Response[List[scheduled_events.ScheduledEvent]]:
         r = Route('GET', '/guilds/{guild_id}/scheduled-events', guild_id=guild_id)
-        params = {'with_user_count': with_user_count}
+        params = {'with_user_count': int(with_user_count)}
         return self.request(r, params=params)
 
     def create_scheduled_event(
