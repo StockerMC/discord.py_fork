@@ -997,10 +997,16 @@ class Guild(Hashable):
         data = await self._state.http.get_scheduled_event(self.id, scheduled_event_id)
         return ScheduledEvent(data=data, state=self._state)
 
-    async def fetch_scheduled_events(self) -> List[ScheduledEvent]:
+    async def fetch_scheduled_events(self, *, with_user_count: bool = True) -> List[ScheduledEvent]:
         """|coro|
 
         Retrieves all :class:`ScheduledEvent` that the guild has.
+
+        Parameters
+        ----------
+        with_user_count: :class:`bool`
+            Whether to include the number of users subscribed to each scheduled event returned.
+            This fills the :attr`ScheduledEvent.user_count` field.
 
         Raises
         -------
@@ -1012,7 +1018,7 @@ class Guild(Hashable):
         :class:`ScheduledEvent`
             The scheduled event from the scheduled event ID.
         """
-        data = await self._state.http.get_scheduled_events(self.id)
+        data = await self._state.http.get_scheduled_events(self.id, with_user_count=with_user_count)
         return [ScheduledEvent(data=d, state=self._state) for d in data]
 
     def get_member_named(self, name: str, /) -> Optional[Member]:
