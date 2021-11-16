@@ -25,7 +25,7 @@ DEALINGS IN THE SOFTWARE.
 from __future__ import annotations
 
 import datetime
-from typing import TYPE_CHECKING, Optional, Union, List
+from typing import TYPE_CHECKING, Optional, Union, List, Dict
 
 from .mixins import Hashable
 from .abc import Snowflake
@@ -89,14 +89,6 @@ class ScheduledEvent(Hashable):
         The IDs of users speaking in the stage channel.
     location: Optional[:class:`str`]
         The location of the scheduled event, if :attr:`.entity_type` is :attr:`ScheduledEventEntityType.external`.
-    subscribed_user_ids: List[:class:`int`]
-        The IDs of users subscribed to the scheduled event.
-
-        .. note::
-
-            This is only modified when discord sends the corresponding events (``guild_scheduled_event_user_add``
-            and ``guild_scheduled_event_user_remove``). This means that the returned list may be incomplete, and it
-            will be empty if the scheduled event wasn't returned by :attr:`Guild.get_scheduled_event`.
     user_count: Optional[:class:`int`]
         The number of users subscribed to the scheduled event. This is only provided if
         the scheduled event was fetched with :meth:`Guild.fetch_scheduled_events` with the
@@ -117,16 +109,15 @@ class ScheduledEvent(Hashable):
         'entity_id',
         'speaker_ids',
         'location',
-        'subscribed_user_ids',
-        'subscribed_users',
         'user_count',
+        '_subscribed_users',
         '_creator',
         '_image',
         '_state',
     )
 
     def __init__(self, *, data: ScheduledEventPayload, state: ConnectionState) -> None:
-        self.subscribed_user_ids: List[int] = []
+        self._subscribed_users: Dict[int, Member] = {}
         self._state: ConnectionState = state
         self._update(data)
 
@@ -203,12 +194,7 @@ class ScheduledEvent(Hashable):
             and ``guild_scheduled_event_user_remove``). This means that the returned list may be incomplete, and it
             will be empty if the scheduled event wasn't returned by :attr:`Guild.get_scheduled_event`.
         """
-        ret = []
-        for subscribed_user_id in self.subscribed_user_ids:
-            member = self.guild.get_member(subscribed_user_id)
-            if member is not None:
-                ret.append(member)
-        return ret
+        return list(self._subscribed_users.values())
 
     async def edit(
         self,

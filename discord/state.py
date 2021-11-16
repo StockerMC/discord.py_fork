@@ -1211,7 +1211,7 @@ class ConnectionState:
 
         old_scheduled_event = guild.get_scheduled_event(int(data['id']))
         if old_scheduled_event is None:
-            _log.debug('GUILD_SCHEDULED_EVENT_CREATE referencing an unknown scheduled event ID: %s. Discarding.', data['guild_id'])
+            _log.debug('GUILD_SCHEDULED_EVENT_CREATE referencing an unknown scheduled event ID: %s. Discarding.', data['id'])
             guild._scheduled_events[int(data['id'])] = ScheduledEvent(data=data, state=self)
             return
         else:
@@ -1238,10 +1238,39 @@ class ConnectionState:
         self.dispatch('guild_scheduled_event_delete', scheduled_event)
 
     def parse_guild_scheduled_event_user_add(self, data: ScheduledEventUserEvent) -> None:
-        ...
+        guild = self._get_guild(int(data['guild_id']))
+        if guild is None:
+            _log.debug('GUILD_SCHEDULED_EVENT_USER_ADD referencing an unknown guild ID: %s. Discarding.', data['guild_id'])
+            return
+
+        scheduled_event = guild.get_scheduled_event(int(data['guild_scheduled_event_id']))
+        if scheduled_event is None:
+            _log.debug('GUILD_SCHEDULED_EVENT_USER_REMOVE referencing an unknown scheduled event ID: %s. Discarding.', data['guild_scheduled_event_id'])
+            return
+
+        user_id = int(data['user_id'])
+        member = guild.get_member(user_id)
+        if member is not None:
+            scheduled_event._subscribed_users[user_id] = member
+            self.dispatch('guild_scheduled_event_user_add', member)
 
     def parse_guild_scheduled_event_user_remove(self, data: ScheduledEventUserEvent) -> None:
-        ...
+        guild = self._get_guild(int(data['guild_id']))
+        if guild is None:
+            _log.debug('GUILD_SCHEDULED_EVENT_USER_REMOVE referencing an unknown guild ID: %s. Discarding.', data['guild_id'])
+            return
+
+        scheduled_event = guild.get_scheduled_event(int(data['guild_scheduled_event_id']))
+        if scheduled_event is None:
+            _log.debug('GUILD_SCHEDULED_EVENT_USER_REMOVE referencing an unknown scheduled event ID: %s. Discarding.', data['guild_scheduled_event_id'])
+            return
+
+        user_id = int(data['user_id'])
+        scheduled_event._subscribed_users.pop(user_id, None)
+
+        member = guild.get_member(user_id)
+        if member is not None:
+            self.dispatch('guild_scheduled_event_user_remove', member)
 
     def _get_create_guild(self, data: GuildPayload) -> Guild:
         if data.get('unavailable') is False:
