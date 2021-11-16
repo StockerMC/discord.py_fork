@@ -1235,7 +1235,7 @@ class ConnectionState:
             scheduled_event = ScheduledEvent(data=data, state=self)
 
         guild._scheduled_events[int(data['id'])] = scheduled_event
-        self.dispatch('guild_scheduled_event_delete', scheduled_event)
+        self.dispatch('guild_scheduled_event_create', scheduled_event)
 
     def parse_guild_scheduled_event_user_add(self, data: ScheduledEventUserEvent) -> None:
         guild = self._get_guild(int(data['guild_id']))
