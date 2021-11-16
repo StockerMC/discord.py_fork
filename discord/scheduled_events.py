@@ -300,3 +300,21 @@ class ScheduledEvent(Hashable):
 
         data = await self._state.http.edit_scheduled_event(self.guild_id, self.id, payload)
         return self.__class__(state=self._state, data=data)
+
+    async def delete(self) -> None:
+        """|coro|
+        
+        Delete's the scheduled event.
+
+        You must have the :attr:`~Permissions.manage_events` permission to
+        use this.
+
+        Raises
+        --------
+        Forbidden
+            You do not have permissions to delete the scheduled event.
+        HTTPException
+            Deleting the scheduled event failed.
+        """
+
+        await self._state.http.delete_scheduled_event(self.guild_id, self.id)
