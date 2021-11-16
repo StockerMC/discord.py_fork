@@ -58,7 +58,7 @@ class ScheduledEvent(_ScheduledEventOptional):
     name: str
     image: Optional[str]
     scheduled_start_time: str
-    scheduled_end_time: str
+    scheduled_end_time: Optional[str]
     privacy_level: ScheduledEventPrivacyLevel
     status: ScheduledEventStatus
     entity_type: ScheduledEventEntityType
