@@ -61,7 +61,7 @@ from .widget import Widget
 from .guild import Guild
 from .emoji import Emoji
 from .channel import _threaded_channel_factory, PartialMessageable
-from .enums import ChannelType, ApplicationCommandType
+from .enums import ChannelType
 from .mentions import AllowedMentions
 from .errors import *
 from .enums import Status, VoiceRegion
@@ -483,7 +483,7 @@ class Client:
         else:
             self._schedule_event(coro, method, *args, **kwargs)
 
-        for event in self.extra_events.get(event_name, []):
+        for event in self.extra_events.get(method, []):
             self._schedule_event(event, method, *args, **kwargs)
 
     async def on_error(self, event_method: str, *args: Any, **kwargs: Any) -> None:
