@@ -1581,7 +1581,7 @@ class HTTPClient:
         return self.request(r, json=payload)
 
     def get_scheduled_event(
-        self, guild_id: Snowflake, scheduled_event_id: Snowflake
+        self, guild_id: Snowflake, scheduled_event_id: Snowflake, with_user_count: bool = True
     ) -> Response[scheduled_events.ScheduledEvent]:
         r = Route(
             'GET',
@@ -1589,7 +1589,8 @@ class HTTPClient:
             guild_id=guild_id,
             scheduled_event_id=scheduled_event_id
         )
-        return self.request(r)
+        params = {'with_user_count': int(with_user_count)}
+        return self.request(r, params=params)
 
     def edit_scheduled_event(
         self, guild_id: Snowflake, scheduled_event_id: Snowflake, payload: scheduled_events.EditScheduledEvent
@@ -1612,7 +1613,14 @@ class HTTPClient:
         return self.request(r)
 
     def get_scheduled_event_users(
-        self, guild_id: Snowflake, scheduled_event_id: Snowflake, *, limit: int = 100, with_member: bool = False
+        self,
+        guild_id: Snowflake,
+        scheduled_event_id: Snowflake,
+        *,
+        limit: int = 100,
+        with_member: bool = True,
+        after: Optional[Snowflake] = None,
+        before: Optional[Snowflake] = None,
     ) -> Response[List[scheduled_events.ScheduledEventUser]]:
         r = Route(
             'GET',
@@ -1620,11 +1628,17 @@ class HTTPClient:
             guild_id=guild_id,
             scheduled_event_id=scheduled_event_id
         )
-        payload = {
+        params: Dict[str, Any] = {
             'limit': limit,
-            'with_member': with_member,
+            'with_member': int(with_member),
         }
-        return self.request(r, json=payload)
+
+        if before is not None:
+            params['before'] = before
+        if after is not None:
+            params['after'] = after
+
+        return self.request(r, params=params)
 
     # Voice management
 
