@@ -183,6 +183,8 @@ class ApplicationCommandOptionDefault:
 
     Classes that derive from this should override the :meth:`.default`
     method to handle its default logic. This method must be a :ref:`coroutine <coroutine>`.
+
+    .. versionadded:: 2.0
     """
 
     __discord_application_command_option_default__: ClassVar[bool] = True
@@ -746,72 +748,34 @@ class ApplicationCommandOptions:
                 options.extend(nested_options)
                 continue
 
-            value: Any = option.get('value')
+            value = option.get('value')
             # the option is a subcommand
             if value is None:
                 continue
 
             if option['type'] == 6:  # user
-                if resolved_data is not None and 'users' in resolved_data:
-                    resolved_user = resolved_data['users'][value]
-                else:
-                    resolved_user = None
-
+                resolved_user = resolved_data['users'][value]  # type: ignore
                 if guild_id is not None:
                     guild = state._get_guild(guild_id) or Object(id=guild_id)
-                    if isinstance(guild, Guild):
-                        value = guild.get_member(int(value))
-
-                    if not isinstance(value, Member):
-                        if resolved_user is not None:
-                            member_with_user = {**resolved_data['members'][value], 'user': resolved_user}  # type: ignore
-                            value = Member(state=state, data=member_with_user, guild=guild)  # type: ignore
-                        else:
-                            value = Object(id=int(value))
+                    member_with_user = {**resolved_data['members'][value], 'user': resolved_user}  # type: ignore
+                    value = Member(state=state, data=member_with_user, guild=guild)  # type: ignore
                 else:
-                    if resolved_user is not None:
-                        value = User(state=state, data=resolved_user)
-                    else:
-                        value = Object(id=int(value))
+                    value = User(state=state, data=resolved_user, guild=guild)  # type: ignore
             elif option['type'] == 7:  # channel
-                guild = state._get_guild(guild_id)
-                if guild is not None:
-                    value = guild._resolve_channel(int(value))  # there isn't enough data in the resolved channels from the payload
-                    if value is None:
-                        value = PartialMessageable(state=state, id=int(value))
-                else:
-                    value = PartialMessageable(state=state, id=int(value))
+                resolved_channel = resolved_data['channels'][value]  # type: ignore
+                if guild_id is not None:
+                    guild = state._get_guild(guild_id)
+                    if guild is not None:
+                        value = guild._resolve_channel(int(resolved_channel['id']))  # there isn't enough data in the resolved channels from the payload
             elif option['type'] == 9:  # mention (role or user)
-                value = None
                 if guild_id is not None:
                     guild = state._get_guild(guild_id) or Object(id=guild_id)
                     try:
-                        if isinstance(guild, Guild):
-                            value = guild.get_member(int(value))
-
-                        if value is None:
-                            if resolved_data is not None and 'members' in resolved_data and 'users' in resolved_data:
-                                resolved_user = resolved_data['users'][value]
-                                member_with_user = {**resolved_data['members'][value], 'user': resolved_user}  # type: ignore
-                                value = Member(state=state, data=member_with_user, guild=guild)  # type: ignore
-                            else:
-                                value = Object(int(value))
+                        value = Member(state=state, data=resolved_data['members'][value], guild=guild)  # type: ignore
                     except KeyError:
-                        if isinstance(guild, Guild):
-                            value = guild.get_role(int(value))
-
-                        if value is None:
-                            if resolved_data is not None and 'roles' in resolved_data:
-                                value = Role(guild=guild, state=state, data=resolved_data['roles'][value])  # type: ignore
-                            else:
-                                value = Object(int(value))
+                        value = Role(guild=guild, state=state, data=resolved_data['roles'][value]) # type: ignore
                 else:
-                    value = state.get_user(int(value))
-                    if value is None:
-                        if resolved_data is not None and 'users' in resolved_data:
-                            value = User(state=state, data=resolved_data['users'][value])
-                        else:
-                            value = Object(int(value))
+                    value = User(state=state, data=resolved_data['users'][value])  # type: ignore
 
             self.__application_command_options__[option['name']] = value
 
@@ -1152,7 +1116,7 @@ class AutocompleteResponse(BaseApplicationCommandResponse[ClientT]):
 
     def __init__(self, interaction: Interaction[ClientT], options: ApplicationCommandOptions, command: SlashCommand, value: str) -> None:
         self.interaction: Interaction[ClientT] = interaction
-        self.options: ApplicationCommandOptions = options
+        self.options: Any = options
         self.value: str = value
         self.command: SlashCommand = command
 
