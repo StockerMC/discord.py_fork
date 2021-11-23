@@ -91,6 +91,7 @@ if TYPE_CHECKING:
     from .user import User
     from .role import Role
     from .ui.view import View
+    from .webhook.async_ import _WebhookState
 
     T = TypeVar('T')
     MR = TypeVar('MR', bound='MessageReference')
@@ -1780,7 +1781,7 @@ class PartialMessage(Hashable):
             raise TypeError(f'Expected TextChannel, DMChannel or Thread not {type(channel)!r}')
 
         self.channel: PartialMessageableChannel = channel
-        self._state: ConnectionState = channel._state
+        self._state: Union[ConnectionState, _WebhookState] = channel._state
         self.id: int = id
 
     def _update(self, data: MessagePayload) -> None:
