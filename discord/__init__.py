@@ -62,6 +62,7 @@ from .threads import *
 from .welcome_screen import *
 from .application_commands import *
 from .cog import *
+from .scheduled_events import *
 
 
 class VersionInfo(NamedTuple):
