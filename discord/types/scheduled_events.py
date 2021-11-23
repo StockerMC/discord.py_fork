@@ -26,22 +26,26 @@ from __future__ import annotations
 
 from typing import TypedDict, Optional, Literal
 
-from .snowflake import Snowflake, SnowflakeList
+from .snowflake import Snowflake
 from .user import User
-from .member import MemberWithUser
+from .member import Member
 
 
-class ScheduledEventUser(User, total=False):
-    guild_member: MemberWithUser
+class _ScheduledEventUserOptional(TypedDict, total=False):
+    member: Member
+
+
+class ScheduledEventUser(_ScheduledEventUserOptional):
+    guild_scheduled_event_id: Snowflake
+    user: User
 
 
 class ScheduledEventMetaData(TypedDict, total=False):
-    speaker_ids: SnowflakeList
     location: str
 
 class _ScheduledEventOptional(TypedDict, total=False):
     creator_id: Snowflake
-    description: str
+    description: Optional[str]
     creator: User
     user_count: int
 
@@ -56,7 +60,6 @@ class ScheduledEvent(_ScheduledEventOptional):
     guild_id: Snowflake
     channel_id: Optional[Snowflake]
     name: str
-    image: Optional[str]
     scheduled_start_time: str
     scheduled_end_time: Optional[str]
     privacy_level: ScheduledEventPrivacyLevel
