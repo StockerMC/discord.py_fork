@@ -746,43 +746,72 @@ class ApplicationCommandOptions:
                 options.extend(nested_options)
                 continue
 
-            value = option.get('value')
+            value: Any = option.get('value')
             # the option is a subcommand
             if value is None:
                 continue
 
             if option['type'] == 6:  # user
-                if resolved_data is not None:
-                    resolved_user = resolved_data['users'][value]  # type: ignore
-                    if guild_id is not None:
-                        guild = state._get_guild(guild_id) or Object(id=guild_id)
-                        member_with_user = {**resolved_data['members'][value], 'user': resolved_user}  # type: ignore
-                        value = Member(state=state, data=member_with_user, guild=guild)  # type: ignore
-                    else:
-                        value = User(state=state, data=resolved_user, guild=guild)  # type: ignore
+                if resolved_data is not None and 'users' in resolved_data:
+                    resolved_user = resolved_data['users'][value]
                 else:
-                    value = Object(id=int(value))
+                    resolved_user = None
+
+                if guild_id is not None:
+                    guild = state._get_guild(guild_id) or Object(id=guild_id)
+                    if isinstance(guild, Guild):
+                        value = guild.get_member(int(value))
+
+                    if not isinstance(value, Member):
+                        if resolved_user is not None:
+                            member_with_user = {**resolved_data['members'][value], 'user': resolved_user}  # type: ignore
+                            value = Member(state=state, data=member_with_user, guild=guild)  # type: ignore
+                        else:
+                            value = Object(id=int(value))
+                else:
+                    if resolved_user is not None:
+                        value = User(state=state, data=resolved_user)
+                    else:
+                        value = Object(id=int(value))
             elif option['type'] == 7:  # channel
-                if resolved_data is not None:
-                    resolved_channel = resolved_data['channels'][value]  # type: ignore
-                    if guild_id is not None:
-                        guild = state._get_guild(guild_id)
-                        if guild is not None:
-                            value = guild._resolve_channel(int(resolved_channel['id']))  # there isn't enough data in the resolved channels from the payload
+                guild = state._get_guild(guild_id)
+                if guild is not None:
+                    value = guild._resolve_channel(int(value))  # there isn't enough data in the resolved channels from the payload
+                    if value is None:
+                        value = PartialMessageable(state=state, id=int(value))
                 else:
                     value = PartialMessageable(state=state, id=int(value))
             elif option['type'] == 9:  # mention (role or user)
-                if resolved_data is not None:
-                    if guild_id is not None:
-                        guild = state._get_guild(guild_id) or Object(id=guild_id)
-                        try:
-                            value = Member(state=state, data=resolved_data['members'][value], guild=guild)  # type: ignore
-                        except KeyError:
-                            value = Role(guild=guild, state=state, data=resolved_data['roles'][value]) # type: ignore
-                    else:
-                        value = User(state=state, data=resolved_data['users'][value])  # type: ignore
+                value = None
+                if guild_id is not None:
+                    guild = state._get_guild(guild_id) or Object(id=guild_id)
+                    try:
+                        if isinstance(guild, Guild):
+                            value = guild.get_member(int(value))
+
+                        if value is None:
+                            if resolved_data is not None and 'members' in resolved_data and 'users' in resolved_data:
+                                resolved_user = resolved_data['users'][value]
+                                member_with_user = {**resolved_data['members'][value], 'user': resolved_user}  # type: ignore
+                                value = Member(state=state, data=member_with_user, guild=guild)  # type: ignore
+                            else:
+                                value = Object(int(value))
+                    except KeyError:
+                        if isinstance(guild, Guild):
+                            value = guild.get_role(int(value))
+
+                        if value is None:
+                            if resolved_data is not None and 'roles' in resolved_data:
+                                value = Role(guild=guild, state=state, data=resolved_data['roles'][value])  # type: ignore
+                            else:
+                                value = Object(int(value))
                 else:
-                    value = Object(id=int(value))
+                    value = state.get_user(int(value))
+                    if value is None:
+                        if resolved_data is not None and 'users' in resolved_data:
+                            value = User(state=state, data=resolved_data['users'][value])
+                        else:
+                            value = Object(int(value))
 
             self.__application_command_options__[option['name']] = value
 
