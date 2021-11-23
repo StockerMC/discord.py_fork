@@ -313,7 +313,6 @@ class Guild(Hashable):
         self._members: Dict[int, Member] = {}
         self._voice_states: Dict[int, VoiceState] = {}
         self._threads: Dict[int, Thread] = {}
-        self._scheduled_events: Dict[int, ScheduledEvent] = {}
         self._state: ConnectionState = state
         self._from_data(data)
 
@@ -474,6 +473,12 @@ class Guild(Hashable):
         for s in guild.get('stage_instances', []):
             stage_instance = StageInstance(guild=self, data=s, state=state)
             self._stage_instances[stage_instance.id] = stage_instance
+
+        self._scheduled_events: Dict[int, ScheduledEvent] = {}
+        # NOTE: this is undocumented and may be changed
+        for event_data in guild.get('guild_scheduled_events', []):
+            scheduled_event = ScheduledEvent(data=event_data, state=state)
+            self._scheduled_events[scheduled_event.id] = scheduled_event
 
         cache_joined = self._state.member_cache_flags.joined
         self_id = self._state.self_id
@@ -941,11 +946,6 @@ class Guild(Hashable):
     @property
     def scheduled_events(self) -> List[ScheduledEvent]:
         """List[:class:`ScheduledEvent`]: The events scheduled in this guild.
-
-        .. note::
-
-            Since scheduled events aren't sent with guild objects from discord, this may be an
-            incomplete list. Scheduled events added to this list are when they are created or updated.
 
         .. versionadded:: 2.0
         """
