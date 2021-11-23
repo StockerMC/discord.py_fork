@@ -1235,9 +1235,10 @@ class ConnectionState:
             scheduled_event = ScheduledEvent(data=data, state=self)
 
         guild._scheduled_events[int(data['id'])] = scheduled_event
-        self.dispatch('guild_scheduled_event_create', scheduled_event)
+        self.dispatch('guild_scheduled_event_delete', scheduled_event)
 
     def parse_guild_scheduled_event_user_add(self, data: ScheduledEventUserEvent) -> None:
+        return
         guild = self._get_guild(int(data['guild_id']))
         if guild is None:
             _log.debug('GUILD_SCHEDULED_EVENT_USER_ADD referencing an unknown guild ID: %s. Discarding.', data['guild_id'])
@@ -1255,6 +1256,7 @@ class ConnectionState:
             self.dispatch('guild_scheduled_event_user_add', member)
 
     def parse_guild_scheduled_event_user_remove(self, data: ScheduledEventUserEvent) -> None:
+        return
         guild = self._get_guild(int(data['guild_id']))
         if guild is None:
             _log.debug('GUILD_SCHEDULED_EVENT_USER_REMOVE referencing an unknown guild ID: %s. Discarding.', data['guild_id'])
