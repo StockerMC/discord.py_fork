@@ -264,7 +264,7 @@ class Invite(Hashable):
     +------------------------------------+-------------------------------------------------------------+
     | :attr:`expires_at`                 | :meth:`Client.fetch_invite` with `with_expiration` enabled  |
     +------------------------------------+-------------------------------------------------------------+
-    | :attr:`guild_scheduled_event`      | :meth:`Client.fetch_invite` with `scheduled_event_id` set   |
+    | :attr:`scheduled_event`            | :meth:`Client.fetch_invite` with `scheduled_event_id` set   |
     +------------------------------------+-------------------------------------------------------------+
 
     If it's not in the table above then it is available by all methods.
@@ -319,6 +319,9 @@ class Invite(Hashable):
         The embedded application the invite targets, if any.
 
         .. versionadded:: 2.0
+    scheduled_event: Optional[:class:`ScheduledEvent`]
+        The scheduled event of the scheduled event ID the invite was fetched with, if any.
+        This is not the scheduled event the invite is for
     """
 
     __slots__ = (
