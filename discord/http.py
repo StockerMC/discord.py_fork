@@ -1469,7 +1469,7 @@ class HTTPClient:
         }
 
         if scheduled_event_id is not None:
-            params['scheduled_event_id'] = scheduled_event_id
+            params['guild_scheduled_event_id'] = scheduled_event_id
 
         return self.request(Route('GET', '/invites/{invite_id}', invite_id=invite_id), params=params)
 
