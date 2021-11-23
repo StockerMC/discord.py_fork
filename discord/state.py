@@ -841,11 +841,10 @@ class ConnectionState:
                 focused_option: Dict[str, Any]
                 options = application_command_data['options']
                 for i, option in enumerate(options):
-                    if not option.get('focused'):
-                        continue
-
-                    focused_option = option
-                    options.pop(i)
+                    if option.get('focused'):
+                        focused_option = option
+                        options.pop(i)
+                        break
 
                 command_option = used_command.__application_command_options__[option['name']]
                 options = ApplicationCommandOptions(
