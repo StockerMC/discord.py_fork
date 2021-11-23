@@ -60,6 +60,7 @@ if TYPE_CHECKING:
         Thread as ThreadPayload,
         ThreadPaginationPayload,
     )
+    from .types.scheduled_events import ScheduledEventUser
     from .types.member import MemberWithUser
     from .types.snowflake import Snowflake as _Snowflake
 
@@ -556,7 +557,6 @@ class GuildIterator(_AsyncIterator['Guild']):
         before: Optional[Union[Snowflake, datetime.datetime]] = None,
         after: Optional[Union[Snowflake, datetime.datetime]] = None,
     ):
-
         if isinstance(before, datetime.datetime):
             before = Object(id=time_snowflake(before, high=False))
         if isinstance(after, datetime.datetime):
@@ -783,3 +783,70 @@ class ArchivedThreadIterator(_AsyncIterator['Thread']):
     def create_thread(self, data: ThreadPayload) -> Thread:
         from .threads import Thread
         return Thread(guild=self.guild, state=self.guild._state, data=data)
+
+
+class ScheduledEventUserIterator(_AsyncIterator['Union[Member, User]']):
+    def __init__(
+        self,
+        scheduled_event_id: int,
+        guild: Guild,
+        limit: Optional[int],
+        before: Optional[Snowflake] = None,
+        after: Optional[Snowflake] = None,
+        with_member: bool = True,
+    ) -> None:
+        self.scheduled_event_id: int = scheduled_event_id
+        self.guild: Guild = guild
+        self.limit: int = limit if limit is not None else 100
+
+        if isinstance(before, datetime.datetime):
+            before = Object(id=time_snowflake(before, high=False))
+        if isinstance(after, datetime.datetime):
+            after = Object(id=time_snowflake(after, high=True))
+
+        self.before: Optional[Snowflake] = before
+        self.after: Optional[Snowflake] = after
+        self.with_member: bool = with_member
+        self.users: asyncio.Queue[Union[User, Member]] = asyncio.Queue()
+        state = guild._state
+        self.get_users: Callable[..., Response[List[ScheduledEventUser]]] = state.http.get_scheduled_event_users
+        self.state: ConnectionState = state
+
+    async def fill_users(self) -> None:
+        from .user import User  # circular import
+        from .member import Member  # circular import
+
+        if self.limit > 0:
+            retrieve = self.limit if self.limit <= 100 else 100
+
+            after = self.after.id if self.after else None
+            before = self.before.id if self.before else None
+            data: List[ScheduledEventUser] = await self.get_users(
+                self.guild.id, self.scheduled_event_id, limit=self.limit, with_member=self.with_member, after=after, before=before
+            )
+
+            if data:
+                self.limit -= retrieve
+                self.after = Object(id=int(data[-1]['user']['id']))
+
+            for element in reversed(data):
+                user_data = element['user']
+                member_data = element.get('member')
+                member = self.guild.get_member(int(user_data['id']))
+                if member is not None:
+                    await self.users.put(member)
+                elif member_data is not None:
+                    member_with_user: MemberWithUser = {'user': user_data, **member_data}  # type: ignore
+                    member = Member(data=member_with_user, guild=self.guild, state=self.state)
+                    await self.users.put(member)
+                else:
+                    await self.users.put(User(data=user_data, state=self.state))
+
+    async def next(self) -> Union[User, Member]:
+        if self.users.empty():
+            await self.fill_users()
+
+        try:
+            return self.users.get_nowait()
+        except asyncio.QueueEmpty:
+            raise NoMoreItems()
