@@ -630,12 +630,10 @@ class ApplicationCommandOptionType(Enum):
 
 
 class ScheduledEventPrivacyLevel(Enum):
-    public = 1
     guild_only = 2
 
 
 class ScheduledEventEntityType(Enum):
-    none = 0
     stage_instance = 1
     voice = 2
     external = 3
