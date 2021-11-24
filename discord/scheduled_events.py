@@ -188,8 +188,8 @@ class ScheduledEvent(Hashable):
         self,
         *,
         limit: Optional[int] = 100,
-        before: Optional[Snowflake] = None,
-        after: Optional[Snowflake] = None,
+        before: Optional[Union[Snowflake, datetime.datetime]] = None,
+        after: Optional[Union[Snowflake, datetime.datetime]] = None,
         with_member: Optional[bool] = None
     ) -> ScheduledEventUserIterator:
         """|coro|

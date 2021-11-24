@@ -791,8 +791,8 @@ class ScheduledEventUserIterator(_AsyncIterator['Union[Member, User]']):
         scheduled_event_id: int,
         guild: Guild,
         limit: Optional[int],
-        before: Optional[Snowflake] = None,
-        after: Optional[Snowflake] = None,
+        before: Optional[Union[Snowflake, datetime.datetime]] = None,
+        after: Optional[Union[Snowflake, datetime.datetime]] = None,
         with_member: bool = True,
     ) -> None:
         self.scheduled_event_id: int = scheduled_event_id
