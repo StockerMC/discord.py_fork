@@ -57,7 +57,11 @@ __all__ = (
     'InteractionType',
     'InteractionResponseType',
     'NSFWLevel',
-    'ApplicationCommandOptionType'
+    'ApplicationCommandType',
+    'ApplicationCommandOptionType',
+    'ScheduledEventPrivacyLevel',
+    'ScheduledEventEntityType',
+    'ScheduledEventStatus',
 )
 
 
