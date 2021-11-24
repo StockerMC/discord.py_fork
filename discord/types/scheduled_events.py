@@ -51,8 +51,8 @@ class _ScheduledEventOptional(TypedDict, total=False):
 
 
 ScheduledEventStatus = Literal[1, 2, 3, 4]
-ScheduledEventEntityType = Literal[0, 1, 2, 3]
-ScheduledEventPrivacyLevel = Literal[1, 2]
+ScheduledEventEntityType = Literal[1, 2, 3]
+ScheduledEventPrivacyLevel = Literal[2]
 
 
 class ScheduledEvent(_ScheduledEventOptional):
