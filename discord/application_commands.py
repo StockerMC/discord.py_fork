@@ -102,6 +102,7 @@ if TYPE_CHECKING:
         Type[Member],
         Type[User],
         Type[Role],
+        Type[Object],
         ChannelTypes,
         Type[GuildChannel],
     ]
@@ -153,6 +154,7 @@ OPTION_TYPE_MAPPING: Final[Dict[ValidOptionTypes, ApplicationCommandOptionType]]
     User: ApplicationCommandOptionType.user,
     Member: ApplicationCommandOptionType.user,
     Role: ApplicationCommandOptionType.role,
+    Object: ApplicationCommandOptionType.mentionable,
     GuildChannel: ApplicationCommandOptionType.channel,
 }
 
