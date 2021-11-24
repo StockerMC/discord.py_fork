@@ -241,7 +241,11 @@ class Attachment(Hashable):
     ephemeral: bool
         Whether the attachment is ephemeral.
 
-        ..versionadded:: 2.0
+        .. versionadded:: 2.0
+    description: Optional[:class:`str`]
+        The description (or alt text) for the attachment.
+
+        .. versionadded:: 2.0
     """
 
     __slots__ = (
@@ -252,9 +256,10 @@ class Attachment(Hashable):
         'filename',
         'url',
         'proxy_url',
-        '_http',
         'content_type',
         'ephemeral',
+        'description',
+        '_http',
     )
 
     def __init__(self, *, data: AttachmentPayload, state: ConnectionState):
@@ -268,6 +273,7 @@ class Attachment(Hashable):
         self._http = state.http
         self.content_type: Optional[str] = data.get('content_type')
         self.ephemeral: bool = data.get('ephemeral', False)
+        self.description: Optional[str] = data.get('description')
 
     def is_spoiler(self) -> bool:
         """:class:`bool`: Whether this attachment contains a spoiler."""

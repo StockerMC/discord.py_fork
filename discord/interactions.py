@@ -38,7 +38,7 @@ from .member import Member
 from .message import Message, Attachment
 from .object import Object
 from .permissions import Permissions
-from .webhook.async_ import async_context, Webhook, ExecuteWebhookParameters, generate_file_multipart, handle_message_parameters
+from .webhook.async_ import async_context, Webhook, ExecuteWebhookParameters, handle_message_parameters
 
 __all__ = (
     'Interaction',
@@ -135,18 +135,11 @@ def handle_create_interaction_response_message_parameters(
     if file is not MISSING:
         files = [file]
 
-    multipart = []
-    payload: Dict[str, Any] = {
-        'data': data,
-        'type': InteractionResponseType.channel_message.value,
-    }
-
-    multipart.append({'name': 'payload_json', 'value': utils._to_json(payload)})
-
+    form = None
     if files:
-        multipart.extend(generate_file_multipart(files))
+        form = utils._generate_multipart(data, files)
 
-    return ExecuteWebhookParameters(payload=None, multipart=multipart, files=files)
+    return ExecuteWebhookParameters(payload=data, multipart=form, files=files)
 
 
 class Interaction(Generic[ClientT]):
