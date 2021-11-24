@@ -22,10 +22,12 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 """
 
+
 from __future__ import annotations
 
 import copy
 import unicodedata
+import datetime
 from typing import (
     Any,
     ClassVar,
@@ -66,6 +68,8 @@ from .enums import (
     ContentFilter,
     NotificationLevel,
     NSFWLevel,
+    ScheduledEventPrivacyLevel,
+    ScheduledEventEntityType,
 )
 from .mixins import Hashable
 from .user import User
@@ -108,6 +112,7 @@ if TYPE_CHECKING:
     from .types.template import CreateTemplate
     from .types.widget import EditWidget
     from .types.welcome_screen import EditWelcomeScreen
+    from .types.scheduled_events import CreateScheduledEvent
     from .types import channel
 
     from .permissions import Permissions
@@ -119,8 +124,6 @@ if TYPE_CHECKING:
 
     T = TypeVar('T')
     Response = Coroutine[Any, Any, T]
-
-    import datetime
 
     VocalGuildChannel = Union[VoiceChannel, StageChannel]
     GuildChannel = Union[VoiceChannel, StageChannel, TextChannel, CategoryChannel, StoreChannel]
@@ -1019,6 +1022,85 @@ class Guild(Hashable):
         """
         data = await self._state.http.get_scheduled_events(self.id, with_user_count=with_user_count)
         return [ScheduledEvent(data=d, state=self._state) for d in data]
+
+    @overload
+    async def create_scheduled_event(
+        self,
+        *,
+        name: str,
+        privacy_level: ScheduledEventPrivacyLevel,
+        scheduled_start_time: datetime.datetime,
+        entity_type: Literal[ScheduledEventEntityType.external],
+        description: Optional[str] = None,
+        channel: Optional[Snowflake] = ...,
+        scheduled_end_time: datetime.datetime,
+        location: str,
+    ) -> ScheduledEvent:
+        ...
+
+    @overload
+    async def create_scheduled_event(
+        self,
+        *,
+        name: str,
+        privacy_level: ScheduledEventPrivacyLevel,
+        scheduled_start_time: datetime.datetime,
+        entity_type: ScheduledEventEntityType,
+        description: Optional[str] = None,
+        channel: Snowflake,
+        scheduled_end_time: Optional[datetime.datetime] = None,
+        location: Optional[str] = None,
+    ) -> ScheduledEvent:
+        ...
+
+    # TODO: should values be checked before making the request? e.g. checking if location is set if
+    # the entity type is external
+    async def create_scheduled_event(
+        self,
+        *,
+        name: str,
+        privacy_level: ScheduledEventPrivacyLevel,
+        scheduled_start_time: datetime.datetime,
+        entity_type: ScheduledEventEntityType,
+        description: Optional[str] = None,
+        channel: Optional[Snowflake] = None,
+        scheduled_end_time: Optional[datetime.datetime] = None,
+        location: Optional[str] = None,
+    ) -> ScheduledEvent:
+        """"""
+        if scheduled_start_time.tzinfo:
+            start_time = scheduled_start_time.astimezone(tz=datetime.timezone.utc).isoformat()
+        else:
+            start_time = scheduled_start_time.replace(tzinfo=datetime.timezone.utc).isoformat()
+
+        payload: CreateScheduledEvent = {
+            'name': name,
+            'privacy_level': privacy_level.value,
+            'scheduled_start_time': start_time,
+            'entity_type': entity_type.value,
+        }
+
+        if description is not None:
+            payload['description'] = description
+
+        if channel is not None:
+            payload['channel_id'] = channel.id
+
+        if scheduled_end_time is not None:
+            if scheduled_end_time.tzinfo:
+                payload['scheduled_end_time'] = scheduled_end_time.astimezone(tz=datetime.timezone.utc).isoformat()
+            else:
+                payload['scheduled_end_time'] = scheduled_end_time.replace(tzinfo=datetime.timezone.utc).isoformat()
+
+        if location is not None:
+            payload['entity_metadata'] = {'location': location}
+
+        data = await self._state.http.create_scheduled_event(self.id, payload)
+        scheduled_event = ScheduledEvent(data=data, state=self._state)
+
+        # temporarily add to the cache
+        self._scheduled_events[scheduled_event.id] = scheduled_event
+        return scheduled_event
 
     def get_member_named(self, name: str, /) -> Optional[Member]:
         """Returns the first member found that matches the name provided.
