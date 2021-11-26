@@ -69,8 +69,8 @@ class ScheduledEvent(Hashable):
     guild_id: :class:`int`
         The ID of the guild the scheduled event belongs to.
     channel_id: Optional[:class:`int`]
-        The ID of the channel in which the scheduled event will be hosted If :attr:`.entity_type` is
-        :attr:`ScheduledEventEntityType.external` or :attr:`ScheduledEventEntityType.none`, this will be ``None``.
+        The ID of the channel in which the scheduled event will be hosted. If :attr:`.entity_type` is
+        :attr:`ScheduledEventEntityType.external`, this will be ``None``.
     creator_id: Optional[:class:`int`]
         The ID of the user that created the scheduled event.
     name: :class:`str`
@@ -166,8 +166,7 @@ class ScheduledEvent(Hashable):
     @property
     def channel(self) -> Optional[Union[StageChannel, VoiceChannel]]:
         """Union[:class:`StageChannel`, :class:`VoiceChannel`]: The channel in which the scheduled event will be hosted
-        If :attr:`.entity_type` is :attr:`ScheduledEventEntityType.external` or :attr:`ScheduledEventEntityType.none`,
-        this will be ``None``.
+        If :attr:`.entity_type` is :attr:`ScheduledEventEntityType.external`, this will be ``None``.
         """
         # the returned channel type will be correct
         return self._state.get_channel(self.channel_id)  # type: ignore
