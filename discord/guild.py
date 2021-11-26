@@ -969,20 +969,22 @@ class Guild(Hashable):
 
         return self._scheduled_events.get(scheduled_event_id)
 
-    async def fetch_scheduled_event(self, scheduled_event_id: int, /) -> ScheduledEvent:
+    async def fetch_scheduled_event(self, scheduled_event_id: int, /, *, with_user_count: bool = True) -> ScheduledEvent:
         """|coro|
 
         Retrieves a :class:`ScheduledEvent` with the specified ID.
 
         .. note::
 
-            This method is an API call. If you have :attr:`Intents.guilds`, consider using
-            :meth:`get_scheduled_event` and checking if it returns ``None`` before calling this method.
+            This method is an API call. For general usage, consider :meth:`get_scheduled_event` instead.
 
         Parameters
         -----------
         scheduled_event_id: :class:`int`
             The scheduled event's ID to fetch from.
+        with_user_count: :class:`bool`
+            Whether to include the number of users subscribed to each scheduled event returned.
+            This fills the :attr`ScheduledEvent.user_count` field. Defaults to ``True``.
 
         Raises
         -------
@@ -996,7 +998,7 @@ class Guild(Hashable):
         :class:`ScheduledEvent`
             The scheduled event from the scheduled event ID.
         """
-        data = await self._state.http.get_scheduled_event(self.id, scheduled_event_id)
+        data = await self._state.http.get_scheduled_event(self.id, scheduled_event_id, with_user_count=with_user_count)
         return ScheduledEvent(data=data, state=self._state)
 
     async def fetch_scheduled_events(self, *, with_user_count: bool = True) -> List[ScheduledEvent]:
@@ -1008,7 +1010,7 @@ class Guild(Hashable):
         ----------
         with_user_count: :class:`bool`
             Whether to include the number of users subscribed to each scheduled event returned.
-            This fills the :attr`ScheduledEvent.user_count` field.
+            This fills the :attr`ScheduledEvent.user_count` field. Defaults to ``True``.
 
         Raises
         -------
