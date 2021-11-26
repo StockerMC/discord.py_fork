@@ -1227,18 +1227,15 @@ class ConnectionState:
             return
 
         scheduled_event = guild._scheduled_events.pop(int(data['id']), None)
-        # if old_scheduled_event is None:
-        #     _log.debug('GUILD_SCHEDULED_EVENT_CREATE referencing an unknown scheduled event ID: %s. Discarding.', data['guild_id'])
-        #     return
-
         if scheduled_event is None:
             scheduled_event = ScheduledEvent(data=data, state=self)
 
         guild._scheduled_events[int(data['id'])] = scheduled_event
         self.dispatch('guild_scheduled_event_delete', scheduled_event)
 
+    # TODO: raw event for user_add/remove?
+
     def parse_guild_scheduled_event_user_add(self, data: ScheduledEventUserEvent) -> None:
-        return
         guild = self._get_guild(int(data['guild_id']))
         if guild is None:
             _log.debug('GUILD_SCHEDULED_EVENT_USER_ADD referencing an unknown guild ID: %s. Discarding.', data['guild_id'])
@@ -1252,11 +1249,9 @@ class ConnectionState:
         user_id = int(data['user_id'])
         member = guild.get_member(user_id)
         if member is not None:
-            scheduled_event._subscribed_users[user_id] = member
             self.dispatch('guild_scheduled_event_user_add', member)
 
     def parse_guild_scheduled_event_user_remove(self, data: ScheduledEventUserEvent) -> None:
-        return
         guild = self._get_guild(int(data['guild_id']))
         if guild is None:
             _log.debug('GUILD_SCHEDULED_EVENT_USER_REMOVE referencing an unknown guild ID: %s. Discarding.', data['guild_id'])
@@ -1267,10 +1262,12 @@ class ConnectionState:
             _log.debug('GUILD_SCHEDULED_EVENT_USER_REMOVE referencing an unknown scheduled event ID: %s. Discarding.', data['guild_scheduled_event_id'])
             return
 
+        # NOTE: should this just be a User/Member and not have the possibility of being both?
         user_id = int(data['user_id'])
-        scheduled_event._subscribed_users.pop(user_id, None)
-
         member = guild.get_member(user_id)
+        if member is None:
+            member = self.get_user(user_id)
+
         if member is not None:
             self.dispatch('guild_scheduled_event_user_remove', member)
 
