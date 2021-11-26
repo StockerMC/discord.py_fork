@@ -1069,7 +1069,46 @@ class Guild(Hashable):
         scheduled_end_time: Optional[datetime.datetime] = None,
         location: Optional[str] = None,
     ) -> ScheduledEvent:
-        """"""
+        """|coro|
+
+        Creates a :class:`ScheduledEvent` for the guild.
+
+        Note that you need the :attr:`~Permissions.manage_events` permission
+        to create the scheduled event.
+
+        Parameters
+        ----------
+        name: :class:`str`
+            The scheduled event's name.
+        privacy_level: :class:`ScheduledEventPrivacyLevel`
+            The scheduled event's privacy level.
+        scheduled_start_time: :class:`datetime.datetime`
+            The time the scheduled event will start.
+        entity_type: :class:`ScheduledEventEntityType`
+            The type of hosting entity associated with the scheduled event.
+        description: Optional[:class:`str`]
+            The scheduled event's description.
+        channel: Optional[:class:`abc.Snowflake`]
+            The channel the scheduled event will be hosted in. This must not be ``None`` if
+            ``entity_type`` is not :attr:`ScheduledEventEntityType.external`.
+        scheduled_end_time: Optional[:class:`datetime.datetime`]
+            The time the scheduled event will end.
+        location: Optional[:class:`str`]
+            The scheduled event's location. This must not be ``None`` if ``entity_type``
+            is :attr:`ScheduledEventEntityType.external`.
+
+        Raises
+        -------
+        Forbidden
+            You do not have the proper permissions to create this scheduled event.
+        HTTPException
+            Creating the scheduled event failed.
+
+        Returns
+        -------
+        :class:`ScheduledEvent`
+            The scheduled event that was just created.
+        """
         if scheduled_start_time.tzinfo:
             start_time = scheduled_start_time.astimezone(tz=datetime.timezone.utc).isoformat()
         else:
