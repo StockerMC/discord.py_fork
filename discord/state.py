@@ -1201,7 +1201,7 @@ class ConnectionState:
 
         scheduled_event = ScheduledEvent(data=data, state=self)
         guild._scheduled_events[int(data['id'])] = scheduled_event
-        self.dispatch('guild_scheduled_event_create', scheduled_event)
+        self.dispatch('scheduled_event_create', scheduled_event)
 
     def parse_guild_scheduled_event_update(self, data: ScheduledEventPayload) -> None:
         guild = self._get_guild(int(data['guild_id']))
@@ -1218,7 +1218,7 @@ class ConnectionState:
             scheduled_event = copy.copy(old_scheduled_event)
             old_scheduled_event._update(data)
 
-        self.dispatch('guild_scheduled_event_update', old_scheduled_event, scheduled_event)
+        self.dispatch('scheduled_event_update', old_scheduled_event, scheduled_event)
 
     def parse_guild_scheduled_event_delete(self, data: ScheduledEventPayload) -> None:
         guild = self._get_guild(int(data['guild_id']))
@@ -1231,7 +1231,7 @@ class ConnectionState:
             scheduled_event = ScheduledEvent(data=data, state=self)
 
         guild._scheduled_events[int(data['id'])] = scheduled_event
-        self.dispatch('guild_scheduled_event_delete', scheduled_event)
+        self.dispatch('scheduled_event_delete', scheduled_event)
 
     # TODO: raw event for user_add/remove?
 
@@ -1249,7 +1249,7 @@ class ConnectionState:
         user_id = int(data['user_id'])
         member = guild.get_member(user_id)
         if member is not None:
-            self.dispatch('guild_scheduled_event_user_add', member)
+            self.dispatch('scheduled_event_user_add', member)
 
     def parse_guild_scheduled_event_user_remove(self, data: ScheduledEventUserEvent) -> None:
         guild = self._get_guild(int(data['guild_id']))
@@ -1269,7 +1269,7 @@ class ConnectionState:
             member = self.get_user(user_id)
 
         if member is not None:
-            self.dispatch('guild_scheduled_event_user_remove', member)
+            self.dispatch('scheduled_event_user_remove', member)
 
     def _get_create_guild(self, data: GuildPayload) -> Guild:
         if data.get('unavailable') is False:
