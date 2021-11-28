@@ -1127,6 +1127,35 @@ to handle it, which defaults to print a traceback and ignoring the exception.
     :param user: The user that joined or left.
     :type user: :class:`User`
 
+.. function:: on_scheduled_event_create(scheduled_event)
+
+    Called when a :class:`ScheduledEvent` is created.
+
+    .. versionadded:: 2.0
+
+    :param scheduled_event: The scheduled event that was created.
+    :type scheduled_event: :class:`ScheduledEvent`
+
+.. function:: on_scheduled_event_delete(scheduled_event)
+
+    Called when a :class:`ScheduledEvent` is deleted.
+
+    .. versionadded:: 2.0
+
+    :param scheduled_event: The scheduled event that was deleted.
+    :type scheduled_event: :class:`ScheduledEvent`
+
+.. function:: on_scheduled_event_update(before, after)
+
+    Called when a :class:`ScheduledEvent` is updated.
+
+    .. versionadded:: 2.0
+
+    :param before: The updated scheduled event's old info.
+    :type before: :class:`ScheduledEvent`
+    :param after: The updated scheduled event's new info.
+    :type after: :class:`ScheduledEvent`
+
 .. _discord-api-utils:
 
 Utility Functions
