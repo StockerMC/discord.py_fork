@@ -244,6 +244,11 @@ class Client:
         To enable these events, this must be set to ``True``. Defaults to ``False``.
 
         .. versionadded:: 2.0
+    application_command_guild_ids: Optional[List[:class:`int`]]
+        The IDs of the guilds to upload all application commands to that do not have guild IDs set.
+        It is recommended to set this while testing to speed up the registering of the commands.
+
+        .. versionadded:: 2.0
     register_application_commands_on_startup: :class:`bool`
         Whether :meth:`register_application_commands` should be called in :meth:`login`.
         It is recommended to set this to ``False`` when the application commands
@@ -2254,7 +2259,7 @@ class Client:
         if not isinstance(application_command, _valid_application_command_types):
             raise TypeError(f'application_command must derive from SlashCommand, MessageCommand, or UserCommand')
 
-        if not application_command.__application_command_guild_ids__ and self.application_command_guild_ids is not None:
+        if application_command.__application_command_guild_ids__ is not None and self.application_command_guild_ids is not None:
             application_command.__application_command_guild_ids__ = self.application_command_guild_ids
             application_command.__application_command_global_command__ = False
 
@@ -2406,7 +2411,8 @@ class Client:
         global_payload = []
         for command in application_commands:
             command_payload = command.to_dict()
-            for guild_id in command.__application_command_guild_ids__:
+            guild_ids = command.__application_command_guild_ids__ or []
+            for guild_id in guild_ids:
                 guild_payloads[guild_id].append(command_payload)
 
             if command.__application_command_global_command__:
