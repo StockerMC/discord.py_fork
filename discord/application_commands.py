@@ -1153,7 +1153,7 @@ class BaseApplicationCommand:
         __application_command_group_command__: ClassVar[bool]
         __application_command_subcommands__: ClassVar[Dict[str, BaseApplicationCommand]]
         __application_command_parent__: Optional[Union[Type[BaseApplicationCommand], BaseApplicationCommand]]
-        __application_command_guild_ids__: List[int]
+        __application_command_guild_ids__: Optional[List[int]]
         __application_command_global_command__: bool
 
     __discord_application_command__: ClassVar[bool] = True
@@ -1164,6 +1164,35 @@ class BaseApplicationCommand:
     }
 
     _cog: Optional[Cog] = None
+
+    @overload
+    def __init_subclass__(
+        cls: Type[BaseApplicationCommand],
+        *,
+        name: Optional[str] = None,
+        description: str = MISSING,
+        parent: Optional[Type[BaseApplicationCommand]] = None,
+        type: ApplicationCommandType = MISSING,
+        default_permission: bool = True,
+        guild_ids: Optional[List[int]] = None,
+        global_command: Literal[False] = ...,
+        group: bool = False,
+    ) -> None:
+        ...
+
+    @overload
+    def __init_subclass__(
+        cls: Type[BaseApplicationCommand],
+        *,
+        name: Optional[str] = None,
+        description: str = MISSING,
+        parent: Optional[Type[BaseApplicationCommand]] = None,\
+        type: ApplicationCommandType = MISSING,
+        default_permission: bool = True,
+        global_command: Literal[True],
+        group: bool = False,
+    ) -> None:
+        ...
 
     def __init_subclass__(
         cls: Type[BaseApplicationCommand],
@@ -1233,9 +1262,9 @@ class BaseApplicationCommand:
         cls.__application_command_parent__ = parent
         cls.__application_command_type__ = type
         cls.__application_command_default_permission__ = bool(default_permission)
-        cls.__application_command_guild_ids__ = guild_ids or []
+        cls.__application_command_guild_ids__ = guild_ids
         if global_command is MISSING:
-            global_command = False if guild_ids else True
+            global_command = not guild_ids
 
         cls.__application_command_global_command__ = global_command
         cls.__application_command_group_command__ = group
@@ -1272,9 +1301,14 @@ class BaseApplicationCommand:
 
         return None
 
-    def _get_used_command(self, application_command_data: ApplicationCommandInteractionData, guild_id: Optional[int]) -> Optional[BaseApplicationCommand]:
+    def _get_used_command(
+        self, application_command_data: ApplicationCommandInteractionData, guild_id: Optional[int]
+    ) -> Optional[BaseApplicationCommand]:
         # check if the guild id is correct (if it's not a global command)
-        if not self.__application_command_global_command__ and guild_id is not None and guild_id not in self.__application_command_guild_ids__:
+        if (
+            not self.__application_command_global_command__ and guild_id is not None
+            and self.__application_command_guild_ids__ is not None and guild_id not in self.__application_command_guild_ids__
+        ):
             return None
 
         options = application_command_data.get('options')
