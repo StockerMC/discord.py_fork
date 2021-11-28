@@ -1206,12 +1206,12 @@ class ConnectionState:
     def parse_guild_scheduled_event_update(self, data: ScheduledEventPayload) -> None:
         guild = self._get_guild(int(data['guild_id']))
         if guild is None:
-            _log.debug('GUILD_SCHEDULED_EVENT_CREATE referencing an unknown guild ID: %s. Discarding.', data['guild_id'])
+            _log.debug('GUILD_SCHEDULED_EVENT_UPDATE referencing an unknown guild ID: %s. Discarding.', data['guild_id'])
             return
 
         old_scheduled_event = guild.get_scheduled_event(int(data['id']))
         if old_scheduled_event is None:
-            _log.debug('GUILD_SCHEDULED_EVENT_CREATE referencing an unknown scheduled event ID: %s. Discarding.', data['id'])
+            _log.debug('GUILD_SCHEDULED_EVENT_UPDATE referencing an unknown scheduled event ID: %s. Discarding.', data['id'])
             guild._scheduled_events[int(data['id'])] = ScheduledEvent(data=data, state=self)
             return
         else:
@@ -1223,7 +1223,7 @@ class ConnectionState:
     def parse_guild_scheduled_event_delete(self, data: ScheduledEventPayload) -> None:
         guild = self._get_guild(int(data['guild_id']))
         if guild is None:
-            _log.debug('GUILD_SCHEDULED_EVENT_CREATE referencing an unknown guild ID: %s. Discarding.', data['guild_id'])
+            _log.debug('GUILD_SCHEDULED_EVENT_DELETE referencing an unknown guild ID: %s. Discarding.', data['guild_id'])
             return
 
         scheduled_event = guild._scheduled_events.pop(int(data['id']), None)
