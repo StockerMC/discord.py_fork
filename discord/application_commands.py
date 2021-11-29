@@ -793,17 +793,14 @@ class ApplicationCommandOptions:
             elif option_type == 8:  # role
                 guild = state._get_guild(guild_id)
                 role = guild and guild.get_role(int(value))
-                if role is None and guild is not None:
+                if role is None:
                     try:
                         resolved_role = resolved_data['roles'][value]
-                        # guild_id won't be None
                         value = Role(guild=guild or Object(id=guild_id), state=state, data=resolved_role)  # type: ignore
                     except KeyError:
                         value = Object(id=int(value))
-                elif role is None:
-                    role = Object(id=int(value))
                 else:
-                    role = value
+                    value = role
             elif option_type == 9:  # mention (role or user)
                 if guild_id is not None:
                     guild = state._get_guild(guild_id)
