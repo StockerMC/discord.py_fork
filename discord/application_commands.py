@@ -1564,8 +1564,7 @@ class SlashCommand(BaseApplicationCommand, type=ApplicationCommandType.slash):
 
         cls.__application_command_subcommands__[subcommand.__application_command_name__] = subcommand
 
-    @classmethod
-    def set_parent(cls, parent: SlashCommand) -> None:
+    def set_parent(self, parent: SlashCommand) -> None:
         """Sets the parent of the slash command.
 
         Parameters
@@ -1576,7 +1575,8 @@ class SlashCommand(BaseApplicationCommand, type=ApplicationCommandType.slash):
         if not isinstance(parent, SlashCommand):
             raise TypeError(f'parent must be a SlashCommand not {parent.__class__.__name__}')
 
-        cls.__application_command_parent__: SlashCommand = parent
+        parent.__application_command_subcommands__[self.__application_command_name__] = self
+        self.__application_command_parent__: SlashCommand = parent
 
     @classmethod
     def add_option(cls, option: ApplicationCommandOption) -> None:
