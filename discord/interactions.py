@@ -96,7 +96,9 @@ def handle_create_interaction_response_message_parameters(
     if embeds is not MISSING and embed is not MISSING:
         raise TypeError('Cannot mix embed and embeds keyword arguments.')
 
-    data = {}
+    data: Dict[str, Any] = {
+        'type': InteractionResponseType.channel_message.value,
+    }
     if embeds is not MISSING:
         if len(embeds) > 10:
             raise InvalidArgument('embeds has a maximum of 10 elements.')
