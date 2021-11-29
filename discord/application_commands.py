@@ -756,8 +756,9 @@ class ApplicationCommandOptions:
                 continue
 
             resolved_data = resolved_data or {}
+            option_type = option['type']
 
-            if option['type'] == 6:  # user
+            if option_type == 6:  # user
                 try:
                     resolved_user = resolved_data['users'][value]
                 except KeyError:
@@ -779,7 +780,7 @@ class ApplicationCommandOptions:
                         value = User(state=state, data=resolved_user)
                     else:
                         value = Object(id=int(value))
-            elif option['type'] == 7:  # channel
+            elif option_type == 7:  # channel
                 guild = state._get_guild(guild_id)
                 if guild is not None:
                     channel = guild._resolve_channel(int(value))
@@ -789,7 +790,21 @@ class ApplicationCommandOptions:
                     value = channel
                 else:
                     value = PartialMessageable(state=state, id=int(value))
-            elif option['type'] == 9:  # mention (role or user)
+            elif option_type == 8:  # role
+                guild = state._get_guild(guild_id)
+                role = guild and guild.get_role(int(value))
+                if role is None and guild is not None:
+                    try:
+                        resolved_role = resolved_data['roles'][value]
+                        # guild_id won't be None
+                        value = Role(guild=guild or Object(id=guild_id), state=state, data=resolved_role)  # type: ignore
+                    except KeyError:
+                        value = Object(id=int(value))
+                elif role is None:
+                    role = Object(id=int(value))
+                else:
+                    role = value
+            elif option_type == 9:  # mention (role or user)
                 if guild_id is not None:
                     guild = state._get_guild(guild_id)
                     try:
@@ -800,16 +815,17 @@ class ApplicationCommandOptions:
                                 member_with_user = {**resolved_data['members'][value], 'user': resolved_user}  # type: ignore
                                 value = Member(state=state, data=member_with_user, guild=guild)  # type: ignore
                             except KeyError:
-                                value = Object(int(value))
+                                value = Object(id=int(value))
                         else:
                             value = obj
                     except KeyError:
                         obj = guild and guild.get_role(int(value))
                         if obj is None:
                             try:
-                                value = Role(guild=guild or Object(id=guild_id), state=state, data=resolved_data['roles'][value])  # type: ignore
+                                resolved_role = resolved_data['roles'][value]
+                                value = Role(guild=guild or Object(id=guild_id), state=state, data=resolved_role)  # type: ignore
                             except KeyError:
-                                value = Object(int(value))
+                                value = Object(id=int(value))
                         else:
                             value = obj
                 else:
@@ -818,7 +834,7 @@ class ApplicationCommandOptions:
                         try:
                             value = User(state=state, data=resolved_data['users'][value])
                         except KeyError:
-                            value = Object(int(value))
+                            value = Object(id=int(value))
                     else:
                         value = obj
 
