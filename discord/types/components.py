@@ -82,6 +82,7 @@ class _InputTextOptional(TypedDict, total=False):
 
 class InputText(_InputTextOptional):
     type: Literal[4]
+    custom_id: str
     style: InputTextStyle
     label: str
 

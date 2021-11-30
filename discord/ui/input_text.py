@@ -25,6 +25,7 @@ DEALINGS IN THE SOFTWARE.
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, TypeVar, Tuple, Optional, Type
+import os
 
 from .item import Item
 from ..enums import ComponentType, InputTextStyle
@@ -74,6 +75,7 @@ class InputText(Item[V]):
     __item_repr_attributes__: Tuple[str, ...] = (
         'label',
         'style',
+        'custom_id',
         'placeholder',
         'min_length',
         'max_length',
@@ -85,16 +87,22 @@ class InputText(Item[V]):
         *,
         label: str,
         style: InputTextStyle,
+        custom_id: Optional[str] = None,
         placeholder: Optional[str] = None,
         min_length: Optional[int] = None,
         max_length: Optional[int] = None,
         row: Optional[int] = None,
     ):
         super().__init__()
+        self._provided_custom_id = custom_id is not None
+        if custom_id is None:
+            custom_id = os.urandom(16).hex()
+
         self._underlying = InputTextComponent._raw_construct(
             type=ComponentType.input_text,
             style=style,
             label=label,
+            custom_id=custom_id,
             placeholder=placeholder,
             min_length=min_length,
             max_length=max_length,
@@ -121,9 +129,20 @@ class InputText(Item[V]):
     @label.setter
     def label(self, value: str) -> None:
         if not isinstance(value, str):
-            raise TypeError('custom_id must be str')
+            raise TypeError('label must be str')
 
         self._underlying.label = value
+
+    @property
+    def custom_id(self) -> str:
+        return self._underlying.custom_id
+
+    @custom_id.setter
+    def custom_id(self, value: str) -> None:
+        if not isinstance(value, str):
+            raise TypeError('custom_id must be str')
+
+        self._underlying.custom_id = value
 
     @property
     def placeholder(self) -> Optional[str]:

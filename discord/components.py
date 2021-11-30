@@ -391,6 +391,8 @@ class InputText(Component):
         The label of the text input.
     style: :class:`discord.InputTextStyle`
         The style of the text input.
+    custom_id: Optional[:class:`str`]
+        The ID of the input text that gets received during an interaction.
     placeholder: Optional[:class:`str`]
         The placeholder text that is shown if nothing is typed, if any.
     min_length: Optional[:class:`int`]
@@ -408,6 +410,7 @@ class InputText(Component):
     __slots__: Tuple[str, ...] = (
         'style',
         'label',
+        'custom_id',
         'placeholder',
         'min_length',
         'max_length',
@@ -415,11 +418,12 @@ class InputText(Component):
 
     __repr_info__: ClassVar[Tuple[str, ...]] = __slots__
 
-    def __init__(self, data: InputTextPayload):
+    def __init__(self, data: InputTextPayload) -> None:
         super().__init__()
         self.type: ComponentType = ComponentType.input_text
         self.label: str = data['label']
         self.style: InputTextStyle = try_enum(InputTextStyle, data['style'])
+        self.custom_id: str = data['custom_id']
         self.placeholder: Optional[str] = data.get('placeholder')
         self.min_length: Optional[int] = None
         self.max_length: Optional[int] = None
@@ -437,6 +441,7 @@ class InputText(Component):
     def to_dict(self) -> InputTextPayload:
         payload: InputTextPayload = {
             'type': self.type.value,
+            'custom_id': self.custom_id,
             'label': self.label,
             'style': self.style.value,
         }
