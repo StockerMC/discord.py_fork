@@ -868,6 +868,7 @@ class InteractionResponse:
         self._responded = True
 
     async def send_modal(self, modal: Modal) -> None:
+        # TODO: note that you can't respond to modal submit interactions with modals
         """|coro|
 
         
