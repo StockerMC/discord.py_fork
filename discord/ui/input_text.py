@@ -188,6 +188,10 @@ class InputText(Item[V]):
     def type(self) -> ComponentType:
         return self._underlying.type
 
+    @property
+    def width(self) -> int:
+        return 5
+
     def to_component_dict(self) -> InputTextPayload:
         return self._underlying.to_dict()
 
