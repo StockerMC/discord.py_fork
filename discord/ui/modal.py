@@ -30,17 +30,22 @@ import inspect
 
 from .item import Item, ItemCallbackType
 from .view import View
-from ..enums import ComponentType
 from ..utils import MISSING
 
 if TYPE_CHECKING:
     from ..interactions import Interaction
-    from ..types.interactions import InteractionModelInteractionCallbackData
+    from ..types.interactions import ModalInteractionData
 
 class Modal(View):
     """Represents a UI modal.
 
-    This implements similar functionality to :class:`discord.ui.View`.
+    This subclasses :class:`discord.ui.View` and implements similar functionality.
+    One of the main differences between a :class:`discord.ui.Modal` and a :class:`discord.ui.View`
+    is that it can have a maximum of 5 children instead of 25.
+
+    .. note::
+
+        Buttons are currently unsupported in modals. This is a discord limitation.
 
     Parameters
     ----------
@@ -87,18 +92,33 @@ class Modal(View):
         children: List[Item] = MISSING,
     ) -> None:
         super().__init__(timeout=timeout)
+        self._provided_values: List[str] = []
         self._provided_custom_id: bool = custom_id is not MISSING
         self.title: str = title
         self.custom_id: str = os.urandom(16).hex() if custom_id is MISSING else custom_id
         self.row: Optional[int] = row
+
         if children is not MISSING:
             self.children.extend(children)
 
     def refresh_state(self, interaction: Interaction) -> None:
-        ...
+        data: ModalInteractionData = interaction.data  # type: ignore
+        for component in data.get('components', []):
+            if component['type'] == 3:  # select
+                self._provided_values.extend(component.get('values', []))
+            elif component['type'] == 4:  # text input
+                self._provided_values.extend(component['value'])  # type: ignore
 
     async def callback(self, interaction: Interaction) -> None:
-        ...
+        """|coro|
+        
+        """
+        pass
+
+    @property
+    def values(self) -> List[str]:
+        """List[:class:`str]`: """
+        return self._provided_values
 
     def to_callback_data(self) -> Dict[str, Any]:
         return {
@@ -108,10 +128,10 @@ class Modal(View):
         }
 
     def is_persistent(self) -> bool:
-        """:class:`bool`: Whether the view is set up as persistent.
+        """:class:`bool`: Whether the modal is set up as persistent.
 
-        A persistent view has all their components with a set ``custom_id`` and
-        a :attr:`timeout` set to ``None``.
+        A persistent modal has a set ``custom_id``, along with all of their components having
+        a set ``custom_id`` as well. It also has a :attr:`timeout` set to ``None``.
         """
         return self.timeout is None and self._provided_custom_id and all(item.is_persistent() for item in self.children)
 
