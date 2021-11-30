@@ -860,6 +860,10 @@ class ConnectionState:
 
                 break
 
+        elif data['type'] == 5:  # modal submit
+            custom_id = interaction.data['custom_id']  # type: ignore
+            self._view_store.dispatch(None, custom_id, interaction)
+
         self.dispatch('interaction', interaction)
 
     def parse_presence_update(self, data: PartialPresenceUpdate) -> None:

@@ -31,7 +31,6 @@ from .item import Item, ItemCallbackType
 from ..enums import ComponentType
 from ..partial_emoji import PartialEmoji
 from ..emoji import Emoji
-from ..interactions import Interaction
 from ..utils import MISSING
 from ..components import (
     SelectOption,
@@ -45,6 +44,7 @@ __all__ = (
 
 if TYPE_CHECKING:
     from .view import View
+    from ..interactions import Interaction
     from ..types.components import SelectMenu as SelectMenuPayload
     from ..types.interactions import (
         ComponentInteractionData,

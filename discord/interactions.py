@@ -38,6 +38,7 @@ from .member import Member
 from .message import Message, Attachment
 from .object import Object
 from .permissions import Permissions
+from .ui.modal import Modal
 from .webhook.async_ import async_context, Webhook, ExecuteWebhookParameters, handle_message_parameters
 
 __all__ = (
@@ -857,12 +858,51 @@ class InteractionResponse:
             parent.id,
             parent.token,
             session=parent._session,
-            type=InteractionResponseType.message_update.value,
+            type=InteractionResponseType.modal.value,
             data=payload,
         )
 
         if view and not view.is_finished():
             state.store_view(view, message_id)
+
+        self._responded = True
+
+    async def send_modal(self, modal: Modal) -> None:
+        """|coro|
+
+        
+        """
+        if self._responded:
+            raise InteractionResponded(self._parent)
+
+        if not isinstance(modal, Modal):
+            raise TypeError(f'expected an instance of Modal not {modal.__class__!r}')
+
+        parent = self._parent
+        msg = parent.message
+        state = parent._state
+        message_id = msg.id if msg else None
+        if parent.type not in (InteractionType.component, InteractionType.application_command):
+            return
+
+        payload = {
+            'type': InteractionResponseType.modal,
+            'data': modal.to_callback_data(),
+        }
+
+        state.prevent_view_updates_for(message_id)
+
+        adapter = async_context.get()
+        await adapter.create_interaction_response(
+            parent.id,
+            parent.token,
+            session=parent._session,
+            type=InteractionResponseType.message_update.value,
+            data=payload,
+        )
+
+        if not modal.is_finished():
+            state.store_view(modal, message_id)
 
         self._responded = True
 

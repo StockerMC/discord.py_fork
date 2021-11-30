@@ -25,7 +25,7 @@ DEALINGS IN THE SOFTWARE.
 from __future__ import annotations
 
 from typing import Any, ClassVar, Dict, List, Optional, TYPE_CHECKING, Tuple, Type, TypeVar, Union
-from .enums import try_enum, ComponentType, ButtonStyle
+from .enums import try_enum, ComponentType, ButtonStyle, InputTextStyle
 from .utils import get_slots, MISSING
 from .partial_emoji import PartialEmoji, _EmojiTag
 
@@ -33,6 +33,7 @@ if TYPE_CHECKING:
     from .types.components import (
         Component as ComponentPayload,
         ButtonComponent as ButtonComponentPayload,
+        InputText as InputTextPayload,
         SelectMenu as SelectMenuPayload,
         SelectOption as SelectOptionPayload,
         ActionRow as ActionRowPayload,
@@ -46,6 +47,7 @@ __all__ = (
     'Button',
     'SelectMenu',
     'SelectOption',
+    'InputText',
 )
 
 C = TypeVar('C', bound='Component')
@@ -91,7 +93,7 @@ class Component:
                 setattr(self, slot, value)
         return self
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> ComponentPayload:
         raise NotImplementedError
 
 
@@ -242,7 +244,7 @@ class SelectMenu(Component):
     __repr_info__: ClassVar[Tuple[str, ...]] = __slots__
 
     def __init__(self, data: SelectMenuPayload) -> None:
-        self.type:ComponentType = ComponentType.select
+        self.type: ComponentType = ComponentType.select
         self.custom_id: str = data['custom_id']
         self.placeholder: Optional[str] = data.get('placeholder')
         self.min_values: int = data.get('min_values', 1)
@@ -371,6 +373,83 @@ class SelectOption:
         return payload
 
 
+class InputText(Component):
+    """Represents a modal's text input.
+
+    This inherits from :class:`Component`.
+
+    .. note::
+
+        The user constructible and usable type to create a button is :class:`discord.ui.Button`
+        not this one.
+
+    .. versionadded:: 2.0
+
+    Attributes
+    ------------
+    label: :class:`str`
+        The label of the text input.
+    style: :class:`discord.InputTextStyle`
+        The style of the text input.
+    placeholder: Optional[:class:`str`]
+        The placeholder text that is shown if nothing is typed, if any.
+    min_length: Optional[:class:`int`]
+        The minimum length of the text input.
+    max_length: Optional[:class:`int`]
+        The maximum length of the text input.
+    row: Optional[:class:`int`]
+        The relative row this text input belongs to. A Discord component can only have 5
+        rows. By default, items are arranged automatically into those 5 rows. If you'd
+        like to control the relative positioning of the row then passing an index is advised.
+        For example, row=1 will show up before row=2. Defaults to ``None``, which is automatic
+        ordering. The row number must be between 0 and 4 (i.e. zero indexed).
+    """
+
+    __slots__: Tuple[str, ...] = (
+        'style',
+        'label',
+        'placeholder',
+        'min_length',
+        'max_length',
+    )
+
+    __repr_info__: ClassVar[Tuple[str, ...]] = __slots__
+
+    def __init__(self, data: InputTextPayload):
+        super().__init__()
+        self.type: ComponentType = ComponentType.input_text
+        self.label: str = data['label']
+        self.style: InputTextStyle = try_enum(InputTextStyle, data['style'])
+        self.placeholder: Optional[str] = data.get('placeholder')
+        self.min_length: Optional[int] = None
+        self.max_length: Optional[int] = None
+
+        try:
+            self.min_length = int(data['min_length'])
+        except KeyError:
+            pass
+
+        try:
+            self.max_length = int(data['max_length'])
+        except KeyError:
+            pass
+
+    def to_dict(self) -> InputTextPayload:
+        payload: InputTextPayload = {
+            'type': self.type.value,
+            'label': self.label,
+            'style': self.style.value,
+        }
+
+        if self.min_length is not None:
+            payload['min_length'] = self.min_length
+
+        if self.max_length is not None:
+            payload['max_length'] = self.max_length
+
+        return payload
+
+
 def _component_factory(data: ComponentPayload) -> Component:
     component_type = data['type']
     if component_type == 1:
@@ -379,6 +458,8 @@ def _component_factory(data: ComponentPayload) -> Component:
         return Button(data)  # type: ignore
     elif component_type == 3:
         return SelectMenu(data)  # type: ignore
+    elif component_type == 4:
+        return InputText(data)  # type: ignore
     else:
         as_enum = try_enum(ComponentType, component_type)
         return Component._raw_construct(type=as_enum)

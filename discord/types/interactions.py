@@ -208,7 +208,16 @@ class InteractionApplicationCommandCallbackData(TypedDict, total=False):
     components: List[Component]
 
 
-InteractionResponseType = Literal[1, 4, 5, 6, 7, 8]
+class _InteractionModelInteractionCallbackDataOptional(TypedDict, total=False):
+    title: str
+
+
+class InteractionModelInteractionCallbackData(_InteractionModelInteractionCallbackDataOptional):
+    custom_id: str
+    components: List[Component]
+
+
+InteractionResponseType = Literal[1, 4, 5, 6, 7, 8, 9]
 
 
 class _InteractionResponseOptional(TypedDict, total=False):

@@ -47,10 +47,11 @@ __all__ = (
 
 
 if TYPE_CHECKING:
+    from .modal import Modal
     from ..interactions import Interaction
     from ..message import Message
-    from ..types.components import Component as ComponentPayload
     from ..state import ConnectionState
+    from ..types.components import Component as ComponentPayload
 
 
 def _walk_all_components(components: List[Component]) -> Iterator[Component]:
@@ -457,7 +458,7 @@ class View:
 class ViewStore:
     def __init__(self, state: ConnectionState) -> None:
         # (component_type, message_id, custom_id): (View, Item)
-        self._views: Dict[Tuple[int, Optional[int], str], Tuple[View, Item]] = {}
+        self._views: Dict[Tuple[Optional[int], Optional[int], str], Tuple[View, Item]] = {}
         # message_id: View
         self._synced_message_views: Dict[int, View] = {}
         self._state: ConnectionState = state
@@ -474,7 +475,7 @@ class ViewStore:
         return list(views.values())
 
     def __verify_integrity(self) -> None:
-        to_remove: List[Tuple[int, Optional[int], str]] = []
+        to_remove: List[Tuple[Optional[int], Optional[int], str]] = []
         for (k, (view, _)) in self._views.items():
             if view.is_finished():
                 to_remove.append(k)
@@ -493,6 +494,9 @@ class ViewStore:
         if message_id is not None:
             self._synced_message_views[message_id] = view
 
+        if hasattr(view, '__discord_ui_modal__'):
+            self._views[(None, message_id, view.custom_id)] = (view, None)  # type: ignore
+
     def remove_view(self, view: View) -> None:
         for item in view.children:
             if item.is_dispatchable():
@@ -503,9 +507,21 @@ class ViewStore:
                 del self._synced_message_views[key]
                 break
 
-    def dispatch(self, component_type: int, custom_id: str, interaction: Interaction[Any]) -> None:
+    def dispatch(self, component_type: Optional[int], custom_id: str, interaction: Interaction[Any]) -> None:
         self.__verify_integrity()
         message_id: Optional[int] = interaction.message and interaction.message.id
+
+        if component_type is None:  # modal submit interaction
+            key = (None, message_id, custom_id)
+            modal_value: Tuple[Modal, None] = self._views.get(key) or self._views.get((None, None, custom_id))  # type: ignore
+            if modal_value is None:
+                return
+
+            modal, _ = modal_value
+            modal.refresh_state(interaction)
+            asyncio.create_task(modal.callback(interaction), name=f'discord-ui-viewstore-dispatch-{modal.id}')
+            return
+
         key = (component_type, message_id, custom_id)
         # Fallback to None message_id searches in case a persistent view
         # was added without an associated message_id

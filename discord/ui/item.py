@@ -24,22 +24,22 @@ DEALINGS IN THE SOFTWARE.
 
 from __future__ import annotations
 
-from typing import Any, Callable, Coroutine, Dict, Generic, Optional, TYPE_CHECKING, Tuple, Type, TypeVar
-
-from ..interactions import Interaction
+from typing import Any, Callable, Coroutine, Generic, Optional, TYPE_CHECKING, Tuple, Type, TypeVar
 
 __all__ = (
     'Item',
 )
 
 if TYPE_CHECKING:
-    from ..enums import ComponentType
     from .view import View
+    from ..enums import ComponentType
     from ..components import Component
+    from ..interactions import Interaction
+    from ..types.components import Component as ComponentPayload
 
 I = TypeVar('I', bound='Item')
 V = TypeVar('V', bound='View', covariant=True)
-ItemCallbackType = Callable[[Any, I, Interaction], Coroutine[Any, Any, Any]]
+ItemCallbackType = Callable[[Any, I, 'Interaction'], Coroutine[Any, Any, Any]]
 
 
 class Item(Generic[V]):
@@ -67,7 +67,7 @@ class Item(Generic[V]):
         # only called upon edit and we're mainly interested during initial creation time.
         self._provided_custom_id: bool = False
 
-    def to_component_dict(self) -> Dict[str, Any]:
+    def to_component_dict(self) -> ComponentPayload:
         raise NotImplementedError
 
     def refresh_component(self, component: Component) -> None:
