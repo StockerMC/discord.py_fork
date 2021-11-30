@@ -24,7 +24,7 @@ DEALINGS IN THE SOFTWARE.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, ClassVar, List, Optional, Callable
+from typing import TYPE_CHECKING, Any, ClassVar, List, Optional, Dict
 import os
 import inspect
 
@@ -100,8 +100,8 @@ class Modal(View):
     async def callback(self, interaction: Interaction) -> None:
         ...
 
-    def to_callback_data(self) -> InteractionModelInteractionCallbackData:
-        payload: InteractionModelInteractionCallbackData = {
+    def to_callback_data(self) -> Dict[str, Any]:
+        payload = {
             'custom_id': self.custom_id,
             'components': self.to_components()
         }

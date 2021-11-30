@@ -885,20 +885,17 @@ class InteractionResponse:
         if parent.type not in (InteractionType.component, InteractionType.application_command):
             return
 
-        payload = {
-            'type': InteractionResponseType.modal,
-            'data': modal.to_callback_data(),
-        }
-
         state.prevent_view_updates_for(message_id)
+
+        data: Dict[str, Any] = modal.to_callback_data()
 
         adapter = async_context.get()
         await adapter.create_interaction_response(
             parent.id,
             parent.token,
             session=parent._session,
-            type=InteractionResponseType.message_update.value,
-            data=payload,
+            type=InteractionResponseType.modal.value,
+            data=data,
         )
 
         if not modal.is_finished():
