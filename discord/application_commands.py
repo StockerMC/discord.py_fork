@@ -750,34 +750,90 @@ class ApplicationCommandOptions:
                 options.extend(nested_options)
                 continue
 
-            value = option.get('value')
+            value: Any = option.get('value')
             # the option is a subcommand
             if value is None:
                 continue
 
-            if option['type'] == 6:  # user
-                resolved_user = resolved_data['users'][value]  # type: ignore
-                if guild_id is not None:
-                    guild = state._get_guild(guild_id) or Object(id=guild_id)
-                    member_with_user = {**resolved_data['members'][value], 'user': resolved_user}  # type: ignore
-                    value = Member(state=state, data=member_with_user, guild=guild)  # type: ignore
-                else:
-                    value = User(state=state, data=resolved_user, guild=guild)  # type: ignore
-            elif option['type'] == 7:  # channel
-                resolved_channel = resolved_data['channels'][value]  # type: ignore
+            resolved_data = resolved_data or {}
+            option_type = option['type']
+
+            if option_type == 6:  # user
+                try:
+                    resolved_user = resolved_data['users'][value]
+                except KeyError:
+                    resolved_user = None
+
                 if guild_id is not None:
                     guild = state._get_guild(guild_id)
-                    if guild is not None:
-                        value = guild._resolve_channel(int(resolved_channel['id']))  # there isn't enough data in the resolved channels from the payload
-            elif option['type'] == 9:  # mention (role or user)
-                if guild_id is not None:
-                    guild = state._get_guild(guild_id) or Object(id=guild_id)
-                    try:
-                        value = Member(state=state, data=resolved_data['members'][value], guild=guild)  # type: ignore
-                    except KeyError:
-                        value = Role(guild=guild, state=state, data=resolved_data['roles'][value]) # type: ignore
+                    user = guild and guild.get_member(int(value))
+                    if user is None:
+                        if resolved_user is not None:
+                            member_with_user = {**resolved_data['members'][value], 'user': resolved_user}  # type: ignore
+                            value = Member(state=state, data=member_with_user, guild=guild or Object(id=guild_id))  # type: ignore
+                        else:
+                            value = Object(id=int(value))
+                    else:
+                        value = user
                 else:
-                    value = User(state=state, data=resolved_data['users'][value])  # type: ignore
+                    if resolved_user is not None:
+                        value = User(state=state, data=resolved_user)
+                    else:
+                        value = Object(id=int(value))
+            elif option_type == 7:  # channel
+                guild = state._get_guild(guild_id)
+                if guild is not None:
+                    channel = guild._resolve_channel(int(value))
+                    if channel is None:  # there isn't enough data in the resolved channels from the payload
+                        channel = PartialMessageable(state=state, id=int(value))
+
+                    value = channel
+                else:
+                    value = PartialMessageable(state=state, id=int(value))
+            elif option_type == 8:  # role
+                guild = state._get_guild(guild_id)
+                role = guild and guild.get_role(int(value))
+                if role is None:
+                    try:
+                        resolved_role = resolved_data['roles'][value]
+                        value = Role(guild=guild or Object(id=guild_id), state=state, data=resolved_role)  # type: ignore
+                    except KeyError:
+                        value = Object(id=int(value))
+                else:
+                    value = role
+            elif option_type == 9:  # mention (role or user)
+                if guild_id is not None:
+                    guild = state._get_guild(guild_id)
+                    try:
+                        obj = guild and guild.get_member(int(value))
+                        if obj is None:
+                            try:
+                                resolved_user = resolved_data['users'][value]
+                                member_with_user = {**resolved_data['members'][value], 'user': resolved_user}  # type: ignore
+                                value = Member(state=state, data=member_with_user, guild=guild)  # type: ignore
+                            except KeyError:
+                                value = Object(id=int(value))
+                        else:
+                            value = obj
+                    except KeyError:
+                        obj = guild and guild.get_role(int(value))
+                        if obj is None:
+                            try:
+                                resolved_role = resolved_data['roles'][value]
+                                value = Role(guild=guild or Object(id=guild_id), state=state, data=resolved_role)  # type: ignore
+                            except KeyError:
+                                value = Object(id=int(value))
+                        else:
+                            value = obj
+                else:
+                    obj = state.get_user(int(value))
+                    if obj is None:
+                        try:
+                            value = User(state=state, data=resolved_data['users'][value])
+                        except KeyError:
+                            value = Object(id=int(value))
+                    else:
+                        value = obj
 
             self.__application_command_options__[option['name']] = value
 
