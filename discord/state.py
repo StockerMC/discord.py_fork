@@ -1222,7 +1222,7 @@ class ConnectionState:
             return await request.wait()
         return request.get_future()
 
-    async def _chunk_and_dispatch(self, guild: Guild, unavailable: bool) -> None:
+    async def _chunk_and_dispatch(self, guild: Guild, unavailable: Optional[bool]) -> None:
         try:
             await asyncio.wait_for(self.chunk_guild(guild), timeout=60.0)
         except asyncio.TimeoutError:
@@ -1234,7 +1234,7 @@ class ConnectionState:
             self.dispatch('guild_join', guild)
 
     def parse_guild_create(self, data: GuildPayload) -> None:
-        unavailable = data.get('unavailable', False)
+        unavailable = data.get('unavailable')
         if unavailable is True:
             # joined a guild with unavailable == True so..
             return
