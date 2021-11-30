@@ -208,11 +208,8 @@ class InteractionApplicationCommandCallbackData(TypedDict, total=False):
     components: List[Component]
 
 
-class _InteractionModelInteractionCallbackDataOptional(TypedDict, total=False):
+class InteractionModelInteractionCallbackData(TypedDict):
     title: str
-
-
-class InteractionModelInteractionCallbackData(_InteractionModelInteractionCallbackDataOptional):
     custom_id: str
     components: List[Component]
 
