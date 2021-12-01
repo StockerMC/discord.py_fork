@@ -180,14 +180,15 @@ class ComponentInteractionData(_ComponentInteractionDataOptional):
     component_type: ComponentType
 
 
-class _ModalComponentInteractionDataOptional(TypedDict, total=False):
-    values: List[str]
+class ModalComponentData(TypedDict):
     value: str
-
-
-class _ModalComponentInteractionData(_ModalComponentInteractionDataOptional):
     custom_id: str
-    type: ComponentType
+    type: Literal[4]
+
+
+class _ModalComponentInteractionData(TypedDict):
+    type: Literal[1]
+    components: List[ModalComponentData]
 
 
 class ModalInteractionData(TypedDict):
