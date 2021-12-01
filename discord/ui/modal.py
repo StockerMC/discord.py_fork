@@ -65,9 +65,6 @@ class Modal(View):
 
     __discord_ui_modal__: ClassVar[bool] = True
 
-    if TYPE_CHECKING:
-        _View__weights: _ViewWeights
-
     def __init_subclass__(cls) -> None:
         children: List[ItemCallbackType] = []
         for base in reversed(cls.__mro__):
@@ -96,8 +93,7 @@ class Modal(View):
 
         if children is not MISSING:
             for item in children:
-                self._View__weights.add_item(item)
-                self.children.append(item)
+                self.add_item(item)
 
     def refresh_state(self, interaction: Interaction) -> None:
         data: ModalInteractionData = interaction.data  # type: ignore
