@@ -29,7 +29,7 @@ import os
 
 from .item import ItemCallbackType
 from .input_text import InputText
-from .view import View, _ViewWeights
+from .view import View
 from ..utils import MISSING
 
 if TYPE_CHECKING:
