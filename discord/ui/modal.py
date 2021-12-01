@@ -26,10 +26,10 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, ClassVar, List, Optional, Dict
 import os
-import inspect
 
-from .item import Item, ItemCallbackType
-from .view import View
+from .item import ItemCallbackType
+from .input_text import InputText
+from .view import View, _ViewWeights
 from ..utils import MISSING
 
 if TYPE_CHECKING:
@@ -45,14 +45,15 @@ class Modal(View):
 
     .. note::
 
-        Buttons are currently unsupported in modals. This is a discord limitation.
+        :class:`discord.ui.InputText` objects are the only components currently supported in modals.
+        This is a discord limitation.
 
     Parameters
     ----------
     timeout: Optional[:class:`float`]
         Timeout in seconds from last interaction with the UI before no longer accepting input.
         If ``None`` then there is no timeout.
-    children: List[:class:`discord.ui.Item`]
+    children: List[:class:`discord.ui.InputText`]
         The children of the modal.
         A modal can have a maximum of 5 children.
     title: Optional[:class:`str`]
@@ -60,15 +61,12 @@ class Modal(View):
     custom_id: :class:`str`
         The ID of the modal that gets received during an interaction.
         If not given then one is generated for you.
-    row: Optional[:class:`int`]
-        The relative row this modal belongs to. A Discord component can only have 5
-        rows. By default, items are arranged automatically into those 5 rows. If you'd
-        like to control the relative positioning of the row then passing an index is advised.
-        For example, row=1 will show up before row=2. Defaults to ``None``, which is automatic
-        ordering. The row number must be between 0 and 4 (i.e. zero indexed).
     """
 
     __discord_ui_modal__: ClassVar[bool] = True
+
+    if TYPE_CHECKING:
+        _View__weights: _ViewWeights
 
     def __init_subclass__(cls) -> None:
         children: List[ItemCallbackType] = []
@@ -88,18 +86,18 @@ class Modal(View):
         title: str,
         timeout: Optional[float] = 180,
         custom_id: str = MISSING,
-        row: Optional[int] = None,
-        children: List[Item] = MISSING,
+        children: List[InputText[Any]] = MISSING,
     ) -> None:
         super().__init__(timeout=timeout)
         self._provided_values: List[str] = []
         self._provided_custom_id: bool = custom_id is not MISSING
         self.title: str = title
         self.custom_id: str = os.urandom(16).hex() if custom_id is MISSING else custom_id
-        self.row: Optional[int] = row
 
         if children is not MISSING:
-            self.children.extend(children)
+            for item in children:
+                self._View__weights.add_item(item)
+                self.children.append(item)
 
     def refresh_state(self, interaction: Interaction) -> None:
         data: ModalInteractionData = interaction.data  # type: ignore
@@ -135,18 +133,18 @@ class Modal(View):
         """
         return self.timeout is None and self._provided_custom_id and all(item.is_persistent() for item in self.children)
 
-    def add_item(self, item: Item[Any]) -> None:
+    def add_item(self, item: InputText[Any]) -> None:
         """Adds an item to the modal.
 
         Parameters
         -----------
-        item: :class:`Item`
+        item: :class:`InputText`
             The item to add to the modal.
 
         Raises
         --------
         TypeError
-            An :class:`Item` was not passed.
+            An :class:`InputText` was not passed.
         ValueError
             Maximum number of children has been exceeded (5)
             or the row the item is trying to be added to is full.
@@ -155,7 +153,7 @@ class Modal(View):
         if len(self.children) > 5:
             raise ValueError('maximum number of children exceeded')
 
-        if not isinstance(item, Item):
+        if not isinstance(item, InputText):
             raise TypeError(f'expected Item not {item.__class__!r}')
 
         self.__weights.add_item(item)
