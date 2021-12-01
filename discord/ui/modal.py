@@ -150,9 +150,7 @@ class Modal(View):
             raise ValueError('maximum number of children exceeded')
 
         if not isinstance(item, InputText):
-            raise TypeError(f'expected Item not {item.__class__!r}')
+            raise TypeError(f'expected InputText not {item.__class__!r}')
 
-        self.__weights.add_item(item)
+        super().add_item(item)
 
-        item._view = self
-        self.children.append(item)
