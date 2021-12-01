@@ -98,10 +98,8 @@ class Modal(View):
     def refresh_state(self, interaction: Interaction) -> None:
         data: ModalInteractionData = interaction.data  # type: ignore
         for component in data.get('components', []):
-            if component['type'] == 3:  # select
-                self._provided_values.extend(component.get('values', []))
-            elif component['type'] == 4:  # text input
-                self._provided_values.extend(component['value'])  # type: ignore
+            if component['type'] == 4:  # text input
+                self._provided_values.append(component['value'])  # type: ignore
 
     async def callback(self, interaction: Interaction) -> None:
         """|coro|
