@@ -881,11 +881,11 @@ class Intents(BaseFlags):
 
         This corresponds to the following events:
 
-        - :func:`on_scheduled_event_create`
-        - :func:`on_scheduled_event_delete`
-        - :func:`on_scheduled_event_update`
-        - :func:`on_scheduled_event_user_add`
-        - :func:`on_scheduled_event_user_remove`
+        - :func:`on_guild_scheduled_event_create`
+        - :func:`on_guild_scheduled_event_delete`
+        - :func:`on_guild_scheduled_event_update`
+        - :func:`on_guild_scheduled_event_user_add`
+        - :func:`on_guild_scheduled_event_user_remove`
 
         This does not correspond to any attributes or classes in the library in terms of cache.
         """
