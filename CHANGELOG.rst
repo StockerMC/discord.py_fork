@@ -13,3 +13,4 @@ New features added to the fork
     * Application commands can be added to cogs
     * Note: for backwards compatibility, ``Cog`` and ``CogMeta`` are imported into the ``ext.commands`` namespace as well.
 
+* Modal/text input interactions
