@@ -1127,7 +1127,7 @@ to handle it, which defaults to print a traceback and ignoring the exception.
     :param user: The user that joined or left.
     :type user: :class:`User`
 
-.. function:: on_scheduled_event_create(scheduled_event)
+.. function:: on_guild_scheduled_event_create(scheduled_event)
 
     Called when a :class:`ScheduledEvent` is created.
 
@@ -1136,7 +1136,7 @@ to handle it, which defaults to print a traceback and ignoring the exception.
     :param scheduled_event: The scheduled event that was created.
     :type scheduled_event: :class:`ScheduledEvent`
 
-.. function:: on_scheduled_event_delete(scheduled_event)
+.. function:: on_guild_scheduled_event_delete(scheduled_event)
 
     Called when a :class:`ScheduledEvent` is deleted.
 
@@ -1145,7 +1145,7 @@ to handle it, which defaults to print a traceback and ignoring the exception.
     :param scheduled_event: The scheduled event that was deleted.
     :type scheduled_event: :class:`ScheduledEvent`
 
-.. function:: on_scheduled_event_update(before, after)
+.. function:: on_guild_scheduled_event_update(before, after)
 
     Called when a :class:`ScheduledEvent` is updated.
 
