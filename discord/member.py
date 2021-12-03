@@ -254,7 +254,7 @@ class Member(discord.abc.Messageable, _UserTag):
         An aware datetime object that specifies the date and time in UTC when the member used their
         "Nitro boost" on the guild, if available. This could be ``None``.
     communication_disabled_until: Optional[:class:`datetime.datetime`]
-        An aware object that specifies the date and time in UTC when the member will have their
+        An aware datetime object that specifies the date and time in UTC when the member will have their
         timeout removed. This could be ``None``.
     """
 
