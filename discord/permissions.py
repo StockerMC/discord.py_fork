@@ -565,6 +565,14 @@ class Permissions(BaseFlags):
         """
         return 1 << 39
 
+    @flag_value
+    def moderate_members(self) -> int:
+        """:class:`bool`: Returns ``True`` if a user can perform limited moderation actions (timeout).
+
+        .. versionadded:: 2.0
+        """
+        return 1 << 40
+
 PO = TypeVar('PO', bound='PermissionOverwrite')
 
 def _augment_from_permissions(cls):
