@@ -1360,10 +1360,14 @@ class BaseApplicationCommand:
     def _get_used_command(
         self, application_command_data: ApplicationCommandInteractionData, guild_id: Optional[int]
     ) -> Optional[BaseApplicationCommand]:
-        # check if the guild id is correct (if it's not a global command)
+        command_name = application_command_data['name']
+        command_type = application_command_data['type']
+        # check if the guild id is not correct (if it's not a global command)
+        # or if the command name or type does not match
         if (
             not self.__application_command_global_command__ and guild_id is not None
             and self.__application_command_guild_ids__ is not None and guild_id not in self.__application_command_guild_ids__
+            or self.__application_command_name__ != command_name or int(self.__application_command_type__) != command_type
         ):
             return None
 
@@ -1374,10 +1378,6 @@ class BaseApplicationCommand:
                 if used_subcommand is not None:
                     return self._recursively_get_subcommand(used_subcommand)
 
-        command_name = application_command_data['name']
-        command_type = application_command_data['type']
-        if self.__application_command_name__ != command_name or int(self.__application_command_type__) != command_type:
-            return None
 
         return self
 
