@@ -1378,7 +1378,6 @@ class BaseApplicationCommand:
                 if used_subcommand is not None:
                     return self._recursively_get_subcommand(used_subcommand)
 
-
         return self
 
     @classmethod
