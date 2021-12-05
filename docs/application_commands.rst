@@ -14,9 +14,9 @@ The classes and the keyword arguments each of them take are as follows:
   * description: ``str`` - The description of the slash command. This is required.
   * guild_ids: ``Optional[List[int]]`` - The IDs of the guilds to upload the slash command to. It is recommended to set this while testing to speed up the registering of the command. Defaults to ``None``.
   * global_command: ``bool`` - Whether the slash command is a global command. Defaults to ``True``.
-  * parent: ``SlashCommand`` - See <Slash Command Groups link>
-  * group: ``bool``- See <Slash Command Groups link>
   * default_permission: ``bool`` - Whether the slash command is enabled by default when the application is added to a guild. Defaults to ``True``.
+  * parent: ``SlashCommand`` - The parent slash command of this slash command.
+  * group: ``bool``- Whether the slash command is a group command.
 * ``discord.MessageCommand``
 
   * name: ``str`` - The name of the message command. This defaults to the name of the class.
@@ -133,6 +133,154 @@ Properties:
 * application_commands: ``List[Union[SlashCommand, MessageCommand, UserCommand]]`` - A list of application commands added to the client.
 
 
-Slash Command Groups
+Slash Command Subcommands and Subcommand Groups
 --------------------
-...
+
+This was taken from the `discord developer docs <https://discord.com/developers/docs/interactions/application-commands#subcommands-and-subcommand-groups>`_:
+
+    We support nesting one level deep within a group, meaning your top level command can contain subcommand groups, and those groups can contain subcommands. That is the only kind of nesting supported. Here's some visual examples:
+
+    .. code-block:: text
+        VALID
+
+        command
+        |
+        |__ subcommand
+        |
+        |__ subcommand
+
+        ----
+
+        VALID
+
+        command
+        |
+        |__ subcommand-group
+            |
+            |__ subcommand
+        |
+        |__ subcommand-group
+            |
+            |__ subcommand
+
+        ----
+
+        VALID
+
+        command
+        |
+        |__ subcommand-group
+            |
+            |__ subcommand
+        |
+        |__ subcommand
+
+        -------
+
+        INVALID
+
+        command
+        |
+        |__ subcommand-group
+            |
+            |__ subcommand-group
+        |
+        |__ subcommand-group
+            |
+            |__ subcommand-group
+
+        ----
+
+        INVALID
+
+        command
+        |
+        |__ subcommand
+            |
+            |__ subcommand-group
+        |
+        |__ subcommand
+            |
+            |__ subcommand-group
+
+
+An example of a valid subcommand structure:
+
+.. code-block:: python3
+
+    class Docs(discord.SlashCommand):
+        ...
+
+    class Python(discord.SlashCommand, parent=Docs):
+        ...
+
+    class Rust(discord.SlashCommand, parent=Docs):
+        ...
+
+docs
+|
+|__ python
+|
+|__ rust
+
+An example of an invalid subcommand structure:
+
+.. code-block:: python3
+
+    class Docs(discord.SlashCommand):
+        ...
+
+    class Python(discord.SlashCommand, parent=Docs):
+        ...
+
+    class Dpy(discord.SlashCommand, parent=Python, group=True):
+        ...
+
+docs
+|
+|__ python
+    |
+    |__ dpy <-- a subcommand cannot contain a subcommand group
+
+An example of a valid subcommand group structure:
+
+.. code-block:: python3
+
+    class Permissions(discord.SlashCommand):
+        ...
+
+    class User(discord.SlashCommand, parent=Permissions, group=True):
+        ...
+
+    class Get(discord.SlashCommand, parent=User):
+        ...
+
+    class Edit(discord.SlashCommand, parent=User):
+        ...
+
+permissions
+|
+|__ user
+    |
+    |__ get
+    |
+    |__ edit
+
+An example of an invalid subcommand group structure:
+
+.. code-block:: python3
+
+    class Permissions(discord.SlashCommand):
+        ...
+
+    class User(discord.SlashCommand, parent=Permissions, group=True):
+        ...
+
+    class Get(discord.SlashCommand, parent=User, group=True):
+        ...
+
+permissions
+|
+|__ user
+    |
+    |__ get <-- a subcommand group cannot contain a subcommand group
