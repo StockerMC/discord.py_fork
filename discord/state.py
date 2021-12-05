@@ -1249,7 +1249,7 @@ class ConnectionState:
         user_id = int(data['user_id'])
         member = guild.get_member(user_id)
         if member is not None:
-            self.dispatch('guild_scheduled_event_user_add', member)
+            self.dispatch('guild_scheduled_event_user_add', scheduled_event, member)
 
     def parse_guild_scheduled_event_user_remove(self, data: ScheduledEventUserEvent) -> None:
         guild = self._get_guild(int(data['guild_id']))
@@ -1269,7 +1269,7 @@ class ConnectionState:
             member = self.get_user(user_id)
 
         if member is not None:
-            self.dispatch('guild_scheduled_event_user_remove', member)
+            self.dispatch('guild_scheduled_event_user_remove', scheduled_event, member)
 
     def _get_create_guild(self, data: GuildPayload) -> Guild:
         if data.get('unavailable') is False:
