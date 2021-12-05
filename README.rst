@@ -18,6 +18,8 @@ Please read the `gist <https://gist.github.com/Rapptz/4a2f62751b9600a31a0d3c7810
 
 A list of changes made to the fork from the original are in `CHANGELOG.rst <https://github.com/StockerMC/discord.py/blob/master/CHANGELOG.rst>`_
 
+The documentation for application commands is in `docs/application_commands.rst <https://github.com/StockerMC/discord.py/blob/master/docs/application_commands.rst>`_
+
 Key Features
 -------------
 
