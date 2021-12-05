@@ -23,7 +23,7 @@ DEALINGS IN THE SOFTWARE.
 """
 
 from __future__ import annotations
-from typing import Any, Callable, ClassVar, Dict, Iterator, List, Optional, Sequence, TYPE_CHECKING, Tuple
+from typing import TYPE_CHECKING, Any, Callable, ClassVar, Dict, Iterator, List, Optional, Sequence, Tuple, Coroutine
 from functools import partial
 from itertools import groupby
 
@@ -138,7 +138,7 @@ class View:
     """
 
     __discord_ui_view__: ClassVar[bool] = True
-    __view_children_items__: ClassVar[List[ItemCallbackType]] = []
+    __view_children_items__: ClassVar[List[ItemCallbackType[Item]]] = []
 
     def __init_subclass__(cls) -> None:
         children: List[ItemCallbackType] = []
