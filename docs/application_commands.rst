@@ -26,62 +26,55 @@ The classes and the keyword arguments each of them take are as follows:
 
 ``Client``
 ----------
-Methods:
+Keyword arguments to the constructor:
 
 * register_application_commands_at_startup: ``bool``
-    Whether ``Client.register_application_commands`` should be called in ``Client.login``.
-    It is recommended to set this to ``False`` when the application commands
-    added to the client are the same (having the exact same name and options) as the previous
-    time they were added. Defaults to ``True``.
+
+  * Whether ``Client.register_application_commands`` should be called in ``Client.login``. It is recommended to set this to ``False`` when the application commands added to the client are the same (having the exact same name and options) as the previous time they were added. Defaults to ``True``.
 
     .. note::
-        If this is set to ``True``, ``Client.register_application_commands`` will be created as a task,
-        which means that the bot may connect to the gateway before all application commands are registered.
-        ``on_ready`` and ``wait_until_ready`` will be delayed to wait for ``Client.register_application_commands``
-        to finish, regardless of whether an error was raised in it or not.
+        If this is set to ``True``, ``Client.register_application_commands`` will be created as a task, which means that the bot may connect to the gateway before all application commands are registered. ``on_ready`` and ``wait_until_ready`` will be delayed to wait for ``Client.register_application_commands`` to finish, regardless of whether an error was raised in it or not.
+
+Methods:
+
 * add_application_command
-    Adds an application command to the client.
+
+  * Adds an application command to the client.
 
     **Parameters**
 
-    application_command: ``Union[SlashCommand, MessageCommand, UserCommand]``
-        The application command to add.
+    * application_command: ``Union[SlashCommand, MessageCommand, UserCommand]`` - The application command to add.
 
     **Raises**
 
-    TypeError
-        The application command passed is not an application command instance.
+    * ``TypeError`` - The application command passed is not an application command instance.
 * remove_application_command
-    Removes an application command from the client.
+
+  * Removes an application command from the client.
 
     **Parameters**
 
-    application_command: ``Union[SlashCommand, MessageCommand, UserCommand, Type[Union[SlashCommand, MessageCommand, UserCommand]]]``
-
-        The application command to remove. This can be an instance of the application command
-        or its class.
+    * application_command: ``Union[SlashCommand, MessageCommand, UserCommand, Type[Union[SlashCommand, MessageCommand, UserCommand]]]`` - The application command to remove. This can be an instance of the application command or its class.
 
     **Raises**
 
-    TypeError
-        The application command passed is not an application command.
+    * ``TypeError`` - The application command passed is not an application command.
 
     **Returns**
 
-    ``Optional[Union[SlashCommand, MessageCommand, UserCommand]]``
-        The application command that was removed. ``None`` if not found.
+    ``Optional[Union[SlashCommand, MessageCommand, UserCommand]]`` - The application command that was removed. ``None`` if not found.
 * add_application_command_check
-    Adds a global application command check to the client.
+
+  * Adds a global application command check to the client.
 
     This is the non-decorator interface to ``Client.application_command_check``.
 
     **Parameters**
 
-    func
-        The function that was used as a global check.
-        This function can either be a regular function or a coroutine.
+    * func - The function that was used as a global check. This function can either be a regular function or a coroutine.
 * application_command_check
-    A decorator that adds a global application command check to the client.
+
+  * A decorator that adds a global application command check to the client.
 
     A global check is similar to an application command's ``command_check`` method
     that is applied on a per command basis except it is run before any command checks
@@ -102,7 +95,8 @@ Methods:
         async def check_commands(response):
             return await client.is_owner(response.user)
 * application_command
-    A decorator that adds an application command to the client.
+
+  * A decorator that adds an application command to the client.
 
     The class being decorated must subclass ``SlashCommand``, ``MessageCommand`` or ``UserCommand``.
 
@@ -116,10 +110,10 @@ Methods:
 
     **Raises**
 
-    TypeError
-        The application command passed does not derive from a valid application command class.
+    * ``TypeError`` - The application command passed does not derive from a valid application command class.
 * register_application_commands: `Coroutine function <https://docs.python.org/3/library/asyncio-task.html#coroutine>`_
-    Registers all application commands added to the client. This will be called in ``Client.login`` if
+
+  * Registers all application commands added to the client. This will be called in ``Client.login`` if
     ``Client.register_application_commands_at_startup`` is ``True``.
 
     .. note::
@@ -132,13 +126,11 @@ Methods:
 
     **Raises**
 
-    ``discord.HTTPException``
-        Registering the application commands failed.
+    * ``discord.HTTPException`` - Registering the application commands failed.
 
 Properties:
 
-* application_commands: ``List[Union[SlashCommand, MessageCommand, UserCommand]]``
-    A list of application commands added to the client.
+* application_commands: ``List[Union[SlashCommand, MessageCommand, UserCommand]]`` - A list of application commands added to the client.
 
 
 Slash Command Groups
