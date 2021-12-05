@@ -1156,6 +1156,26 @@ to handle it, which defaults to print a traceback and ignoring the exception.
     :param after: The updated scheduled event's new info.
     :type after: :class:`ScheduledEvent`
 
+.. function:: on_guild_scheduled_event_user_add(scheduled_event, user)
+
+    Called when a :class:`Member` or :class:`User` has subscribed to a
+    :class:`ScheduledEvent`.
+
+    :param scheduled_event: The scheduled event the member or user subscribed to.
+    :type scheduled_event: :class:`ScheduledEvent`
+    :param user: The member or user that subscribed to the scheduled event.
+    :type user: Union[:class:`Member`, :class:`User`]
+
+.. function:: on_guild_scheduled_event_user_add(scheduled_event, user)
+
+    Called when a :class:`Member` or :class:`User` has unsubscribed from a
+    :class:`ScheduledEvent`.
+
+    :param scheduled_event: The scheduled event the member or user unsubscribed from.
+    :type scheduled_event: :class:`ScheduledEvent`
+    :param user: The member or user that unsubscribed from the scheduled event.
+    :type user: Union[:class:`Member`, :class:`User`]
+
 .. _discord-api-utils:
 
 Utility Functions
