@@ -141,6 +141,7 @@ This was taken from the `discord developer docs <https://discord.com/developers/
     We support nesting one level deep within a group, meaning your top level command can contain subcommand groups, and those groups can contain subcommands. That is the only kind of nesting supported. Here's some visual examples:
 
     .. code-block:: text
+    
         VALID
 
         command
@@ -217,11 +218,13 @@ An example of a valid subcommand structure:
     class Rust(discord.SlashCommand, parent=Docs):
         ...
 
-docs
-|
-|__ python
-|
-|__ rust
+.. code-block:: text
+
+    docs
+    |
+    |__ python
+    |
+    |__ rust
 
 An example of an invalid subcommand structure:
 
@@ -236,11 +239,13 @@ An example of an invalid subcommand structure:
     class Dpy(discord.SlashCommand, parent=Python, group=True):
         ...
 
-docs
-|
-|__ python
+.. code-block:: text
+
+    docs
     |
-    |__ dpy <-- a subcommand cannot contain a subcommand group
+    |__ python
+        |
+        |__ dpy <-- a subcommand cannot contain a subcommand group
 
 An example of a valid subcommand group structure:
 
@@ -258,13 +263,15 @@ An example of a valid subcommand group structure:
     class Edit(discord.SlashCommand, parent=User):
         ...
 
-permissions
-|
-|__ user
+.. code-block:: text
+
+    permissions
     |
-    |__ get
-    |
-    |__ edit
+    |__ user
+        |
+        |__ get
+        |
+        |__ edit
 
 An example of an invalid subcommand group structure:
 
@@ -279,8 +286,10 @@ An example of an invalid subcommand group structure:
     class Get(discord.SlashCommand, parent=User, group=True):
         ...
 
-permissions
-|
-|__ user
+.. code-block:: text
+
+    permissions
     |
-    |__ get <-- a subcommand group cannot contain a subcommand group
+    |__ user
+        |
+        |__ get <-- a subcommand group cannot contain a subcommand group
