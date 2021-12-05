@@ -95,6 +95,9 @@ class Modal(View):
             for item in children:
                 self.add_item(item)
 
+    def __repr__(self) -> str:
+        return f'<{self.__class__.__name__} title={self.title!r} timeout={self.timeout} children={len(self.children)}>'
+
     def refresh_state(self, interaction: Interaction) -> None:
         data: ModalInteractionData = interaction.data  # type: ignore
         for component in data.get('components', []):
