@@ -766,11 +766,14 @@ class ApplicationCommandOptions:
 
                 if guild_id is not None:
                     guild = state._get_guild(guild_id)
-                    user = guild and guild.get_member(int(value))
+                    user = guild and guild.get_member(int(value)) or state.get_user(int(value))
                     if user is None:
                         if resolved_user is not None:
-                            member_with_user = {**resolved_data['members'][value], 'user': resolved_user}  # type: ignore
-                            value = Member(state=state, data=member_with_user, guild=guild or Object(id=guild_id))  # type: ignore
+                            try:
+                                member_with_user = {**resolved_data['members'][value], 'user': resolved_user}  # type: ignore
+                                value = Member(state=state, data=member_with_user, guild=guild or Object(id=guild_id))  # type: ignore
+                            except KeyError:
+                                value = User(state=state, data=resolved_user)
                         else:
                             value = Object(id=int(value))
                     else:
