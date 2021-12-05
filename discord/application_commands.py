@@ -1512,7 +1512,7 @@ class BaseApplicationCommand:
                     name=command.__application_command_name__,
                     description=command.__application_command_description__,
                     options=[
-                        *list(command.__application_command_options__.values()),
+                        *command.__application_command_options__.values(),
                         *[subcommand._as_option() for subcommand in command.__application_command_subcommands__.values()],
                     ],
                 ))
