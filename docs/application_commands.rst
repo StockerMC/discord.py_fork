@@ -9,28 +9,28 @@ There are three classes you can derive from for making application commands. Key
 The classes and the keyword arguments each of them take are as follows:
 
 * ``discord.SlashCommand``
-    * name: ``str``
-        The name of the slash command. This defaults to the name of the class.
-    * description: ``str``
-        The description of the slash command. This is required.
-    * guild_ids: Optional[List[``int``]]
-        The IDs of the guilds to upload the slash command to. It is recommended to set this while testing
-        to speed up the registering of the command. Defaults to ``None``.
-    * global_command: ``bool``
-        Whether the slash command is a global command. Defaults to ``True``.
-    * parent: ``SlashCommand``
-        See <Slash Command Groups link>
-    * group: ``bool``
-        See <Slash Command Groups link>
-    * default_permission: `bool`
-        Whether the slash command is enabled by default when the application is added to a guild.
-        Defaults to ``True``.
+  * name: ``str``
+    The name of the slash command. This defaults to the name of the class.
+  * description: ``str``
+    The description of the slash command. This is required.
+  * guild_ids: Optional[List[``int``]]
+    The IDs of the guilds to upload the slash command to. It is recommended to set this while testing
+    to speed up the registering of the command. Defaults to ``None``.
+  * global_command: ``bool``
+    Whether the slash command is a global command. Defaults to ``True``.
+  * parent: ``SlashCommand``
+    See <Slash Command Groups link>
+  * group: ``bool``
+    See <Slash Command Groups link>
+  * default_permission: `bool`
+    Whether the slash command is enabled by default when the application is added to a guild.
+    Defaults to ``True``.
 * ``discord.MessageCommand``
-    * name: ``str``
-        The name of the message command. This defaults to the name of the class.
+  * name: ``str``
+    The name of the message command. This defaults to the name of the class.
 * ``discord.UserCommand``
-    * name: ``str``
-        The name of the user command. This defaults to the name of the class.
+  * name: ``str``
+    The name of the user command. This defaults to the name of the class.
 
 ``Client``
 ----------
