@@ -249,7 +249,7 @@ class Client:
         It is recommended to set this while testing to speed up the registering of the commands.
 
         .. versionadded:: 2.0
-    register_application_commands_on_startup: :class:`bool`
+    register_application_commands_at_startup: :class:`bool`
         Whether :meth:`register_application_commands` should be called in :meth:`login`.
         It is recommended to set this to ``False`` when the application commands
         added to the client are the same (having the exact same name and options) as the previous
@@ -287,7 +287,7 @@ class Client:
         self.owner_ids: Optional[collections.abc.Collection[int]] = options.get('owner_ids', set())
         self.application_command_guild_ids: Optional[List[int]] = options.get('application_command_guild_ids')
         self.extra_events: Dict[str, List[CoroFunc]] = {}
-        self.register_application_commands_on_startup: bool = options.get('register_application_commands_on_startup', True)
+        self.register_application_commands_at_startup: bool = options.get('register_application_commands_at_startup', True)
 
         if self.owner_id and self.owner_ids:
             raise TypeError('Both owner_id and owner_ids are set.')
@@ -576,7 +576,7 @@ class Client:
         data = await self.http.static_login(token.strip())
         self._connection.user = ClientUser(state=self._connection, data=data)
 
-        if self.register_application_commands_on_startup:
+        if self.register_application_commands_at_startup:
             self._connection._application_command_task = asyncio.create_task(
                 self._connection._register_application_commands(), name='discord-register-application-commands'
             )
@@ -2374,7 +2374,7 @@ class Client:
         """|coro|
         
         Registers all application commands added to the client. This will
-        be called in :meth:`login` is called if :attr:`.register_application_commands_on_startup`
+        be called in :meth:`login` is called if :attr:`.register_application_commands_at_startup`
         is ``True``.
 
         .. note::
