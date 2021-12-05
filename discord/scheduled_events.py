@@ -150,6 +150,12 @@ class ScheduledEvent(Hashable):
         if entity_metadata is not None:
             self.location = entity_metadata.get('location')
 
+    def __str__(self) -> str:
+        return self.name
+
+    def __repr__(self) -> str:
+        return f'<{self.__class__.__name__} name={self.name!r} id={self.id} guild_id={self.guild_id}>'
+
     @property
     def created_at(self) -> datetime.datetime:
         """:class:`datetime.datetime`: The scheduled event's creation time in UTC."""
