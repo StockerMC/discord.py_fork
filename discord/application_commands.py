@@ -253,7 +253,7 @@ class ApplicationCommandOption(Generic[ApplicationCommandOptionChoiceType]):
         The choices of the option.
     options: Iterable[:class:`ApplicationCommandOption`]
         The parameters of the option if it's a subcommand or subcommand group type.
-    default: Optional[:class:`ApplicationCommandOptionDefault`]
+    default: Optional[Union[:class:`ApplicationCommandOptionDefault`, Any]]
         The default for the option, if any.
 
         This is for when the option is accessed with it's relevant :class:`ApplicationCommandOptions` instance
@@ -533,8 +533,8 @@ def application_command_option(
         Defaults to ``True``.
     choices: Optional[Iterable[:class:`ApplicationCommandOptionChoice`]]
         The choices of the option, if any.
-    default: Optional[Union[:class:`ApplicationCommandOptionDefault`, Type[:class:`ApplicationCommandOptionDefault`]]]
-        The default of the option for when it's accessed with it's relevant :class:`ApplicationCommandOptions` instance.
+    default: Optional[Union[:class:`ApplicationCommandOptionDefault`, Type[:class:`ApplicationCommandOptionDefault`], Any]]
+        The default of the option for when it's accessed with its relevant :class:`ApplicationCommandOptions` instance.
     channel_types: Iterable[Union[:class:`ChannelType`, Type]]
         The valid channel types for this option. This is only valid for options of type :attr:`ApplicationCommandOptionType.channel`
 
@@ -748,6 +748,10 @@ class ApplicationCommandOptions:
             nested_options = option.get('options')
             if nested_options is not None:
                 options.extend(nested_options)
+                continue
+
+            # the option is the focused option in an autocomplete response
+            if option.get('focused'):
                 continue
 
             value: Any = option.get('value')
