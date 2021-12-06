@@ -870,7 +870,7 @@ class ApplicationCommandOptions:
         return len([v for v in self.__application_command_options__.values() if v is not None])
 
     def __contains__(self, option: str) -> bool:
-        return option in self.__application_command_options__
+        return option in self.__application_command_options__ and option is not None
 
     def __iter__(self) -> Iterator[Tuple[str, Any]]:
         yield from self.__application_command_options__.items()
