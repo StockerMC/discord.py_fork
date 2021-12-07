@@ -2267,7 +2267,7 @@ class Client:
         subcommands = list(application_command.__application_command_subcommands__.items())
         while subcommands:
             name, subcommand = subcommands.pop(0)
-            subcommand.__application_command_parent__ = application_command
+            subcommand.__application_command_parent__ = application_command  # type: ignore
 
             if inspect.isclass(subcommand):
                 # parent won't be None
