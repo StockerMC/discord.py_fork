@@ -44,7 +44,7 @@ from typing import (
     Literal,
     Iterator,
     Generic,
-    AsyncIterator,
+    AsyncGenerator,
     Iterable,
     Set,
     overload,
@@ -119,7 +119,7 @@ if TYPE_CHECKING:
     AutocompleteCallback = Callable[
         [SlashCommandT, 'AutocompleteResponse[Any]'],
         Union[
-            AsyncIterator[Union['ApplicationCommandOptionChoiceType', 'ApplicationCommandOptionChoice[ApplicationCommandOptionChoiceType]']],
+            AsyncGenerator[Union['ApplicationCommandOptionChoiceType', 'ApplicationCommandOptionChoice[ApplicationCommandOptionChoiceType]'], None],
             Coro[Iterable[Union['ApplicationCommandOptionChoiceType', 'ApplicationCommandOptionChoice[ApplicationCommandOptionChoiceType]']]]
         ]
     ]
@@ -249,16 +249,16 @@ class ApplicationCommandOption(Generic[ApplicationCommandOptionChoiceType]):
         The description of the option.
     required: :class:`bool`
         Whether the option is required or not.
-    choices: Iterable[:class:`ApplicationCommandOptionChoice`]
+    choices: List[:class:`ApplicationCommandOptionChoice`]
         The choices of the option.
-    options: Iterable[:class:`ApplicationCommandOption`]
-        The parameters of the option if it's a subcommand or subcommand group type.
+    options: List[:class:`ApplicationCommandOption`]
+        The parameters of the option if :attr:`.type` is :attr:`ApplicationCommandOptionType.sub_command` or :attr:`ApplicationCommandOptionType.sub_command_group`.
     default: Optional[Union[:class:`ApplicationCommandOptionDefault`, Any]]
         The default for the option, if any.
 
         This is for when the option is accessed with it's relevant :class:`ApplicationCommandOptions` instance
         and the option was not provided by the user.
-    channel_types: Iterable[:class:`ChannelType`]
+    channel_types: Set[:class:`ChannelType`]
         The valid channel types for this option. This is only valid for options of type :attr:`ApplicationCommandOptionType.channel`.
     autocomplete: Callable[[:class:`AutocompleteResponse`], Any]
         The callable for responses to when a user is typing an autocomplete option. This can be an :data:`typing.AsyncIterator`
@@ -535,7 +535,7 @@ def application_command_option(
         The choices of the option, if any.
     default: Optional[Union[:class:`ApplicationCommandOptionDefault`, Type[:class:`ApplicationCommandOptionDefault`], Any]]
         The default of the option for when it's accessed with its relevant :class:`ApplicationCommandOptions` instance.
-    channel_types: Iterable[Union[:class:`ChannelType`, Type]]
+    channel_types: Optional[Iterable[Union[:class:`ChannelType`, Type]]]
         The valid channel types for this option. This is only valid for options of type :attr:`ApplicationCommandOptionType.channel`
 
         This can including the following: :class:`ChannelType` members, :class:`TextChannel`, :class:`VoiceChannel`,
@@ -587,7 +587,7 @@ def _transform_literal_choices(
     attr_name: str,
     attr_type: ApplicationCommandOptionType,
     annotation: Any
-) -> Tuple[Type, ApplicationCommandOptionChoiceTypes]:
+) -> Tuple[Any, ApplicationCommandOptionChoiceTypes]:
     annotation_type = MISSING
     choices: ApplicationCommandOptionChoiceTypes = []
     for arg in annotation.__args__:
