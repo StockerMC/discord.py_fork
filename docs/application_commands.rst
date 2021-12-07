@@ -62,9 +62,56 @@ set.
 ``discord.ApplicationCommandOption``
 ------------------------------------
 
+``discord.application_command_option`` should be used to create options, not this class.
+
+* type: ``discord.ApplicationCommandOptionType`` - The type of the option.
+* name: ``str`` - The name of the option.
+* description: ``str`` - The description of the option.
+* required: ``bool`` - Whether the option is required or not.
+* choices: ``List[discord.ApplicationCommandOptionChoice]`` - The choices of the option.
+* options: ``List[discord.ApplicationCommandOption]`` - The parameters of the option if its ``type`` is ``ApplicationCommandOptionType.sub_command`` or ``ApplicationCommandOptionType.sub_command_group``.
+* default: ``Optional[Union[discord.ApplicationCommandOptionDefault, Any]]``- The default for the option, if any. This is for when the option is accessed with it's relevant ``ApplicationCommandOptions`` instance and the option was not provided by the user.
+* channel_types: ``Set[discord.ChannelType]`` - The valid channel types for this option. This is only valid for options of type ``ApplicationCommandOptionType.channel``.
+* min_value: ``Optional[int]`` - The minimum value permitted for this option. This is only valid for options of type ``ApplicationCommandOptionType.integer``.
+* max_value: ``Optional[int]`` - The maximum value permitted for this option. This is only valid for options of type ``ApplicationCommandOptionType.integer``.
+* ``@autocomplete`` - The callable for responses to when a user is typing an autocomplete option. This can be a ``typing.AsyncIterator`` that yields choices with types of ``str``, ``int`` or ``float``. This can also be a coroutine function that returns an iterable of choices with types of ``str``, ``int`` or ``float``. Similar to an application command's ``command_check``, it takes a single parameter which is the response from a user typing the option.
+
 Application Command Option Choices
 ----------------------------------
-...
+
+To set the choices of an application command option, pass a list of ``ApplicationCommandOptionChoice`` objects to the ``choices`` keyword argument.
+Only options of type ``str``, ``int``, and ``float`` can have choices. The type of the value of the choices of the option must be the same as the type of the option as well.
+If an option is type hinted with ``typing.Literal``, each type argument of the ``Literal`` is set as a choice of the option, being the name and value of the option choice.
+
+Quick example:
+
+.. code-block python3
+
+    class Blep(discord.SlashCommand, guild_ids=[123]):
+    """Send a random adorable animal photo"""
+
+    # if we wanted the values to be different than the name, we would
+    # pass our own discord.ApplicationCommandOptionChoice instances to
+    # the choices parameter of application_command_option (which takes a list)
+    animal: typing.Optional[typing.Literal['Dog', 'Cat', 'Penguin']] = discord.application_command_option(
+        description='The type of animal',
+        default='Dog',
+    )
+
+    async def callback(self, response: discord.SlashCommandResponse):
+        photos = {
+            'Dog': 'https://i.imgur.com/rpQdRoY.jpg',
+            'Cat': 'https://pbs.twimg.com/media/E_hf3mzXsAQvIBq.jpg:large',
+            'Penguin': 'https://static.onecms.io/wp-content/uploads/sites/20/2017/01/penguins.jpg',
+        }
+
+        photo = photos[response.options.animal]
+        await response.send_message(photo)
+
+``discord.ApplicationCommandOptionChoice``
+
+* name: ``str`` - The name of the choice. This is shown to users.
+* value: ``Union[str, int, float]`` - The value of the choice. This is what you will receive if the choice is selected. The type of this should be the same type of the option it is for.
 
 Application Command Option Defaults
 -----------------------------------
@@ -382,6 +429,7 @@ An example of an invalid subcommand group structure:
 Autocomplete
 ------------
 
+Only options of type ``str``, ``int``, or ``float`` can be autocomplete options.
 To declare an autocomplete option, decorate a method with ``option.autocomplete``. The method can be either of the following:
 
 * A coroutine function that returns an iterable of ``ApplicationCommandOptionChoice`` objects or strings.
