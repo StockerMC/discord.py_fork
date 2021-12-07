@@ -1202,9 +1202,11 @@ def _application_command_special_method(func: FuncT) -> FuncT:
     func.__application_command_special_method__ = None
     return func
 
+
 def _get_overridden_method(method: FuncT) -> Optional[FuncT]:
     """Return None if the method is not overridden. Otherwise returns the overridden method."""
     return getattr(method.__func__, '__application_command_special_method__', method)
+
 
 class BaseApplicationCommand:
     if TYPE_CHECKING:
@@ -1214,8 +1216,8 @@ class BaseApplicationCommand:
         __application_command_type__: ClassVar[ApplicationCommandType]
         __application_command_default_permission__: ClassVar[bool]
         __application_command_group_command__: ClassVar[bool]
-        __application_command_subcommands__: ClassVar[Dict[str, BaseApplicationCommand]]
-        __application_command_parent__: Optional[Union[Type[BaseApplicationCommand], BaseApplicationCommand]]
+        __application_command_subcommands__: ClassVar[Dict[str, SlashCommand]]
+        __application_command_parent__: Optional[Union[Type[SlashCommand], SlashCommand]]
         __application_command_guild_ids__: Optional[List[int]]
         __application_command_global_command__: bool
 
@@ -1234,7 +1236,7 @@ class BaseApplicationCommand:
         *,
         name: Optional[str] = None,
         description: str = MISSING,
-        parent: Optional[Type[BaseApplicationCommand]] = None,
+        parent: Optional[Type[SlashCommand]] = None,
         type: ApplicationCommandType = MISSING,
         default_permission: bool = True,
         guild_ids: Optional[List[int]] = None,
@@ -1249,7 +1251,7 @@ class BaseApplicationCommand:
         *,
         name: Optional[str] = None,
         description: str = MISSING,
-        parent: Optional[Type[BaseApplicationCommand]] = None,\
+        parent: Optional[Type[SlashCommand]] = None,
         type: ApplicationCommandType = MISSING,
         default_permission: bool = True,
         global_command: Literal[True],
@@ -1262,7 +1264,7 @@ class BaseApplicationCommand:
         *,
         name: Optional[str] = None,
         description: str = MISSING,
-        parent: Optional[Type[BaseApplicationCommand]] = None,  # make this SlashCommand?
+        parent: Optional[Type[SlashCommand]] = None,  # make this SlashCommand?
         type: ApplicationCommandType = MISSING,
         default_permission: bool = True,
         guild_ids: Optional[List[int]] = None,
@@ -1480,6 +1482,7 @@ class BaseApplicationCommand:
         """
         if not isinstance(type, ApplicationCommandType):
             raise TypeError(f'type must be an ApplicationCommandType member not {type.__class__.__name__}')
+
         cls.__application_command_type__ = type
 
     async def callback(self, response: BaseApplicationCommandResponse[Any]) -> None:
@@ -1527,6 +1530,46 @@ class BaseApplicationCommand:
                 ret['options'] = options
 
         return ret
+
+    @property
+    def name(self) -> str:
+        return self.__application_command_name__
+
+    @property
+    def description(self) -> str:
+        return self.__application_command_description__
+
+    @property
+    def options(self) -> List[ApplicationCommandOption]:
+        return list(self.__application_command_options__.values())
+
+    @property
+    def type(self) -> ApplicationCommandType:
+        return self.__application_command_type__
+
+    @property
+    def default_permission(self) -> bool:
+        return self.__application_command_default_permission__
+
+    @property
+    def group_command(self) -> bool:
+        return self.__application_command_group_command__
+
+    @property
+    def subcommands(self) -> List[Union[Type[SlashCommand], SlashCommand]]:
+        return list(self.__application_command_subcommands__.values())
+
+    @property
+    def parent(self) -> Optional[Union[SlashCommand, Type[SlashCommand]]]:
+        return self.__application_command_parent__
+
+    @property
+    def guild_ids(self) -> Optional[List[int]]:
+        return self.__application_command_guild_ids__
+
+    @property
+    def global_command(self) -> bool:
+        return self.__application_command_global_command__
 
 
 class SlashCommand(BaseApplicationCommand, type=ApplicationCommandType.slash):
@@ -1638,7 +1681,7 @@ class SlashCommand(BaseApplicationCommand, type=ApplicationCommandType.slash):
             raise TypeError(f'parent must be a SlashCommand not {parent.__class__.__name__}')
 
         parent.__application_command_subcommands__[self.__application_command_name__] = self
-        self.__application_command_parent__: SlashCommand = parent
+        self.__application_command_parent__ = parent
 
     @classmethod
     def add_option(cls, option: ApplicationCommandOption) -> None:
