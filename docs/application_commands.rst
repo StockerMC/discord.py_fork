@@ -61,7 +61,6 @@ set.
 
 ``discord.ApplicationCommandOption``
 ------------------------------------
-...
 
 Application Command Option Choices
 ----------------------------------
@@ -459,7 +458,7 @@ Keyword arguments to the constructor:
 
 Methods:
 
-* add_application_command
+* ``add_application_command(application_command)``
 
   * Adds an application command to the client.
 
@@ -470,7 +469,7 @@ Methods:
     **Raises**
 
     * ``TypeError`` - The application command passed is not an application command instance.
-* remove_application_command
+* ``remove_application_command(application_command)``
 
   * Removes an application command from the client.
 
@@ -485,7 +484,7 @@ Methods:
     **Returns**
 
     ``Optional[Union[SlashCommand, MessageCommand, UserCommand]]`` - The application command that was removed. ``None`` if not found.
-* add_application_command_check
+* ``add_application_command_check(func)``
 
   * Adds a global application command check to the client.
 
@@ -494,7 +493,7 @@ Methods:
     **Parameters**
 
     * func - The function that was used as a global check. This function can either be a regular function or a coroutine.
-* application_command_check
+* ``@application_command_check``
 
   * A decorator that adds a global application command check to the client.
 
@@ -506,7 +505,7 @@ Methods:
 
         This function can either be a regular function or a coroutine.
 
-    This takes a single parameter, which is the response of the application command. The type of it can be
+    Similar to an application command's ``command_check``, this takes a single parameter, which is the response of the application command. The type of it can be
     ``SlashCommandResponse``, ``MessageCommandResponse`` or ``UserCommandResponse``.
 
     Quick example:
@@ -516,7 +515,7 @@ Methods:
         @client.application_command_check
         async def check_commands(response):
             return await client.is_owner(response.user)
-* application_command
+* ``@application_command``
 
   * A decorator that adds an application command to the client.
 
@@ -533,7 +532,7 @@ Methods:
     **Raises**
 
     * ``TypeError`` - The application command passed does not derive from a valid application command class.
-* register_application_commands: Coroutine function
+* ``await register_application_commands()``
 
   * Registers all application commands added to the client. This will be called in ``Client.login`` if
     ``Client.register_application_commands_at_startup`` is ``True``.
@@ -556,18 +555,18 @@ Properties:
 
 ``Cog``
 -------
-* add_application_command
+* ``add_application_command(application_command)``
 
   * TODO
 
-* remove_application_command
+* ``remove_application_command(application_command)``
 
   * TODO
 
-* get_application_commands
+* ``get_application_commands()``
 
   * TODO
 
-* cog_application_command_check
+* ``cog_application_command_check(response)``
 
   * Similar to the ``cog_command_check`` method, this method is ran for application commands added to this cog. It receives one argument: the response of the command used. This method *could be a coroutine*.
