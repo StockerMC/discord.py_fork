@@ -1264,9 +1264,6 @@ class ConnectionState:
 
         user_id = int(data['user_id'])
         member = guild.get_member(user_id)
-        if member is None:
-            member = self.get_user(user_id)
-
         if member is not None:
             self.dispatch('guild_scheduled_event_user_remove', scheduled_event, member)
 
