@@ -1156,25 +1156,23 @@ to handle it, which defaults to print a traceback and ignoring the exception.
     :param after: The updated scheduled event's new info.
     :type after: :class:`ScheduledEvent`
 
-.. function:: on_guild_scheduled_event_user_add(scheduled_event, user)
+.. function:: on_guild_scheduled_event_user_add(scheduled_event, member)
 
-    Called when a :class:`Member` or :class:`User` has subscribed to a
-    :class:`ScheduledEvent`.
+    Called when a :class:`Member` has subscribed to a :class:`ScheduledEvent`.
 
-    :param scheduled_event: The scheduled event the member or user subscribed to.
+    :param scheduled_event: The scheduled event the member subscribed to.
     :type scheduled_event: :class:`ScheduledEvent`
-    :param user: The member or user that subscribed to the scheduled event.
-    :type user: Union[:class:`Member`, :class:`User`]
+    :param user: The member that subscribed to the scheduled event.
+    :type user: :class:`Member`
 
-.. function:: on_guild_scheduled_event_user_add(scheduled_event, user)
+.. function:: on_guild_scheduled_event_user_remove(scheduled_event, member)
 
-    Called when a :class:`Member` or :class:`User` has unsubscribed from a
-    :class:`ScheduledEvent`.
+    Called when a :class:`Member` has unsubscribed from a :class:`ScheduledEvent`.
 
-    :param scheduled_event: The scheduled event the member or user unsubscribed from.
+    :param scheduled_event: The scheduled event the member unsubscribed from.
     :type scheduled_event: :class:`ScheduledEvent`
-    :param user: The member or user that unsubscribed from the scheduled event.
-    :type user: Union[:class:`Member`, :class:`User`]
+    :param user: The member that unsubscribed from the scheduled event.
+    :type user: :class:`Member`
 
 .. _discord-api-utils:
 
