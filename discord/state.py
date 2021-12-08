@@ -1262,7 +1262,6 @@ class ConnectionState:
             _log.debug('GUILD_SCHEDULED_EVENT_USER_REMOVE referencing an unknown scheduled event ID: %s. Discarding.', data['guild_scheduled_event_id'])
             return
 
-        # NOTE: should this just be a User/Member and not have the possibility of being both?
         user_id = int(data['user_id'])
         member = guild.get_member(user_id)
         if member is None:
