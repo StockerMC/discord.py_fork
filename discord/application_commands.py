@@ -624,6 +624,7 @@ def _get_options(
 
             origin = getattr(annotation, '__origin__', None)
             is_union = origin is Union
+            args = []
             if not is_union:
                 if PY_310 and annotation.__class__ is types.UnionType:  # type: ignore
                     args = annotation.__args__
