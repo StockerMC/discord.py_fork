@@ -1572,6 +1572,23 @@ class BaseApplicationCommand:
     def global_command(self) -> bool:
         return self.__application_command_global_command__
 
+    @property
+    def full_parent_name(self) -> str:
+        entries = []
+        command = self
+        while command.__application_command_parent__ is not None:
+            command = command.__application_command_parent__
+            entries.append(command.__application_command_name__)
+
+        return ' '.join(reversed(entries))
+
+    @property
+    def qualified_name(self) -> str:
+        parent = self.full_parent_name
+        if parent:
+            return parent + ' ' + self.__application_command_name__
+        else:
+            return self.__application_command_name__
 
 class SlashCommand(BaseApplicationCommand, type=ApplicationCommandType.slash):
     """Represents a Discord slash command.
