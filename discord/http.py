@@ -1575,10 +1575,10 @@ class HTTPClient:
         return self.request(r, params=params)
 
     def create_scheduled_event(
-        self, guild_id: Snowflake, payload: scheduled_events.CreateScheduledEvent
+        self, guild_id: Snowflake, payload: scheduled_events.CreateScheduledEvent, reason: Optional[str] = None,
     )  -> Response[scheduled_events.ScheduledEvent]:
         r = Route('POST', '/guilds/{guild_id}/scheduled-events', guild_id=guild_id)
-        return self.request(r, json=payload)
+        return self.request(r, json=payload, reason=reason)
 
     def get_scheduled_event(
         self, guild_id: Snowflake, scheduled_event_id: Snowflake, with_user_count: bool = True
@@ -1593,7 +1593,7 @@ class HTTPClient:
         return self.request(r, params=params)
 
     def edit_scheduled_event(
-        self, guild_id: Snowflake, scheduled_event_id: Snowflake, payload: scheduled_events.EditScheduledEvent
+        self, guild_id: Snowflake, scheduled_event_id: Snowflake, payload: scheduled_events.EditScheduledEvent, reason: Optional[str] = None
     ) -> Response[scheduled_events.ScheduledEvent]:
         r = Route(
             'PATCH',
@@ -1601,7 +1601,7 @@ class HTTPClient:
             guild_id=guild_id,
             scheduled_event_id=scheduled_event_id
         )
-        return self.request(r, json=payload)
+        return self.request(r, json=payload, reason=reason)
 
     def delete_scheduled_event(self, guild_id: Snowflake, scheduled_event_id: Snowflake) -> Response[None]:
         r = Route(

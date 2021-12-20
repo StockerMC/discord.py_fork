@@ -281,6 +281,7 @@ class ScheduledEvent(Hashable):
         description: str = MISSING,
         entity_type: ScheduledEventEntityType = MISSING,
         status: ScheduledEventStatus = MISSING,
+        reason: Optional[str] = None,
     ) -> ScheduledEvent:
         """|coro|
         
@@ -308,6 +309,20 @@ class ScheduledEvent(Hashable):
             The entity type of the scheduled event.
         status: :class:`ScheduledEventStatus`
             The status of the scheduled event.
+        reason: Optional[:class:`str`]
+            The reason for creating the scheduled event. Shows up on the audit log.
+
+        Raises
+        -------
+        Forbidden
+            You do not have the proper permissions to edit this scheduled event.
+        HTTPException
+            Editing the scheduled event failed.
+
+        Returns
+        -------
+        :class:`ScheduledEvent`
+            The newly updated scheduled event.
         """
 
         payload: EditScheduledEventPayload = {}
@@ -352,7 +367,7 @@ class ScheduledEvent(Hashable):
         if entity_metadata:
             payload['entity_metadata'] = entity_metadata
 
-        data = await self._state.http.edit_scheduled_event(self.guild_id, self.id, payload)
+        data = await self._state.http.edit_scheduled_event(self.guild_id, self.id, payload, reason=reason)
         return self.__class__(state=self._state, data=data)
 
     async def delete(self) -> None:

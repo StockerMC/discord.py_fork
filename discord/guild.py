@@ -1037,6 +1037,7 @@ class Guild(Hashable):
         channel: Optional[Snowflake] = ...,
         scheduled_end_time: datetime.datetime,
         location: str,
+        reason: Optional[str] = None,
     ) -> ScheduledEvent:
         ...
 
@@ -1052,6 +1053,7 @@ class Guild(Hashable):
         channel: Snowflake,
         scheduled_end_time: Optional[datetime.datetime] = None,
         location: Optional[str] = None,
+        reason: Optional[str] = None,
     ) -> ScheduledEvent:
         ...
 
@@ -1068,6 +1070,7 @@ class Guild(Hashable):
         channel: Optional[Snowflake] = None,
         scheduled_end_time: Optional[datetime.datetime] = None,
         location: Optional[str] = None,
+        reason: Optional[str] = None,
     ) -> ScheduledEvent:
         """|coro|
 
@@ -1096,6 +1099,8 @@ class Guild(Hashable):
         location: Optional[:class:`str`]
             The scheduled event's location. This must not be ``None`` if ``entity_type``
             is :attr:`ScheduledEventEntityType.external`.
+        reason: Optional[:class:`str`]
+            The reason for creating the scheduled event. Shows up on the audit log.
 
         Raises
         -------
@@ -1136,7 +1141,7 @@ class Guild(Hashable):
         if location is not None:
             payload['entity_metadata'] = {'location': location}
 
-        data = await self._state.http.create_scheduled_event(self.id, payload)
+        data = await self._state.http.create_scheduled_event(self.id, payload, reason=reason)
         scheduled_event = ScheduledEvent(data=data, state=self._state)
 
         # temporarily add to the cache
