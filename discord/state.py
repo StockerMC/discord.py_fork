@@ -938,7 +938,7 @@ class ConnectionState:
             _log.debug('CHANNEL_UPDATE referencing an unknown guild ID: %s. Discarding.', guild_id)
 
     def parse_channel_create(self, data: ChannelPayload) -> None:
-        factory, ch_type = _channel_factory(data['type'])
+        factory, _ = _channel_factory(data['type'])
         if factory is None:
             _log.debug('CHANNEL_CREATE referencing an unknown channel type %s. Discarding.', data['type'])
             return
@@ -1236,6 +1236,9 @@ class ConnectionState:
     # TODO: raw event for user_add/remove?
 
     def parse_guild_scheduled_event_user_add(self, data: ScheduledEventUserEvent) -> None:
+        raw = RawGuildScheduledEventUserEvent(data, 'GUILD_SCHEDULED_EVENT_USER_ADD')
+        self.dispatch('raw_guild_scheduled_event_user_add', raw)
+
         guild = self._get_guild(int(data['guild_id']))
         if guild is None:
             _log.debug('GUILD_SCHEDULED_EVENT_USER_ADD referencing an unknown guild ID: %s. Discarding.', data['guild_id'])
@@ -1252,6 +1255,9 @@ class ConnectionState:
             self.dispatch('guild_scheduled_event_user_add', scheduled_event, member)
 
     def parse_guild_scheduled_event_user_remove(self, data: ScheduledEventUserEvent) -> None:
+        raw = RawGuildScheduledEventUserEvent(data, 'GUILD_SCHEDULED_EVENT_USER_REMOVE')
+        self.dispatch('raw_guild_scheduled_event_user_add', raw)
+
         guild = self._get_guild(int(data['guild_id']))
         if guild is None:
             _log.debug('GUILD_SCHEDULED_EVENT_USER_REMOVE referencing an unknown guild ID: %s. Discarding.', data['guild_id'])

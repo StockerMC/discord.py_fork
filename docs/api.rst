@@ -1160,19 +1160,51 @@ to handle it, which defaults to print a traceback and ignoring the exception.
 
     Called when a :class:`Member` has subscribed to a :class:`ScheduledEvent`.
 
+    This requires :attr:`Intents.members` to be enabled.
+
+    .. note::
+
+        Consider using :func:`on_raw_guild_scheduled_event_user_add` if you need this and do not want
+        to enable the members intent.
+
     :param scheduled_event: The scheduled event the member subscribed to.
     :type scheduled_event: :class:`ScheduledEvent`
     :param user: The member that subscribed to the scheduled event.
     :type user: :class:`Member`
 
+.. function:: on_raw_guild_scheduled_event_user_add(payload)
+
+    Called when a :class:`Member` has subscribed to a :class:`ScheduledEvent`.
+    Unlike :func:`on_guild_scheduled_event_user_add`, this is called regardless
+    of the state of the internal member cache.
+
+    :param payload: The raw event payload data.
+    :type payload: :class:`RawGuildScheduledEventUserEvent`
+
 .. function:: on_guild_scheduled_event_user_remove(scheduled_event, member)
 
     Called when a :class:`Member` has unsubscribed from a :class:`ScheduledEvent`.
+
+    This requires :attr:`Intents.members` to be enabled.
+
+    .. note::
+
+        Consider using :func:`on_raw_guild_scheduled_event_user_remove` if you need this and do not want
+        to enable the members intent.
 
     :param scheduled_event: The scheduled event the member unsubscribed from.
     :type scheduled_event: :class:`ScheduledEvent`
     :param user: The member that unsubscribed from the scheduled event.
     :type user: :class:`Member`
+
+.. function:: on_raw_guild_scheduled_event_user_remove(payload)
+
+    Called when a :class:`Member` has subscribed to a :class:`ScheduledEvent`.
+    Unlike :func:`on_guild_scheduled_event_user_remove`, this is called regardless
+    of the state of the internal member cache.
+
+    :param payload: The raw event payload data.
+    :type payload: :class:`RawGuildScheduledEventUserEvent`
 
 .. _discord-api-utils:
 
@@ -4150,6 +4182,14 @@ RawTypingEvent
 .. attributetable:: RawTypingEvent
 
 .. autoclass:: RawTypingEvent()
+    :members:
+
+RawGuildScheduledEventUserEvent
+~~~~~~~~~~~~~~~
+
+.. attributetable:: RawGuildScheduledEventUserEvent
+
+.. autoclass:: RawGuildScheduledEventUserEvent()
     :members:
 
 PartialWebhookGuild
