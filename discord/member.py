@@ -253,7 +253,7 @@ class Member(discord.abc.Messageable, _UserTag):
     premium_since: Optional[:class:`datetime.datetime`]
         An aware datetime object that specifies the date and time in UTC when the member used their
         "Nitro boost" on the guild, if available. This could be ``None``.
-    communication_disabled_until: Optional[:class:`datetime.datetime`]
+    timeout_until: Optional[:class:`datetime.datetime`]
         An aware datetime object that specifies the date and time in UTC when the member will have their
         timeout removed. This could be ``None``.
     """
@@ -261,7 +261,7 @@ class Member(discord.abc.Messageable, _UserTag):
     __slots__ = (
         'joined_at',
         'premium_since',
-        'communication_disabled_until',
+        'timeout_until',
         'activities',
         'guild',
         'pending',
@@ -297,7 +297,7 @@ class Member(discord.abc.Messageable, _UserTag):
         self.guild: Guild = guild
         self.joined_at: Optional[datetime.datetime] = utils.parse_time(data.get('joined_at'))
         self.premium_since: Optional[datetime.datetime] = utils.parse_time(data.get('premium_since'))
-        self.communication_disabled_until: Optional[datetime.datetime] = utils.parse_time(data.get('communication_disabled_until'))
+        self.timeout_until: Optional[datetime.datetime] = utils.parse_time(data.get('communication_disabled_until'))
         self._roles: utils.SnowflakeList = utils.SnowflakeList(map(int, data['roles']))
         self._client_status: Dict[Optional[str], str] = {None: 'offline'}
         self.activities: Tuple[ActivityTypes, ...] = tuple()
@@ -667,7 +667,7 @@ class Member(discord.abc.Messageable, _UserTag):
         suppress: bool = MISSING,
         roles: List[discord.abc.Snowflake] = MISSING,
         voice_channel: Optional[VocalGuildChannel] = MISSING,
-        communication_disabled_until: Optional[datetime.datetime] = MISSING,
+        timeout_until: Optional[datetime.datetime] = MISSING,
         reason: Optional[str] = None,
     ) -> Optional[Member]:
         """|coro|
@@ -689,7 +689,7 @@ class Member(discord.abc.Messageable, _UserTag):
         +------------------------------+--------------------------------------+
         | voice_channel                | :attr:`Permissions.move_members`     |
         +------------------------------+--------------------------------------+
-        | communication_disabled_until | :attr:`Permissions.moderate_members` |
+        | timeout_until | :attr:`Permissions.moderate_members` |
         +------------------------------+--------------------------------------+
 
         All parameters are optional.
@@ -718,7 +718,7 @@ class Member(discord.abc.Messageable, _UserTag):
         voice_channel: Optional[:class:`VoiceChannel`]
             The voice channel to move the member to.
             Pass ``None`` to kick them from voice.
-        communication_disabled_until: Optional[:class:`datetime.datetime`]
+        timeout_until: Optional[:class:`datetime.datetime`]
             A datetime object when indicating when the user should be timed out until.
             Pass ``None`` to remove their timeout.
         reason: Optional[:class:`str`]
@@ -777,14 +777,14 @@ class Member(discord.abc.Messageable, _UserTag):
         if roles is not MISSING:
             payload['roles'] = tuple(r.id for r in roles)
 
-        if communication_disabled_until is not MISSING:
-            if communication_disabled_until is None:
+        if timeout_until is not MISSING:
+            if timeout_until is None:
                 payload['communication_disabled_until'] = None
             else:
-                if communication_disabled_until.tzinfo:
-                    timestamp = communication_disabled_until.astimezone(tz=datetime.timezone.utc).isoformat()
+                if timeout_until.tzinfo:
+                    timestamp = timeout_until.astimezone(tz=datetime.timezone.utc).isoformat()
                 else:
-                    timestamp = communication_disabled_until.replace(tzinfo=datetime.timezone.utc).isoformat()
+                    timestamp = timeout_until.replace(tzinfo=datetime.timezone.utc).isoformat()
 
                 payload['communication_disabled_until'] = timestamp
 
