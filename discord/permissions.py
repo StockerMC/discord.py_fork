@@ -153,7 +153,7 @@ class Permissions(BaseFlags):
         """A factory method that creates a :class:`Permissions` with all
         permissions set to ``True``.
         """
-        return cls(0b1111111111111111111111111111111111111111)
+        return cls(0b11111111111111111111111111111111111111111)
 
     @classmethod
     def all_channel(cls: Type[P]) -> P:
@@ -564,6 +564,14 @@ class Permissions(BaseFlags):
         .. versionadded:: 2.0
         """
         return 1 << 39
+
+    @flag_value
+    def moderate_members(self) -> int:
+        """:class:`bool`: Returns ``True`` if a user can perform limited moderation actions (timeout).
+
+        .. versionadded:: 2.0
+        """
+        return 1 << 40
 
 PO = TypeVar('PO', bound='PermissionOverwrite')
 
