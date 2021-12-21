@@ -4,9 +4,15 @@ Change Log
 - Fully typehinted the library
 
 September 10, 2021
-^^^^^^^^^^^^^^^^^^
+------------------
 
-Implemented welcome screens.
+Implemented welcome screens:
+
+- Added the ``discord.WelcomeScreen`` and ``discord.WelcomeScreenChannel`` classes.
+- Added the ``discord.Guild.welcome_screen`` method.
+
+Application Commands
+--------------------
 
 September 21, 2021
 ^^^^^^^^^^^^^^^^^^
@@ -17,8 +23,13 @@ Implemented application commands:
 - `Examples <https://gist.github.com/StockerMC/discord.py/examples/application_commands>`_
 - Documentation: TODO
 
+October 8, 2021
+^^^^^^^^^^^^^^^
+
+Implemented autocompletion support for slash command options.
+
 September 24, 2021
-^^^^^^^^^^^^^^^^^^
+------------------
 
 Added cogs, extensions and listeners to ``Client``:
 
@@ -27,17 +38,45 @@ Added cogs, extensions and listeners to ``Client``:
 - For backwards compatibility, ``Cog`` and ``CogMeta`` are imported into the ``ext.commands`` namespace as well.
 
 September 28, 2021
-^^^^^^^^^^^^^^^^^^
+------------------
 
-Implemented role icons.
+Implemented role icons:
 
-October 8, 2021
-^^^^^^^^^^^^^^^
+- Added the ``discord.Role.icon`` property.
 
-Implemented autocompletion support for slash command options.
+Member Timeouts
+---------------
 
 December 20, 2021
 ^^^^^^^^^^^^^^^^^
 
-- Implemented member timeouts.
-- Implemented guild scheduled events.
+Implemented member timeouts:
+
+- Added the ``Member.timeout_until`` attribute.
+- Added the ``timeout_until`` keyword argument to ``Member.edit``.
+
+December 21, 2021
+^^^^^^^^^^^^^^^^^
+
+- Added the ``Member.timed_out`` property.
+
+Guild Scheduled Events
+----------------------
+
+December 20, 2021
+^^^^^^^^^^^^^^^^^
+
+Implemented guild scheduled events:
+
+- Added the ``discord.ScheduledEvent`` class.
+- Added the ``discord.Guild.create_scheduled_event`` method.
+- Added the following events:
+
+  - ``on_guild_scheduled_event_create``
+  - ``on_guild_scheduled_event_delete``
+  - ``on_guild_scheduled_event_update``
+  - ``on_guild_scheduled_event_user_add``
+  - ``on_guild_scheduled_event_user_add``
+  - ``on_raw_guild_scheduled_event_user_remove``
+  - ``on_raw_guild_scheduled_event_user_remove``
+
