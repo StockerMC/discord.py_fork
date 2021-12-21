@@ -4224,6 +4224,14 @@ ApplicationCommandOption
 
 .. autofunction:: discord.application_command_option
 
+ScheduledEvent
+~~~~~~~~~~~~~~~
+
+.. attributetable:: ScheduledEvent
+
+.. autoclass:: ScheduledEvent()
+    :members:
+
 Data Classes
 --------------
 
