@@ -17,3 +17,4 @@ Dec 20, 2021
 ^^^^^^^^^^^^
 
 - Implemented member timeouts.
+- Implemented guild scheduled events.
