@@ -1,4 +1,4 @@
-New features added to the fork
+Change Log
 ==============================
 
 * Fully typehinted the library
@@ -13,3 +13,7 @@ New features added to the fork
     * Application commands can be added to cogs
     * Note: for backwards compatibility, ``Cog`` and ``CogMeta`` are imported into the ``ext.commands`` namespace as well.
 
+Dec 20, 2021
+^^^^^^^^^^^^
+
+* Implemented member timeouts.
