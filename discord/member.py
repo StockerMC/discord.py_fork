@@ -361,6 +361,7 @@ class Member(discord.abc.Messageable, _UserTag):
         self.activities = member.activities
         self._state = member._state
         self._avatar = member._avatar
+        self.timeout_until = member.timeout_until
 
         # Reference will not be copied unless necessary by PRESENCE_UPDATE
         # See below
