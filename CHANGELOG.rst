@@ -12,17 +12,19 @@ September 21, 2021
 ^^^^^^^^^^^^^^^^^^
 
 Implemented application commands:
-    - Based on `Danny's class based slash command DSL <https://gist.github.com/Rapptz/2a7a299aa075427357e9b8a970747c2c>`_
-    - `Examples <https://gist.github.com/StockerMC/discord.py/examples/application_commands>`_
-    - Documentation: TODO
+
+- Based on `Danny's class based slash command DSL <https://gist.github.com/Rapptz/2a7a299aa075427357e9b8a970747c2c>`_
+- `Examples <https://gist.github.com/StockerMC/discord.py/examples/application_commands>`_
+- Documentation: TODO
 
 September 24, 2021
 ^^^^^^^^^^^^^^^^^^
 
 Added cogs, extensions and listeners to ``Client``:
-    - Moved ``Cog`` and ``CogMeta`` into the discord namespace.
-    - Application commands can be added to cogs
-    - For backwards compatibility, ``Cog`` and ``CogMeta`` are imported into the ``ext.commands`` namespace as well.
+
+- Moved ``Cog`` and ``CogMeta`` into the discord namespace.
+- Application commands can be added to cogs
+- For backwards compatibility, ``Cog`` and ``CogMeta`` are imported into the ``ext.commands`` namespace as well.
 
 September 28, 2021
 ^^^^^^^^^^^^^^^^^^
