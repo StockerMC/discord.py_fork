@@ -72,6 +72,9 @@ except ModuleNotFoundError:
 else:
     HAS_ORJSON = True
 
+if TYPE_CHECKING:
+    from .file import File
+
 
 __all__ = (
     'oauth_url',
@@ -516,6 +519,29 @@ def _parse_ratelimit_header(request: _RequestLike, *, use_clock: bool = False) -
         return (reset - now).total_seconds()
     else:
         return float(reset_after)
+
+
+def _generate_multipart(payload: Dict[str, Any], files: Sequence[File]) -> List[Dict[str, Any]]:
+    payload['attachments'] = attachments = []
+    form = []
+
+    for index, file in enumerate(files):
+        if file.description is not None:
+            attachments.append({
+                'id': str(index),
+                'filename': file.filename,
+                'description': file.description,
+            })
+
+        form.append({
+            'name': f'files[{index}]',
+            'value': file.fp,
+            'filename': file.filename,
+            'content_type': 'application/octet-stream',
+        })
+
+    form.append({'name': 'payload_json', 'value': _to_json(payload)})
+    return form
 
 
 @overload

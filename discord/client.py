@@ -61,7 +61,7 @@ from .widget import Widget
 from .guild import Guild
 from .emoji import Emoji
 from .channel import _threaded_channel_factory, PartialMessageable
-from .enums import ChannelType, ApplicationCommandType
+from .enums import ChannelType
 from .mentions import AllowedMentions
 from .errors import *
 from .enums import Status, VoiceRegion
@@ -244,7 +244,12 @@ class Client:
         To enable these events, this must be set to ``True``. Defaults to ``False``.
 
         .. versionadded:: 2.0
-    register_application_commands_on_startup: :class:`bool`
+    application_command_guild_ids: Optional[List[:class:`int`]]
+        The IDs of the guilds to upload all application commands to that do not have guild IDs set.
+        It is recommended to set this while testing to speed up the registering of the commands.
+
+        .. versionadded:: 2.0
+    register_application_commands_at_startup: :class:`bool`
         Whether :meth:`register_application_commands` should be called in :meth:`login`.
         It is recommended to set this to ``False`` when the application commands
         added to the client are the same (having the exact same name and options) as the previous
@@ -253,7 +258,7 @@ class Client:
         .. note::
 
             If this is set to ``True``, :meth:`register_application_commands` will be created as a task,
-            which means that the bot may connect to the gateway before all application commands are registered.
+            which means that the client may connect to the gateway before all application commands are registered.
             :func:`on_ready` and :meth:`wait_until_ready` will be delayed to wait for
             :meth:`Client.register_application_commands` to finish, regardless of whether an error was raised in it or not.
 
@@ -282,7 +287,7 @@ class Client:
         self.owner_ids: Optional[collections.abc.Collection[int]] = options.get('owner_ids', set())
         self.application_command_guild_ids: Optional[List[int]] = options.get('application_command_guild_ids')
         self.extra_events: Dict[str, List[CoroFunc]] = {}
-        self.register_application_commands_on_startup: bool = options.get('register_application_commands_on_startup', True)
+        self.register_application_commands_at_startup: bool = options.get('register_application_commands_at_startup', True)
 
         if self.owner_id and self.owner_ids:
             raise TypeError('Both owner_id and owner_ids are set.')
@@ -421,7 +426,7 @@ class Client:
 
         .. versionadded:: 2.0
         """
-        return self._connection.application_flags  # type: ignore
+        return self._connection.application_flags
 
     def is_ready(self) -> bool:
         """:class:`bool`: Specifies if the client's internal cache is ready for use."""
@@ -483,7 +488,7 @@ class Client:
         else:
             self._schedule_event(coro, method, *args, **kwargs)
 
-        for event in self.extra_events.get(event_name, []):
+        for event in self.extra_events.get(method, []):
             self._schedule_event(event, method, *args, **kwargs)
 
     async def on_error(self, event_method: str, *args: Any, **kwargs: Any) -> None:
@@ -571,7 +576,7 @@ class Client:
         data = await self.http.static_login(token.strip())
         self._connection.user = ClientUser(state=self._connection, data=data)
 
-        if self.register_application_commands_on_startup:
+        if self.register_application_commands_at_startup:
             self._connection._application_command_task = asyncio.create_task(
                 self._connection._register_application_commands(), name='discord-register-application-commands'
             )
@@ -1894,7 +1899,7 @@ class Client:
     # cogs
 
     def add_cog(self, cog: Cog, *, override: bool = False) -> None:
-        """Adds a "cog" to the bot.
+        """Adds a "cog" client.
 
         A cog is a class that has its own event listeners and commands.
 
@@ -1906,7 +1911,7 @@ class Client:
         Parameters
         -----------
         cog: :class:`.Cog`
-            The cog to register to the bot.
+            The cog to register client.
         override: :class:`bool`
             If a previously loaded cog with the same name should be ejected
             instead of raising an error.
@@ -1960,7 +1965,7 @@ class Client:
         return self.__cogs.get(name)
 
     def remove_cog(self, name: str) -> Optional[Cog]:
-        """Removes a cog from the bot and returns it.
+        """Removes a cog from the client and returns it.
 
         All registered commands and event listeners that the
         cog has registered will be removed as well.
@@ -2088,7 +2093,7 @@ class Client:
 
         An extension must have a global function, ``setup`` defined as
         the entry point on what to do when the extension is loaded. This entry
-        point must have a single argument, the ``bot``.
+        point must have a single argument, the ``client``.
 
         Parameters
         ------------
@@ -2131,12 +2136,12 @@ class Client:
         """Unloads an extension.
 
         When the extension is unloaded, all commands, listeners, and cogs are
-        removed from the bot and the module is un-imported.
+        removed from the client and the module is un-imported.
 
         The extension can provide an optional global function, ``teardown``,
         to do miscellaneous clean-up if necessary. This function takes a single
-        parameter, the ``bot``, similar to ``setup`` from
-        :meth:`~.Bot.load_extension`.
+        parameter, the ``client``, similar to ``setup`` from
+        :meth:`.load_extension`.
 
         Parameters
         ------------
@@ -2174,7 +2179,7 @@ class Client:
         This replaces the extension with the same extension, only refreshed. This is
         equivalent to a :meth:`unload_extension` followed by a :meth:`load_extension`
         except done in an atomic way. That is, if an operation fails mid-reload then
-        the bot will roll-back to the prior working state.
+        the client will roll-back to the prior working state.
 
         Parameters
         ------------
@@ -2247,7 +2252,7 @@ class Client:
         return list(self._application_commands.values())
 
     def add_application_command(self, application_command: ApplicationCommand) -> None:
-        """Adds an application command to the bot to be registered when the bot logs in.
+        """Adds an application command to the client.
 
         Parameters
         -----------
@@ -2262,7 +2267,7 @@ class Client:
         if not isinstance(application_command, _valid_application_command_types):
             raise TypeError(f'application_command must derive from SlashCommand, MessageCommand, or UserCommand')
 
-        if not application_command.__application_command_guild_ids__ and self.application_command_guild_ids is not None:
+        if application_command.__application_command_guild_ids__ is not None and self.application_command_guild_ids is not None:
             application_command.__application_command_guild_ids__ = self.application_command_guild_ids
             application_command.__application_command_global_command__ = False
 
@@ -2270,26 +2275,25 @@ class Client:
         subcommands = list(application_command.__application_command_subcommands__.items())
         while subcommands:
             name, subcommand = subcommands.pop(0)
-            parent = subcommand.__application_command_parent__
-            parent = parent() if inspect.isclass(parent) else parent
-            subcommand.__application_command_parent__ = parent
+            subcommand.__application_command_parent__ = application_command  # type: ignore
 
             if inspect.isclass(subcommand):
                 # parent won't be None
-                parent.__application_command_subcommands__[name] = subcommand()  # type: ignore
+                application_command.__application_command_subcommands__[name] = subcommand()  # type: ignore
 
             subcommands.extend(subcommand.__application_command_subcommands__.items())
 
     def remove_application_command(self, application_command: Union[ApplicationCommand, Type[ApplicationCommand]]) -> Optional[ApplicationCommand]:
-        """Adds an application command to the bot to be registered when the bot logs in.
+        """Removes an application command from the client.
 
         Parameters
         -----------
         application_command: Union[
-            Union[:class:`SlashCommand`, :class:`MessageCommand`, :class:`UserCommand`],
+            :class:`SlashCommand`, :class:`MessageCommand`, :class:`UserCommand`,
             Type[Union[:class:`SlashCommand`, :class:`MessageCommand`, :class:`UserCommand`]]
         ]
-            The application command to remove.
+            The application command to remove. This can be an instance of the application command
+            or its class.
 
         Raises
         ------
@@ -2308,9 +2312,9 @@ class Client:
         return self._application_commands.pop(application_command._get_key(), None)
 
     def add_application_command_check(self, func: Check) -> None:
-        """Adds a global application command check to the bot.
+        """Adds a global application command check client.
 
-        This is the non-decorator interface to :meth:`command_check`.
+        This is the non-decorator interface to :meth:`.application_command_check`.
 
         Parameters
         -----------
@@ -2322,20 +2326,18 @@ class Client:
         self._application_command_checks.append(func)
 
     def application_command_check(self, func: T) -> T:
-        r"""A decorator that adds a global application command check to the bot.
+        r"""A decorator that adds a global application command check to the client.
 
-        A global check is similar to :meth:`command_check` that is applied
-        on a per command basis except it is run before any command checks
-        have been run and applies to every command the bot has.
+        A global check is similar to an application command's ``command_check`` method
+        that is applied on a per command basis except it is run before any command checks
+        have been run and applies to every application command the client has.
 
         .. note::
 
             This function can either be a regular function or a coroutine.
 
-        Similar to a command :meth:`command_check`\, this takes a single parameter\,
-        which is the response of the application command. The type of it can be
-        :class:`SlashCommandResponse`\, :class:`MessageCommandResponse` or
-        :class:`UserCommandResponse`.
+        This takes a single parameter, which is the response of the application command. The type of it can be
+        :class:`SlashCommandResponse`, :class:`MessageCommandResponse` or :class:`UserCommandResponse`.
 
         Example
         ---------
@@ -2367,7 +2369,7 @@ class Client:
         Raises
         ------
         TypeError
-            The application command passed is not an application command instance.
+            The application command passed does not derive from a valid application command class.
         """
 
         self.add_application_command(cls())
@@ -2376,9 +2378,8 @@ class Client:
     async def register_application_commands(self) -> None:
         """|coro|
         
-        Registers all application commands added to the client. This will
-        be called in :meth:`login` is called if :attr:`.register_application_commands_on_startup`
-        is ``True``.
+        Registers all application commands added to the client. This will be called in
+        :meth:`login` if :attr:`.register_application_commands_at_startup` is ``True``.
 
         .. note::
 
@@ -2414,7 +2415,8 @@ class Client:
         global_payload = []
         for command in application_commands:
             command_payload = command.to_dict()
-            for guild_id in command.__application_command_guild_ids__:
+            guild_ids = command.__application_command_guild_ids__ or []
+            for guild_id in guild_ids:
                 guild_payloads[guild_id].append(command_payload)
 
             if command.__application_command_global_command__:

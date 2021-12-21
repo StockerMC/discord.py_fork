@@ -266,7 +266,7 @@ class HTTPClient:
                         f.reset(seek=tries)
 
                 if form:
-                    form_data = aiohttp.FormData()
+                    form_data = aiohttp.FormData(quote_fields=False)
                     for params in form:
                         form_data.add_field(**params)
                     kwargs['data'] = form_data
@@ -476,9 +476,7 @@ class HTTPClient:
         stickers: Optional[SnowflakeList] = None,
         components: Optional[List[components.Component]] = None,
     ) -> Response[message.Message]:
-        form = []
-
-        payload: Dict[str, Any] = {'tts': tts}
+        payload: Optional[Dict[str, Any]] = {'tts': tts}
         if content:
             payload['content'] = content
         if embed:
@@ -496,29 +494,12 @@ class HTTPClient:
         if stickers:
             payload['sticker_ids'] = stickers
 
-        form.append({'name': 'payload_json', 'value': utils._to_json(payload)})
-        if len(files) == 1:
-            file = files[0]
-            form.append(
-                {
-                    'name': 'file',
-                    'value': file.fp,
-                    'filename': file.filename,
-                    'content_type': 'application/octet-stream',
-                }
-            )
-        else:
-            for index, file in enumerate(files):
-                form.append(
-                    {
-                        'name': f'file{index}',
-                        'value': file.fp,
-                        'filename': file.filename,
-                        'content_type': 'application/octet-stream',
-                    }
-                )
+        form = None
+        if files:
+            form = utils._generate_multipart(payload, files)
+            payload = None
 
-        return self.request(route, form=form, files=files)
+        return self.request(route, json=payload, form=form, files=files)
 
     def send_files(
         self,
@@ -1839,7 +1820,6 @@ class HTTPClient:
         embeds: Optional[List[embed.Embed]] = None,
         allowed_mentions: Optional[message.AllowedMentions] = None,
     ):
-
         payload: Dict[str, Any] = {}
         if content:
             payload['content'] = content
@@ -1848,22 +1828,9 @@ class HTTPClient:
         if allowed_mentions:
             payload['allowed_mentions'] = allowed_mentions
 
-        form: List[Dict[str, Any]] = [
-            {
-                'name': 'payload_json',
-                'value': utils._to_json(payload),
-            }
-        ]
-
+        form = None
         if file:
-            form.append(
-                {
-                    'name': 'file',
-                    'value': file.fp,
-                    'filename': file.filename,
-                    'content_type': 'application/octet-stream',
-                }
-            )
+            form = utils._generate_multipart(payload, [file])
 
         return self.request(route, form=form, files=[file] if file else None)
 

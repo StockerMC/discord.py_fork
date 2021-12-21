@@ -91,6 +91,7 @@ if TYPE_CHECKING:
     from .user import User
     from .role import Role
     from .ui.view import View
+    from .webhook.async_ import _WebhookState
 
     T = TypeVar('T')
     MR = TypeVar('MR', bound='MessageReference')
@@ -240,7 +241,11 @@ class Attachment(Hashable):
     ephemeral: bool
         Whether the attachment is ephemeral.
 
-        ..versionadded:: 2.0
+        .. versionadded:: 2.0
+    description: Optional[:class:`str`]
+        The description (or alt text) for the attachment.
+
+        .. versionadded:: 2.0
     """
 
     __slots__ = (
@@ -251,9 +256,10 @@ class Attachment(Hashable):
         'filename',
         'url',
         'proxy_url',
-        '_http',
         'content_type',
         'ephemeral',
+        'description',
+        '_http',
     )
 
     def __init__(self, *, data: AttachmentPayload, state: ConnectionState):
@@ -267,6 +273,7 @@ class Attachment(Hashable):
         self._http = state.http
         self.content_type: Optional[str] = data.get('content_type')
         self.ephemeral: bool = data.get('ephemeral', False)
+        self.description: Optional[str] = data.get('description')
 
     def is_spoiler(self) -> bool:
         """:class:`bool`: Whether this attachment contains a spoiler."""
@@ -1780,7 +1787,7 @@ class PartialMessage(Hashable):
             raise TypeError(f'Expected TextChannel, DMChannel or Thread not {type(channel)!r}')
 
         self.channel: PartialMessageableChannel = channel
-        self._state: ConnectionState = channel._state
+        self._state: Union[ConnectionState, _WebhookState] = channel._state
         self.id: int = id
 
     def _update(self, data: MessagePayload) -> None:

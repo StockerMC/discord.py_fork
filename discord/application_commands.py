@@ -44,7 +44,7 @@ from typing import (
     Literal,
     Iterator,
     Generic,
-    AsyncIterator,
+    AsyncGenerator,
     Iterable,
     Set,
     overload,
@@ -102,6 +102,7 @@ if TYPE_CHECKING:
         Type[Member],
         Type[User],
         Type[Role],
+        Type[Object],
         ChannelTypes,
         Type[GuildChannel],
     ]
@@ -118,7 +119,7 @@ if TYPE_CHECKING:
     AutocompleteCallback = Callable[
         [SlashCommandT, 'AutocompleteResponse[Any]'],
         Union[
-            AsyncIterator[Union['ApplicationCommandOptionChoiceType', 'ApplicationCommandOptionChoice[ApplicationCommandOptionChoiceType]']],
+            AsyncGenerator[Union['ApplicationCommandOptionChoiceType', 'ApplicationCommandOptionChoice[ApplicationCommandOptionChoiceType]'], None],
             Coro[Iterable[Union['ApplicationCommandOptionChoiceType', 'ApplicationCommandOptionChoice[ApplicationCommandOptionChoiceType]']]]
         ]
     ]
@@ -153,6 +154,7 @@ OPTION_TYPE_MAPPING: Final[Dict[ValidOptionTypes, ApplicationCommandOptionType]]
     User: ApplicationCommandOptionType.user,
     Member: ApplicationCommandOptionType.user,
     Role: ApplicationCommandOptionType.role,
+    Object: ApplicationCommandOptionType.mentionable,
     GuildChannel: ApplicationCommandOptionType.channel,
 }
 
@@ -183,6 +185,8 @@ class ApplicationCommandOptionDefault:
 
     Classes that derive from this should override the :meth:`.default`
     method to handle its default logic. This method must be a :ref:`coroutine <coroutine>`.
+
+    .. versionadded:: 2.0
     """
 
     __discord_application_command_option_default__: ClassVar[bool] = True
@@ -245,16 +249,16 @@ class ApplicationCommandOption(Generic[ApplicationCommandOptionChoiceType]):
         The description of the option.
     required: :class:`bool`
         Whether the option is required or not.
-    choices: Iterable[:class:`ApplicationCommandOptionChoice`]
+    choices: List[:class:`ApplicationCommandOptionChoice`]
         The choices of the option.
-    options: Iterable[:class:`ApplicationCommandOption`]
-        The parameters of the option if it's a subcommand or subcommand group type.
-    default: Optional[:class:`ApplicationCommandOptionDefault`]
+    options: List[:class:`ApplicationCommandOption`]
+        The parameters of the option if :attr:`.type` is :attr:`ApplicationCommandOptionType.sub_command` or :attr:`ApplicationCommandOptionType.sub_command_group`.
+    default: Optional[Union[:class:`ApplicationCommandOptionDefault`, Any]]
         The default for the option, if any.
 
         This is for when the option is accessed with it's relevant :class:`ApplicationCommandOptions` instance
         and the option was not provided by the user.
-    channel_types: Iterable[:class:`ChannelType`]
+    channel_types: Set[:class:`ChannelType`]
         The valid channel types for this option. This is only valid for options of type :attr:`ApplicationCommandOptionType.channel`.
     autocomplete: Callable[[:class:`AutocompleteResponse`], Any]
         The callable for responses to when a user is typing an autocomplete option. This can be an :data:`typing.AsyncIterator`
@@ -529,9 +533,9 @@ def application_command_option(
         Defaults to ``True``.
     choices: Optional[Iterable[:class:`ApplicationCommandOptionChoice`]]
         The choices of the option, if any.
-    default: Optional[Union[:class:`ApplicationCommandOptionDefault`, Type[:class:`ApplicationCommandOptionDefault`]]]
-        The default of the option for when it's accessed with it's relevant :class:`ApplicationCommandOptions` instance.
-    channel_types: Iterable[Union[:class:`ChannelType`, Type]]
+    default: Optional[Union[:class:`ApplicationCommandOptionDefault`, Type[:class:`ApplicationCommandOptionDefault`], Any]]
+        The default of the option for when it's accessed with its relevant :class:`ApplicationCommandOptions` instance.
+    channel_types: Optional[Iterable[Union[:class:`ChannelType`, Type]]]
         The valid channel types for this option. This is only valid for options of type :attr:`ApplicationCommandOptionType.channel`
 
         This can including the following: :class:`ChannelType` members, :class:`TextChannel`, :class:`VoiceChannel`,
@@ -583,7 +587,7 @@ def _transform_literal_choices(
     attr_name: str,
     attr_type: ApplicationCommandOptionType,
     annotation: Any
-) -> Tuple[Type, ApplicationCommandOptionChoiceTypes]:
+) -> Tuple[Any, ApplicationCommandOptionChoiceTypes]:
     annotation_type = MISSING
     choices: ApplicationCommandOptionChoiceTypes = []
     for arg in annotation.__args__:
@@ -620,6 +624,7 @@ def _get_options(
 
             origin = getattr(annotation, '__origin__', None)
             is_union = origin is Union
+            args = []
             if not is_union:
                 if PY_310 and annotation.__class__ is types.UnionType:  # type: ignore
                     args = annotation.__args__
@@ -746,34 +751,97 @@ class ApplicationCommandOptions:
                 options.extend(nested_options)
                 continue
 
-            value = option.get('value')
+            # the option is the focused option in an autocomplete response
+            if option.get('focused'):
+                continue
+
+            value: Any = option.get('value')
             # the option is a subcommand
             if value is None:
                 continue
 
-            if option['type'] == 6:  # user
-                resolved_user = resolved_data['users'][value]  # type: ignore
-                if guild_id is not None:
-                    guild = state._get_guild(guild_id) or Object(id=guild_id)
-                    member_with_user = {**resolved_data['members'][value], 'user': resolved_user}  # type: ignore
-                    value = Member(state=state, data=member_with_user, guild=guild)  # type: ignore
-                else:
-                    value = User(state=state, data=resolved_user, guild=guild)  # type: ignore
-            elif option['type'] == 7:  # channel
-                resolved_channel = resolved_data['channels'][value]  # type: ignore
+            resolved_data = resolved_data or {}
+            option_type = option['type']
+
+            if option_type == 6:  # user
+                try:
+                    resolved_user = resolved_data['users'][value]
+                except KeyError:
+                    resolved_user = None
+
                 if guild_id is not None:
                     guild = state._get_guild(guild_id)
-                    if guild is not None:
-                        value = guild._resolve_channel(int(resolved_channel['id']))  # there isn't enough data in the resolved channels from the payload
-            elif option['type'] == 9:  # mention (role or user)
-                if guild_id is not None:
-                    guild = state._get_guild(guild_id) or Object(id=guild_id)
-                    try:
-                        value = Member(state=state, data=resolved_data['members'][value], guild=guild)  # type: ignore
-                    except KeyError:
-                        value = Role(guild=guild, state=state, data=resolved_data['roles'][value]) # type: ignore
+                    user = guild and guild.get_member(int(value)) or state.get_user(int(value))
+                    if user is None:
+                        if resolved_user is not None:
+                            try:
+                                member_with_user = {**resolved_data['members'][value], 'user': resolved_user}  # type: ignore
+                                value = Member(state=state, data=member_with_user, guild=guild or Object(id=guild_id))  # type: ignore
+                            except KeyError:
+                                value = User(state=state, data=resolved_user)
+                        else:
+                            value = Object(id=int(value))
+                    else:
+                        value = user
                 else:
-                    value = User(state=state, data=resolved_data['users'][value])  # type: ignore
+                    if resolved_user is not None:
+                        value = User(state=state, data=resolved_user)
+                    else:
+                        value = Object(id=int(value))
+            elif option_type == 7:  # channel
+                guild = state._get_guild(guild_id)
+                if guild is not None:
+                    channel = guild._resolve_channel(int(value))
+                    if channel is None:  # there isn't enough data in the resolved channels from the payload
+                        channel = PartialMessageable(state=state, id=int(value))
+
+                    value = channel
+                else:
+                    value = PartialMessageable(state=state, id=int(value))
+            elif option_type == 8:  # role
+                guild = state._get_guild(guild_id)
+                role = guild and guild.get_role(int(value))
+                if role is None:
+                    try:
+                        resolved_role = resolved_data['roles'][value]
+                        value = Role(guild=guild or Object(id=guild_id), state=state, data=resolved_role)  # type: ignore
+                    except KeyError:
+                        value = Object(id=int(value))
+                else:
+                    value = role
+            elif option_type == 9:  # mention (role or user)
+                if guild_id is not None:
+                    guild = state._get_guild(guild_id)
+                    try:
+                        obj = guild and guild.get_member(int(value))
+                        if obj is None:
+                            try:
+                                resolved_user = resolved_data['users'][value]
+                                member_with_user = {**resolved_data['members'][value], 'user': resolved_user}  # type: ignore
+                                value = Member(state=state, data=member_with_user, guild=guild)  # type: ignore
+                            except KeyError:
+                                value = Object(id=int(value))
+                        else:
+                            value = obj
+                    except KeyError:
+                        obj = guild and guild.get_role(int(value))
+                        if obj is None:
+                            try:
+                                resolved_role = resolved_data['roles'][value]
+                                value = Role(guild=guild or Object(id=guild_id), state=state, data=resolved_role)  # type: ignore
+                            except KeyError:
+                                value = Object(id=int(value))
+                        else:
+                            value = obj
+                else:
+                    obj = state.get_user(int(value))
+                    if obj is None:
+                        try:
+                            value = User(state=state, data=resolved_data['users'][value])
+                        except KeyError:
+                            value = Object(id=int(value))
+                    else:
+                        value = obj
 
             self.__application_command_options__[option['name']] = value
 
@@ -803,7 +871,7 @@ class ApplicationCommandOptions:
         return len([v for v in self.__application_command_options__.values() if v is not None])
 
     def __contains__(self, option: str) -> bool:
-        return option in self.__application_command_options__
+        return option in self.__application_command_options__ and option is not None
 
     def __iter__(self) -> Iterator[Tuple[str, Any]]:
         yield from self.__application_command_options__.items()
@@ -1135,9 +1203,11 @@ def _application_command_special_method(func: FuncT) -> FuncT:
     func.__application_command_special_method__ = None
     return func
 
+
 def _get_overridden_method(method: FuncT) -> Optional[FuncT]:
     """Return None if the method is not overridden. Otherwise returns the overridden method."""
     return getattr(method.__func__, '__application_command_special_method__', method)
+
 
 class BaseApplicationCommand:
     if TYPE_CHECKING:
@@ -1147,9 +1217,9 @@ class BaseApplicationCommand:
         __application_command_type__: ClassVar[ApplicationCommandType]
         __application_command_default_permission__: ClassVar[bool]
         __application_command_group_command__: ClassVar[bool]
-        __application_command_subcommands__: ClassVar[Dict[str, BaseApplicationCommand]]
-        __application_command_parent__: Optional[Union[Type[BaseApplicationCommand], BaseApplicationCommand]]
-        __application_command_guild_ids__: List[int]
+        __application_command_subcommands__: ClassVar[Dict[str, SlashCommand]]
+        __application_command_parent__: Optional[Union[Type[SlashCommand], SlashCommand]]
+        __application_command_guild_ids__: Optional[List[int]]
         __application_command_global_command__: bool
 
     __discord_application_command__: ClassVar[bool] = True
@@ -1161,12 +1231,41 @@ class BaseApplicationCommand:
 
     _cog: Optional[Cog] = None
 
+    @overload
     def __init_subclass__(
         cls: Type[BaseApplicationCommand],
         *,
         name: Optional[str] = None,
         description: str = MISSING,
-        parent: Optional[Type[BaseApplicationCommand]] = None,  # make this SlashCommand?
+        parent: Optional[Type[SlashCommand]] = None,
+        type: ApplicationCommandType = MISSING,
+        default_permission: bool = True,
+        guild_ids: Optional[List[int]] = None,
+        global_command: Literal[False] = ...,
+        group: bool = False,
+    ) -> None:
+        ...
+
+    @overload
+    def __init_subclass__(
+        cls: Type[BaseApplicationCommand],
+        *,
+        name: Optional[str] = None,
+        description: str = MISSING,
+        parent: Optional[Type[SlashCommand]] = None,
+        type: ApplicationCommandType = MISSING,
+        default_permission: bool = True,
+        global_command: Literal[True],
+        group: bool = False,
+    ) -> None:
+        ...
+
+    def __init_subclass__(
+        cls: Type[BaseApplicationCommand],
+        *,
+        name: Optional[str] = None,
+        description: str = MISSING,
+        parent: Optional[Type[SlashCommand]] = None,  # make this SlashCommand?
         type: ApplicationCommandType = MISSING,
         default_permission: bool = True,
         guild_ids: Optional[List[int]] = None,
@@ -1229,9 +1328,9 @@ class BaseApplicationCommand:
         cls.__application_command_parent__ = parent
         cls.__application_command_type__ = type
         cls.__application_command_default_permission__ = bool(default_permission)
-        cls.__application_command_guild_ids__ = guild_ids or []
+        cls.__application_command_guild_ids__ = guild_ids
         if global_command is MISSING:
-            global_command = False if guild_ids else True
+            global_command = not guild_ids
 
         cls.__application_command_global_command__ = global_command
         cls.__application_command_group_command__ = group
@@ -1268,9 +1367,18 @@ class BaseApplicationCommand:
 
         return None
 
-    def _get_used_command(self, application_command_data: ApplicationCommandInteractionData, guild_id: Optional[int]) -> Optional[BaseApplicationCommand]:
-        # check if the guild id is correct (if it's not a global command)
-        if not self.__application_command_global_command__ and guild_id is not None and guild_id not in self.__application_command_guild_ids__:
+    def _get_used_command(
+        self, application_command_data: ApplicationCommandInteractionData, guild_id: Optional[int]
+    ) -> Optional[BaseApplicationCommand]:
+        command_name = application_command_data['name']
+        command_type = application_command_data['type']
+        # check if the guild id is not correct (if it's not a global command)
+        # or if the command name or type does not match
+        if (
+            not self.__application_command_global_command__ and guild_id is not None
+            and self.__application_command_guild_ids__ is not None and guild_id not in self.__application_command_guild_ids__
+            or self.__application_command_name__ != command_name or int(self.__application_command_type__) != command_type
+        ):
             return None
 
         options = application_command_data.get('options')
@@ -1279,11 +1387,6 @@ class BaseApplicationCommand:
                 used_subcommand = _get_used_subcommand(options.copy())
                 if used_subcommand is not None:
                     return self._recursively_get_subcommand(used_subcommand)
-
-        command_name = application_command_data['name']
-        command_type = application_command_data['type']
-        if self.__application_command_name__ != command_name or int(self.__application_command_type__) != command_type:
-            return None
 
         return self
 
@@ -1380,6 +1483,7 @@ class BaseApplicationCommand:
         """
         if not isinstance(type, ApplicationCommandType):
             raise TypeError(f'type must be an ApplicationCommandType member not {type.__class__.__name__}')
+
         cls.__application_command_type__ = type
 
     async def callback(self, response: BaseApplicationCommandResponse[Any]) -> None:
@@ -1416,7 +1520,7 @@ class BaseApplicationCommand:
                     name=command.__application_command_name__,
                     description=command.__application_command_description__,
                     options=[
-                        *list(command.__application_command_options__.values()),
+                        *command.__application_command_options__.values(),
                         *[subcommand._as_option() for subcommand in command.__application_command_subcommands__.values()],
                     ],
                 ))
@@ -1427,6 +1531,46 @@ class BaseApplicationCommand:
                 ret['options'] = options
 
         return ret
+
+    @property
+    def name(self) -> str:
+        return self.__application_command_name__
+
+    @property
+    def description(self) -> str:
+        return self.__application_command_description__
+
+    @property
+    def options(self) -> List[ApplicationCommandOption]:
+        return list(self.__application_command_options__.values())
+
+    @property
+    def type(self) -> ApplicationCommandType:
+        return self.__application_command_type__
+
+    @property
+    def default_permission(self) -> bool:
+        return self.__application_command_default_permission__
+
+    @property
+    def group_command(self) -> bool:
+        return self.__application_command_group_command__
+
+    @property
+    def subcommands(self) -> List[Union[Type[SlashCommand], SlashCommand]]:
+        return list(self.__application_command_subcommands__.values())
+
+    @property
+    def parent(self) -> Optional[Union[SlashCommand, Type[SlashCommand]]]:
+        return self.__application_command_parent__
+
+    @property
+    def guild_ids(self) -> Optional[List[int]]:
+        return self.__application_command_guild_ids__
+
+    @property
+    def global_command(self) -> bool:
+        return self.__application_command_global_command__
 
 
 class SlashCommand(BaseApplicationCommand, type=ApplicationCommandType.slash):
@@ -1526,8 +1670,7 @@ class SlashCommand(BaseApplicationCommand, type=ApplicationCommandType.slash):
 
         cls.__application_command_subcommands__[subcommand.__application_command_name__] = subcommand
 
-    @classmethod
-    def set_parent(cls, parent: SlashCommand) -> None:
+    def set_parent(self, parent: SlashCommand) -> None:
         """Sets the parent of the slash command.
 
         Parameters
@@ -1538,7 +1681,8 @@ class SlashCommand(BaseApplicationCommand, type=ApplicationCommandType.slash):
         if not isinstance(parent, SlashCommand):
             raise TypeError(f'parent must be a SlashCommand not {parent.__class__.__name__}')
 
-        cls.__application_command_parent__: SlashCommand = parent
+        parent.__application_command_subcommands__[self.__application_command_name__] = self
+        self.__application_command_parent__ = parent
 
     @classmethod
     def add_option(cls, option: ApplicationCommandOption) -> None:

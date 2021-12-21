@@ -841,16 +841,21 @@ class ConnectionState:
                     continue
 
                 command_options = list(used_command.__application_command_options__.values())
-                focused_option: Dict[str, Any]
+                focused_option: Dict[str, Any] = {}
                 options = application_command_data['options']
-                for i, option in enumerate(options):
-                    if not option.get('focused'):
+                copied_options = options.copy()
+                while copied_options:
+                    option = copied_options.pop(0)
+                    nested_options = option.get('options')
+                    if nested_options:
+                        copied_options.extend(nested_options)
                         continue
 
-                    focused_option = option
-                    options.pop(i)
+                    if option.get('focused'):
+                        focused_option = option
+                        break
 
-                command_option = used_command.__application_command_options__[option['name']]
+                command_option = used_command.__application_command_options__[focused_option['name']]
                 options = ApplicationCommandOptions(
                     guild_id=guild_id,
                     options=options,
@@ -1306,7 +1311,7 @@ class ConnectionState:
             return await request.wait()
         return request.get_future()
 
-    async def _chunk_and_dispatch(self, guild: Guild, unavailable: bool) -> None:
+    async def _chunk_and_dispatch(self, guild: Guild, unavailable: Optional[bool]) -> None:
         try:
             await asyncio.wait_for(self.chunk_guild(guild), timeout=60.0)
         except asyncio.TimeoutError:
@@ -1318,7 +1323,7 @@ class ConnectionState:
             self.dispatch('guild_join', guild)
 
     def parse_guild_create(self, data: GuildPayload) -> None:
-        unavailable = data.get('unavailable', False)
+        unavailable = data.get('unavailable')
         if unavailable is True:
             # joined a guild with unavailable == True so..
             return

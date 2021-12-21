@@ -42,6 +42,7 @@ ApplicationCommandType = Literal[1, 2, 3]
 class _ApplicationCommandOptional(TypedDict, total=False):
     options: List[ApplicationCommandOption]
     type: ApplicationCommandType
+    guild_id: Snowflake
 
 
 class ApplicationCommand(_ApplicationCommandOptional):

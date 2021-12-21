@@ -153,7 +153,7 @@ class Permissions(BaseFlags):
         """A factory method that creates a :class:`Permissions` with all
         permissions set to ``True``.
         """
-        return cls(0b111111111111111111111111111111111111111)
+        return cls(0b11111111111111111111111111111111111111111)
 
     @classmethod
     def all_channel(cls: Type[P]) -> P:
@@ -556,6 +556,30 @@ class Permissions(BaseFlags):
         .. versionadded:: 2.0
         """
         return 1 << 38
+
+    @flag_value
+    def start_embedded_activities(self) -> int:
+        """:class:`bool`: Returns ``True`` if a user can launch activities in a voice channel.
+
+        .. versionadded:: 2.0
+        """
+        return 1 << 39
+
+    @flag_value
+    def moderate_members(self) -> int:
+        """:class:`bool`: Returns ``True`` if a user can perform limited moderation actions (timeout).
+
+        .. versionadded:: 2.0
+        """
+        return 1 << 40
+
+    @make_permission_alias('moderate_members')
+    def timeout_members(self) -> int:
+        """:class:`bool`: An alias for :attr:`moderate_members`.
+
+        .. versionadded:: 2.0
+        """
+        return 1 << 40
 
 PO = TypeVar('PO', bound='PermissionOverwrite')
 
