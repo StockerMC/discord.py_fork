@@ -22,10 +22,12 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 """
 
+
 from __future__ import annotations
 
 import copy
 import unicodedata
+import datetime
 from typing import (
     Any,
     ClassVar,
@@ -66,6 +68,8 @@ from .enums import (
     ContentFilter,
     NotificationLevel,
     NSFWLevel,
+    ScheduledEventPrivacyLevel,
+    ScheduledEventEntityType,
 )
 from .mixins import Hashable
 from .user import User
@@ -80,6 +84,7 @@ from .threads import Thread, ThreadMember
 from .sticker import GuildSticker
 from .file import File
 from .welcome_screen import WelcomeScreen, WelcomeScreenChannel
+from .scheduled_events import ScheduledEvent
 
 
 __all__ = (
@@ -107,6 +112,7 @@ if TYPE_CHECKING:
     from .types.template import CreateTemplate
     from .types.widget import EditWidget
     from .types.welcome_screen import EditWelcomeScreen
+    from .types.scheduled_events import CreateScheduledEvent
     from .types import channel
 
     from .permissions import Permissions
@@ -118,8 +124,6 @@ if TYPE_CHECKING:
 
     T = TypeVar('T')
     Response = Coroutine[Any, Any, T]
-
-    import datetime
 
     VocalGuildChannel = Union[VoiceChannel, StageChannel]
     GuildChannel = Union[VoiceChannel, StageChannel, TextChannel, CategoryChannel, StoreChannel]
@@ -296,6 +300,7 @@ class Guild(Hashable):
         '_public_updates_channel_id',
         '_stage_instances',
         '_threads',
+        '_scheduled_events',
     )
 
     _PREMIUM_GUILD_LIMITS: ClassVar[Dict[Optional[int], _GuildLimit]] = {
@@ -471,6 +476,11 @@ class Guild(Hashable):
         for s in guild.get('stage_instances', []):
             stage_instance = StageInstance(guild=self, data=s, state=state)
             self._stage_instances[stage_instance.id] = stage_instance
+
+        self._scheduled_events: Dict[int, ScheduledEvent] = {}
+        for event_data in guild.get('guild_scheduled_events', []):
+            scheduled_event = ScheduledEvent(data=event_data, state=state)
+            self._scheduled_events[scheduled_event.id] = scheduled_event
 
         cache_joined = self._state.member_cache_flags.joined
         self_id = self._state.self_id
@@ -934,6 +944,209 @@ class Guild(Hashable):
     def created_at(self) -> datetime.datetime:
         """:class:`datetime.datetime`: Returns the guild's creation time in UTC."""
         return utils.snowflake_time(self.id)
+
+    @property
+    def scheduled_events(self) -> List[ScheduledEvent]:
+        """List[:class:`ScheduledEvent`]: The events scheduled in this guild.
+
+        .. versionadded:: 2.0
+        """
+        return list(self._scheduled_events.values())
+
+    def get_scheduled_event(self, scheduled_event_id: int, /) -> Optional[ScheduledEvent]:
+        """Returns a scheduled event with the given ID.
+
+        Parameters
+        -----------
+        scheduled_event_id: :class:`int`
+            The ID to search for.
+
+        Returns
+        --------
+        Optional[:class:`ScheduledEvent`]
+            The scheduled event or ``None`` if not found.
+        """
+
+        return self._scheduled_events.get(scheduled_event_id)
+
+    async def fetch_scheduled_event(self, scheduled_event_id: int, /, *, with_user_count: bool = True) -> ScheduledEvent:
+        """|coro|
+
+        Retrieves a :class:`ScheduledEvent` with the specified ID.
+
+        .. note::
+
+            This method is an API call. For general usage, consider :meth:`get_scheduled_event` instead.
+
+        Parameters
+        -----------
+        scheduled_event_id: :class:`int`
+            The scheduled event's ID to fetch from.
+        with_user_count: :class:`bool`
+            Whether to include the number of users subscribed to each scheduled event returned.
+            This fills the :attr`ScheduledEvent.user_count` field. Defaults to ``True``.
+
+        Raises
+        -------
+        Forbidden
+            You do not have access to the guild.
+        HTTPException
+            Fetching the scheduled event failed.
+
+        Returns
+        --------
+        :class:`ScheduledEvent`
+            The scheduled event from the scheduled event ID.
+        """
+        data = await self._state.http.get_scheduled_event(self.id, scheduled_event_id, with_user_count=with_user_count)
+        return ScheduledEvent(data=data, state=self._state)
+
+    async def fetch_scheduled_events(self, *, with_user_count: bool = True) -> List[ScheduledEvent]:
+        """|coro|
+
+        Retrieves all :class:`ScheduledEvent` that the guild has.
+
+        Parameters
+        ----------
+        with_user_count: :class:`bool`
+            Whether to include the number of users subscribed to each scheduled event returned.
+            This fills the :attr`ScheduledEvent.user_count` field. Defaults to ``True``.
+
+        Raises
+        -------
+        HTTPException
+            Retrieving the scheduled events failed.
+
+        Returns
+        --------
+        :class:`ScheduledEvent`
+            The scheduled event from the scheduled event ID.
+        """
+        data = await self._state.http.get_scheduled_events(self.id, with_user_count=with_user_count)
+        return [ScheduledEvent(data=d, state=self._state) for d in data]
+
+    @overload
+    async def create_scheduled_event(
+        self,
+        *,
+        name: str,
+        privacy_level: ScheduledEventPrivacyLevel,
+        scheduled_start_time: datetime.datetime,
+        entity_type: Literal[ScheduledEventEntityType.external],
+        description: Optional[str] = None,
+        channel: Optional[Snowflake] = ...,
+        scheduled_end_time: datetime.datetime,
+        location: str,
+        reason: Optional[str] = None,
+    ) -> ScheduledEvent:
+        ...
+
+    @overload
+    async def create_scheduled_event(
+        self,
+        *,
+        name: str,
+        privacy_level: ScheduledEventPrivacyLevel,
+        scheduled_start_time: datetime.datetime,
+        entity_type: ScheduledEventEntityType,
+        description: Optional[str] = None,
+        channel: Snowflake,
+        scheduled_end_time: Optional[datetime.datetime] = None,
+        location: Optional[str] = None,
+        reason: Optional[str] = None,
+    ) -> ScheduledEvent:
+        ...
+
+    # TODO: should values be checked before making the request? e.g. checking if location is set if
+    # the entity type is external
+    async def create_scheduled_event(
+        self,
+        *,
+        name: str,
+        privacy_level: ScheduledEventPrivacyLevel,
+        scheduled_start_time: datetime.datetime,
+        entity_type: ScheduledEventEntityType,
+        description: Optional[str] = None,
+        channel: Optional[Snowflake] = None,
+        scheduled_end_time: Optional[datetime.datetime] = None,
+        location: Optional[str] = None,
+        reason: Optional[str] = None,
+    ) -> ScheduledEvent:
+        """|coro|
+
+        Creates a :class:`ScheduledEvent` for the guild.
+
+        Note that you need the :attr:`~Permissions.manage_events` permission
+        to create the scheduled event.
+
+        Parameters
+        ----------
+        name: :class:`str`
+            The scheduled event's name.
+        privacy_level: :class:`ScheduledEventPrivacyLevel`
+            The scheduled event's privacy level.
+        scheduled_start_time: :class:`datetime.datetime`
+            The time the scheduled event will start.
+        entity_type: :class:`ScheduledEventEntityType`
+            The type of hosting entity associated with the scheduled event.
+        description: Optional[:class:`str`]
+            The scheduled event's description.
+        channel: Optional[:class:`abc.Snowflake`]
+            The channel the scheduled event will be hosted in. This must not be ``None`` if
+            ``entity_type`` is not :attr:`ScheduledEventEntityType.external`.
+        scheduled_end_time: Optional[:class:`datetime.datetime`]
+            The time the scheduled event will end.
+        location: Optional[:class:`str`]
+            The scheduled event's location. This must not be ``None`` if ``entity_type``
+            is :attr:`ScheduledEventEntityType.external`.
+        reason: Optional[:class:`str`]
+            The reason for creating the scheduled event. Shows up on the audit log.
+
+        Raises
+        -------
+        Forbidden
+            You do not have the proper permissions to create this scheduled event.
+        HTTPException
+            Creating the scheduled event failed.
+
+        Returns
+        -------
+        :class:`ScheduledEvent`
+            The scheduled event that was just created.
+        """
+        if scheduled_start_time.tzinfo:
+            start_time = scheduled_start_time.astimezone(tz=datetime.timezone.utc).isoformat()
+        else:
+            start_time = scheduled_start_time.replace(tzinfo=datetime.timezone.utc).isoformat()
+
+        payload: CreateScheduledEvent = {
+            'name': name,
+            'privacy_level': privacy_level.value,
+            'scheduled_start_time': start_time,
+            'entity_type': entity_type.value,
+        }
+
+        if description is not None:
+            payload['description'] = description
+
+        if channel is not None:
+            payload['channel_id'] = channel.id
+
+        if scheduled_end_time is not None:
+            if scheduled_end_time.tzinfo:
+                payload['scheduled_end_time'] = scheduled_end_time.astimezone(tz=datetime.timezone.utc).isoformat()
+            else:
+                payload['scheduled_end_time'] = scheduled_end_time.replace(tzinfo=datetime.timezone.utc).isoformat()
+
+        if location is not None:
+            payload['entity_metadata'] = {'location': location}
+
+        data = await self._state.http.create_scheduled_event(self.id, payload, reason=reason)
+        scheduled_event = ScheduledEvent(data=data, state=self._state)
+
+        # temporarily add to the cache
+        self._scheduled_events[scheduled_event.id] = scheduled_event
+        return scheduled_event
 
     def get_member_named(self, name: str, /) -> Optional[Member]:
         """Returns the first member found that matches the name provided.

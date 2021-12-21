@@ -37,6 +37,7 @@ if TYPE_CHECKING:
         MessageReactionRemoveEmojiEvent,
         GuildIntegrationDeleteEvent,
         TypingStartEvent,
+        ScheduledEventUserEvent,
     )
     from .types.message import Message as MessagePayload
 
@@ -56,6 +57,7 @@ __all__ = (
     'RawReactionClearEmojiEvent',
     'RawIntegrationDeleteEvent',
     'RawTypingEvent',
+    'RawGuildScheduledEventUserEvent',
 )
 
 
@@ -320,9 +322,47 @@ class RawTypingEvent(_RawReprMixin):
         'when',
     )
 
-    def __init__(self, data: TypingStartEvent, channel: Union[TextChannel, Thread, GroupChannel, DMChannel], when: datetime.datetime) -> None:
+    def __init__(
+        self,
+        data: TypingStartEvent,
+        channel: Union[TextChannel, Thread, GroupChannel, DMChannel],
+        when: datetime.datetime
+    ) -> None:
         self.channel_id: int = int(data['channel_id'])
         self.user_id: int = int(data['user_id'])
         self.guild_id: Optional[int] = _get_as_snowflake(data, 'guild_id')
         self.channel: Union[TextChannel, Thread, GroupChannel, DMChannel] = channel
         self.when: datetime.datetime = when
+
+class RawGuildScheduledEventUserEvent(_RawReprMixin):
+    """Represents the payload for a :func:`on_raw_guild_scheduled_event_user_add`
+    or :func:`on_raw_guild_scheduled_event_user_add` event.
+
+    .. versionadded:: 2.0
+
+    Attributes
+    -----------
+    guild_id: :class:`int`
+        The guild ID where the user subscribed to or unsubscribed from a scheduled event.
+    user_id: :class:`int`
+        The user ID who subscribed to or unsubscribed from a scheduled event.
+    scheduled_event_id: :class:`int`
+        The scheduled event ID that the user subscribed to or unsubscribed from.
+    event_type: :class:`str`
+        The event type that triggered this action. Can be
+        ``GUILD_SCHEDULED_EVENT_USER_ADD`` for subscription to an event or
+        ``GUILD_SCHEDULED_EVENT_USER_REMOVE`` for unsubscription.
+    """
+
+    __slots__ = (
+        'guild_id',
+        'user_id',
+        'scheduled_event_id',
+        'event_type',
+    )
+
+    def __init__(self, data: ScheduledEventUserEvent, event_type: str) -> None:
+        self.guild_id: int = int(data['guild_id'])
+        self.user_id: int = int(data['user_id'])
+        self.scheduled_event_id: int = int(data['guild_scheduled_event_id'])
+        self.event_type: str = event_type

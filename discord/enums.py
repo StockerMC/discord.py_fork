@@ -57,7 +57,11 @@ __all__ = (
     'InteractionType',
     'InteractionResponseType',
     'NSFWLevel',
-    'ApplicationCommandOptionType'
+    'ApplicationCommandType',
+    'ApplicationCommandOptionType',
+    'ScheduledEventPrivacyLevel',
+    'ScheduledEventEntityType',
+    'ScheduledEventStatus',
 )
 
 
@@ -326,50 +330,53 @@ class AuditLogActionCategory(Enum):
 
 class AuditLogAction(Enum):
     # fmt: off
-    guild_update             = 1
-    channel_create           = 10
-    channel_update           = 11
-    channel_delete           = 12
-    overwrite_create         = 13
-    overwrite_update         = 14
-    overwrite_delete         = 15
-    kick                     = 20
-    member_prune             = 21
-    ban                      = 22
-    unban                    = 23
-    member_update            = 24
-    member_role_update       = 25
-    member_move              = 26
-    member_disconnect        = 27
-    bot_add                  = 28
-    role_create              = 30
-    role_update              = 31
-    role_delete              = 32
-    invite_create            = 40
-    invite_update            = 41
-    invite_delete            = 42
-    webhook_create           = 50
-    webhook_update           = 51
-    webhook_delete           = 52
-    emoji_create             = 60
-    emoji_update             = 61
-    emoji_delete             = 62
-    message_delete           = 72
-    message_bulk_delete      = 73
-    message_pin              = 74
-    message_unpin            = 75
-    integration_create       = 80
-    integration_update       = 81
-    integration_delete       = 82
-    stage_instance_create    = 83
-    stage_instance_update    = 84
-    stage_instance_delete    = 85
-    sticker_create           = 90
-    sticker_update           = 91
-    sticker_delete           = 92
-    thread_create            = 110
-    thread_update            = 111
-    thread_delete            = 112
+    guild_update                    = 1
+    channel_create                  = 10
+    channel_update                  = 11
+    channel_delete                  = 12
+    overwrite_create                = 13
+    overwrite_update                = 14
+    overwrite_delete                = 15
+    kick                            = 20
+    member_prune                    = 21
+    ban                             = 22
+    unban                           = 23
+    member_update                   = 24
+    member_role_update              = 25
+    member_move                     = 26
+    member_disconnect               = 27
+    bot_add                         = 28
+    role_create                     = 30
+    role_update                     = 31
+    role_delete                     = 32
+    invite_create                   = 40
+    invite_update                   = 41
+    invite_delete                   = 42
+    webhook_create                  = 50
+    webhook_update                  = 51
+    webhook_delete                  = 52
+    emoji_create                    = 60
+    emoji_update                    = 61
+    emoji_delete                    = 62
+    message_delete                  = 72
+    message_bulk_delete             = 73
+    message_pin                     = 74
+    message_unpin                   = 75
+    integration_create              = 80
+    integration_update              = 81
+    integration_delete              = 82
+    stage_instance_create           = 83
+    stage_instance_update           = 84
+    stage_instance_delete           = 85
+    sticker_create                  = 90
+    sticker_update                  = 91
+    sticker_delete                  = 92
+    guild_scheduled_event_create    = 100
+    guild_scheduled_event_update    = 101
+    guild_scheduled_event_delete    = 102
+    thread_create                   = 110
+    thread_update                   = 111
+    thread_delete                   = 112
     # fmt: on
 
     @property
@@ -627,6 +634,23 @@ class ApplicationCommandOptionType(Enum):
 
     def __int__(self) -> int:
         return self.value
+
+
+class ScheduledEventPrivacyLevel(Enum):
+    guild_only = 2
+
+
+class ScheduledEventEntityType(Enum):
+    stage_instance = 1
+    voice = 2
+    external = 3
+
+
+class ScheduledEventStatus(Enum):
+    scheduled = 1
+    active = 2
+    completed = 3
+    cancelled = 4
 
 
 T = TypeVar('T')

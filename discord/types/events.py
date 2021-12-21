@@ -222,3 +222,9 @@ class _GuildIntegrationDeleteEventOptional(TypedDict, total=False):
 class GuildIntegrationDeleteEvent(_GuildIntegrationDeleteEventOptional):
     id: Snowflake
     guild_id: Snowflake
+
+
+class ScheduledEventUserEvent(TypedDict):
+    guild_scheduled_event_id: Snowflake
+    user_id: Snowflake
+    guild_id: Snowflake

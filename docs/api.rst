@@ -1127,6 +1127,85 @@ to handle it, which defaults to print a traceback and ignoring the exception.
     :param user: The user that joined or left.
     :type user: :class:`User`
 
+.. function:: on_guild_scheduled_event_create(scheduled_event)
+
+    Called when a :class:`ScheduledEvent` is created.
+
+    .. versionadded:: 2.0
+
+    :param scheduled_event: The scheduled event that was created.
+    :type scheduled_event: :class:`ScheduledEvent`
+
+.. function:: on_guild_scheduled_event_delete(scheduled_event)
+
+    Called when a :class:`ScheduledEvent` is deleted.
+
+    .. versionadded:: 2.0
+
+    :param scheduled_event: The scheduled event that was deleted.
+    :type scheduled_event: :class:`ScheduledEvent`
+
+.. function:: on_guild_scheduled_event_update(before, after)
+
+    Called when a :class:`ScheduledEvent` is updated.
+
+    .. versionadded:: 2.0
+
+    :param before: The updated scheduled event's old info.
+    :type before: :class:`ScheduledEvent`
+    :param after: The updated scheduled event's new info.
+    :type after: :class:`ScheduledEvent`
+
+.. function:: on_guild_scheduled_event_user_add(scheduled_event, member)
+
+    Called when a :class:`Member` has subscribed to a :class:`ScheduledEvent`.
+
+    This requires :attr:`Intents.members` to be enabled.
+
+    .. note::
+
+        Consider using :func:`on_raw_guild_scheduled_event_user_add` if you need this and do not want
+        to enable the members intent.
+
+    :param scheduled_event: The scheduled event the member subscribed to.
+    :type scheduled_event: :class:`ScheduledEvent`
+    :param user: The member that subscribed to the scheduled event.
+    :type user: :class:`Member`
+
+.. function:: on_raw_guild_scheduled_event_user_add(payload)
+
+    Called when a :class:`Member` has subscribed to a :class:`ScheduledEvent`.
+    Unlike :func:`on_guild_scheduled_event_user_add`, this is called regardless
+    of the state of the internal member cache.
+
+    :param payload: The raw event payload data.
+    :type payload: :class:`RawGuildScheduledEventUserEvent`
+
+.. function:: on_guild_scheduled_event_user_remove(scheduled_event, member)
+
+    Called when a :class:`Member` has unsubscribed from a :class:`ScheduledEvent`.
+
+    This requires :attr:`Intents.members` to be enabled.
+
+    .. note::
+
+        Consider using :func:`on_raw_guild_scheduled_event_user_remove` if you need this and do not want
+        to enable the members intent.
+
+    :param scheduled_event: The scheduled event the member unsubscribed from.
+    :type scheduled_event: :class:`ScheduledEvent`
+    :param user: The member that unsubscribed from the scheduled event.
+    :type user: :class:`Member`
+
+.. function:: on_raw_guild_scheduled_event_user_remove(payload)
+
+    Called when a :class:`Member` has subscribed to a :class:`ScheduledEvent`.
+    Unlike :func:`on_guild_scheduled_event_user_remove`, this is called regardless
+    of the state of the internal member cache.
+
+    :param payload: The raw event payload data.
+    :type payload: :class:`RawGuildScheduledEventUserEvent`
+
 .. _discord-api-utils:
 
 Utility Functions
@@ -2588,6 +2667,64 @@ of :class:`enum.Enum`.
 
         Alias for :attr:`.closed`
 
+.. class:: ScheduledEventPrivacyLevel
+
+    Represents a scheduled event's privacy level.
+
+    .. versionadded:: 2.0
+
+    .. attribute:: public
+
+        The scheduled event is public and available in discovery.
+
+    .. attribute:: guild_only
+
+        The scheduled event is only accessible to guild members.
+
+.. class:: ScheduledEventEntityType
+
+    Represents a scheduled event's entity type.
+
+    .. versionadded:: 2.0
+
+    .. attribute:: none
+
+        The scheduled event does not have an entity set.
+
+    .. attribute:: stage_instance
+
+        The scheduled event's entity is a stage channel.
+
+    .. attribute:: voice
+
+        The scheduled event's entity is a voice channel.
+
+    .. attribute:: external
+
+        The scheduled event's entity type is set to external, and has a location set.
+
+.. class:: ScheduledEventStatus
+
+    Represents a scheduled event's status.
+
+    .. versionadded:: 2.0
+
+    .. attribute:: scheduled
+
+        The scheduled event is scheduled to happen.
+
+    .. attribute:: active
+
+        The scheduled event is currently live.
+
+    .. attribute:: completed
+
+        The scheduled event has completed.
+
+    .. attribute:: canceled
+
+        The scheduled event was cancelled.
+
 .. class:: NSFWLevel
 
     Represents the NSFW level of a guild.
@@ -4047,6 +4184,14 @@ RawTypingEvent
 .. autoclass:: RawTypingEvent()
     :members:
 
+RawGuildScheduledEventUserEvent
+~~~~~~~~~~~~~~~
+
+.. attributetable:: RawGuildScheduledEventUserEvent
+
+.. autoclass:: RawGuildScheduledEventUserEvent()
+    :members:
+
 PartialWebhookGuild
 ~~~~~~~~~~~~~~~~~~~~
 
@@ -4078,6 +4223,14 @@ ApplicationCommandOption
         :decorator:
 
 .. autofunction:: discord.application_command_option
+
+ScheduledEvent
+~~~~~~~~~~~~~~~
+
+.. attributetable:: ScheduledEvent
+
+.. autoclass:: ScheduledEvent()
+    :members:
 
 Data Classes
 --------------

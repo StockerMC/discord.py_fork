@@ -76,6 +76,7 @@ __all__ = (
     'ThreadConverter',
     'GuildChannelConverter',
     'GuildStickerConverter',
+    'ScheduledEventConverter',
     'clean_content',
     'Greedy',
     'run_converters',
@@ -840,7 +841,7 @@ class GuildStickerConverter(IDConverter[discord.GuildSticker]):
     The lookup strategy is as follows (in order):
 
     1. Lookup by ID.
-    3. Lookup by name
+    2. Lookup by name
 
     .. versionadded:: 2.0
     """
@@ -870,9 +871,81 @@ class GuildStickerConverter(IDConverter[discord.GuildSticker]):
         return result
 
 
+class ScheduledEventConverter(Converter[discord.ScheduledEvent]):
+    """Converts to a :class:`~discord.ScheduledEvent`.
+
+    All lookups are done for the local guild first, if available. If that lookup
+    fails, then it checks the client's global cache.
+
+    The lookup strategy is as follows (in order):
+    1. Lookup by scheduled event URL
+    2. Lookup by scheduled event ID (the event **must** be in the context guild)
+    3. Lookup by scheduled event invite URL (this is done using :meth:`.Bot.fetch_invite`)
+    4. Lookup by scheduued event name (the event **must** be in the context guild)
+
+    .. versionadded:: 2.0
+    """
+
+    LINK_REGEX = re.compile(
+        r'https?://(?:(ptb|canary|www)\.)?discord(?:app)?\.com/events/'
+        r'(?P<guild_id>[0-9]{15,20})/(?P<scheduled_event_id>[0-9]{15,20})'
+    )
+    INVITE_REGEX = re.compile(
+        r'(?:https?\:\/\/)?discord(?:\.gg|(?:app)?\.com\/invite)\/(.+)\?event=([0-9]{15,20})'
+    )
+
+    @staticmethod
+    def _get_id_matches(ctx: Context[Any], argument: str) -> Tuple[Optional[int], Optional[int]]:
+        match = ScheduledEventConverter.LINK_REGEX.match(argument) or IDConverter._get_id_match(argument)
+        if match is None:
+            return ctx.guild and ctx.guild.id, None
+
+        data = match.groupdict() or {'scheduled_event_id': match.group(1)}
+        scheduled_event_id = int(data['scheduled_event_id'])
+        guild_id = data.get('guild_id')
+
+        if guild_id is not None:
+            guild_id = int(guild_id)
+
+        return guild_id, scheduled_event_id
+
+    async def convert(self, ctx: Context[Bot], argument: str) -> discord.ScheduledEvent:
+        guild_id, scheduled_event_id = self._get_id_matches(ctx, argument)
+        if guild_id is None:
+            guild = ctx.guild
+        else:
+            guild = ctx.bot.get_guild(guild_id)
+
+        if guild is None:
+            raise ScheduledEventNotFound(argument)
+
+        if scheduled_event_id is None:
+            match = self.INVITE_REGEX.match(argument)
+            if match is not None:
+                try:
+                    invite = await ctx.bot.fetch_invite(match.group(1), scheduled_event_id=int(match.group(2)))
+                except discord.HTTPException:
+                    raise ScheduledEventNotFound(argument) from None
+                else:
+                    scheduled_event = invite.scheduled_event
+            else:
+                scheduled_event = _utils_get(guild.scheduled_events, name=argument)
+
+            if scheduled_event is None:
+                raise ScheduledEventNotFound(argument)
+        else:
+            scheduled_event = guild.get_scheduled_event(scheduled_event_id)
+            if scheduled_event is None:
+                try:
+                    scheduled_event = await guild.fetch_scheduled_event(scheduled_event_id)
+                except discord.HTTPException:
+                    raise ScheduledEventNotFound(argument) from None
+
+        return scheduled_event
+
 class clean_content(Converter[str]):
     """Converts the argument to mention scrubbed version of
-    said content.
+    said content.]
 
     This behaves similarly to :attr:`~discord.Message.clean_content`.
 
@@ -1060,6 +1133,7 @@ CONVERTER_MAPPING: Dict[type, Any] = {
     discord.Thread: ThreadConverter,
     discord.abc.GuildChannel: GuildChannelConverter,
     discord.GuildSticker: GuildStickerConverter,
+    discord.ScheduledEvent: ScheduledEventConverter,
 }
 
 

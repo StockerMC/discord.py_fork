@@ -85,6 +85,7 @@ if TYPE_CHECKING:
         threads,
         welcome_screen,
         sticker,
+        scheduled_events,
     )
     from .types.snowflake import Snowflake, SnowflakeList
 
@@ -1441,12 +1442,16 @@ class HTTPClient:
         return self.request(r, reason=reason, json=payload)
 
     def get_invite(
-        self, invite_id: str, *, with_counts: bool = True, with_expiration: bool = True
+        self, invite_id: str, *, with_counts: bool = True, with_expiration: bool = True, scheduled_event_id: Optional[int] = None
     ) -> Response[invite.Invite]:
         params = {
             'with_counts': int(with_counts),
             'with_expiration': int(with_expiration),
         }
+
+        if scheduled_event_id is not None:
+            params['guild_scheduled_event_id'] = scheduled_event_id
+
         return self.request(Route('GET', '/invites/{invite_id}', invite_id=invite_id), params=params)
 
     def invites_from(self, guild_id: Snowflake) -> Response[List[invite.Invite]]:
@@ -1542,6 +1547,79 @@ class HTTPClient:
     ) -> Response[None]:
         r = Route('DELETE', '/channels/{channel_id}/permissions/{target}', channel_id=channel_id, target=target)
         return self.request(r, reason=reason)
+
+    def get_scheduled_events(
+        self, guild_id: Snowflake, *, with_user_count: bool = False
+    ) -> Response[List[scheduled_events.ScheduledEvent]]:
+        r = Route('GET', '/guilds/{guild_id}/scheduled-events', guild_id=guild_id)
+        params = {'with_user_count': int(with_user_count)}
+        return self.request(r, params=params)
+
+    def create_scheduled_event(
+        self, guild_id: Snowflake, payload: scheduled_events.CreateScheduledEvent, reason: Optional[str] = None,
+    )  -> Response[scheduled_events.ScheduledEvent]:
+        r = Route('POST', '/guilds/{guild_id}/scheduled-events', guild_id=guild_id)
+        return self.request(r, json=payload, reason=reason)
+
+    def get_scheduled_event(
+        self, guild_id: Snowflake, scheduled_event_id: Snowflake, with_user_count: bool = True
+    ) -> Response[scheduled_events.ScheduledEvent]:
+        r = Route(
+            'GET',
+            '/guilds/{guild_id}/scheduled-events/{scheduled_event_id}',
+            guild_id=guild_id,
+            scheduled_event_id=scheduled_event_id
+        )
+        params = {'with_user_count': int(with_user_count)}
+        return self.request(r, params=params)
+
+    def edit_scheduled_event(
+        self, guild_id: Snowflake, scheduled_event_id: Snowflake, payload: scheduled_events.EditScheduledEvent, reason: Optional[str] = None
+    ) -> Response[scheduled_events.ScheduledEvent]:
+        r = Route(
+            'PATCH',
+            '/guilds/{guild_id}/scheduled-events/{scheduled_event_id}',
+            guild_id=guild_id,
+            scheduled_event_id=scheduled_event_id
+        )
+        return self.request(r, json=payload, reason=reason)
+
+    def delete_scheduled_event(self, guild_id: Snowflake, scheduled_event_id: Snowflake) -> Response[None]:
+        r = Route(
+            'DELETE',
+            '/guilds/{guild_id}/scheduled-events/{scheduled_event_id}',
+            guild_id=guild_id,
+            scheduled_event_id=scheduled_event_id
+        )
+        return self.request(r)
+
+    def get_scheduled_event_users(
+        self,
+        guild_id: Snowflake,
+        scheduled_event_id: Snowflake,
+        *,
+        limit: int = 100,
+        with_member: bool = True,
+        after: Optional[Snowflake] = None,
+        before: Optional[Snowflake] = None,
+    ) -> Response[List[scheduled_events.ScheduledEventUser]]:
+        r = Route(
+            'GET',
+            '/guilds/{guild_id}/scheduled-events/{scheduled_event_id}/users',
+            guild_id=guild_id,
+            scheduled_event_id=scheduled_event_id
+        )
+        params: Dict[str, Any] = {
+            'limit': limit,
+            'with_member': int(with_member),
+        }
+
+        if before is not None:
+            params['before'] = before
+        if after is not None:
+            params['after'] = after
+
+        return self.request(r, params=params)
 
     # Voice management
 

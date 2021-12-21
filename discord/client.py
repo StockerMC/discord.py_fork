@@ -1430,7 +1430,9 @@ class Client:
 
     # Invite management
 
-    async def fetch_invite(self, url: Union[Invite, str], *, with_counts: bool = True, with_expiration: bool = True) -> Invite:
+    async def fetch_invite(
+        self, url: Union[Invite, str], *, with_counts: bool = True, with_expiration: bool = True, scheduled_event_id: Optional[int] = None
+    ) -> Invite:
         """|coro|
 
         Gets an :class:`.Invite` from a discord.gg URL or ID.
@@ -1454,6 +1456,10 @@ class Client:
             :attr:`.Invite.expires_at` field.
 
             .. versionadded:: 2.0
+        scheduled_event_id: Optional[:class:`int`]
+            The ID of the scheduled event to include information about in the invite.
+            This fills the :attr:`.Invite.scheduled_event` field. If the ID is invalid,
+            the field will be ``None``.
 
         Raises
         -------
@@ -1469,7 +1475,9 @@ class Client:
         """
 
         invite_id = utils.resolve_invite(url)
-        data = await self.http.get_invite(invite_id, with_counts=with_counts, with_expiration=with_expiration)
+        data = await self.http.get_invite(
+            invite_id, with_counts=with_counts, with_expiration=with_expiration, scheduled_event_id=scheduled_event_id
+        )
         return Invite.from_incomplete(state=self._connection, data=data)
 
     async def delete_invite(self, invite: Union[Invite, str]) -> None:
