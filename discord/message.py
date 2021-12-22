@@ -1265,6 +1265,22 @@ class Message(Hashable):
         *,
         content: Optional[str] = ...,
         embed: Optional[Embed] = ...,
+        files: List[File] = ...,
+        attachments: List[Attachment] = ...,
+        suppress: bool = ...,
+        delete_after: Optional[float] = ...,
+        allowed_mentions: Optional[AllowedMentions] = ...,
+        view: Optional[View] = ...,
+    ) -> Message:
+        ...
+
+    @overload
+    async def edit(
+        self,
+        *,
+        content: Optional[str] = ...,
+        embed: Optional[Embed] = ...,
+        file: File = ...,
         attachments: List[Attachment] = ...,
         suppress: bool = ...,
         delete_after: Optional[float] = ...,
@@ -1279,6 +1295,22 @@ class Message(Hashable):
         *,
         content: Optional[str] = ...,
         embeds: List[Embed] = ...,
+        file: File = ...,
+        attachments: List[Attachment] = ...,
+        suppress: bool = ...,
+        delete_after: Optional[float] = ...,
+        allowed_mentions: Optional[AllowedMentions] = ...,
+        view: Optional[View] = ...,
+    ) -> Message:
+        ...
+
+    @overload
+    async def edit(
+        self,
+        *,
+        content: Optional[str] = ...,
+        embeds: List[Embed] = ...,
+        files: List[File] = ...,
         attachments: List[Attachment] = ...,
         suppress: bool = ...,
         delete_after: Optional[float] = ...,
@@ -1292,6 +1324,8 @@ class Message(Hashable):
         content: Optional[str] = MISSING,
         embed: Optional[Embed] = MISSING,
         embeds: List[Embed] = MISSING,
+        file: File = MISSING,
+        files: List[File] = MISSING,
         attachments: List[Attachment] = MISSING,
         suppress: bool = MISSING,
         delete_after: Optional[float] = None,
@@ -1323,6 +1357,10 @@ class Message(Hashable):
         attachments: List[:class:`Attachment`]
             A list of attachments to keep in the message. If ``[]`` is passed
             then all attachments are removed.
+        file: :class:`File`
+            The new file to replace the attachments on the message with.
+        file: List[:class:`File`]
+            A list of files to replace the attachents on the message with.
         suppress: :class:`bool`
             Whether to suppress embeds for the message. This removes
             all the embeds if set to ``True``. If set to ``False``
@@ -1399,7 +1437,32 @@ class Message(Hashable):
             else:
                 payload['components'] = []
 
-        data = await self._state.http.edit_message(self.channel.id, self.id, **payload)
+        if file is not MISSING and files is not MISSING:
+            raise InvalidArgument('cannot pass both file and files parameter to edit()')
+
+        if file is not MISSING:
+            if not isinstance(file, File):
+                raise InvalidArgument('file parameter must be None or File')
+
+            try:
+                data = await self._state.http.edit_files(self.channel.id, self.id, files=[file], **payload)
+            finally:
+                file.close()
+
+        elif files is not MISSING:
+            if len(files) > 10:
+                raise InvalidArgument('files parameter must be a list of up to 10 elements')
+            elif not all(isinstance(file, File) for file in files):
+                raise InvalidArgument('files parameter must be a list of File')
+
+            try:
+                data = await self._state.http.edit_files(self.channel.id, self.id, files=files, **payload)
+            finally:
+                for f in files:
+                    f.close()
+        else:
+            data = await self._state.http.edit_message(self.channel.id, self.id, **payload)
+
         message = Message(state=self._state, channel=self.channel, data=data)
 
         if view and not view.is_finished():

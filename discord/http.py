@@ -533,6 +533,21 @@ class HTTPClient:
             components=components,
         )
 
+    def edit_files(
+        self,
+        channel_id: Snowflake,
+        message_id: Snowflake,
+        *,
+        files: Sequence[File],
+        **fields: Any,
+    ) -> Response[message.Message]:
+        r = Route('PATCH', '/channels/{channel_id}/messages/{message_id}', channel_id=channel_id, message_id=message_id)
+        return self.send_multipart_helper(
+            r,
+            files=files,
+            **fields,
+        )
+
     def delete_message(
         self, channel_id: Snowflake, message_id: Snowflake, *, reason: Optional[str] = None
     ) -> Response[None]:

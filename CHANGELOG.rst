@@ -79,3 +79,8 @@ Implemented guild scheduled events:
   - ``on_raw_guild_scheduled_event_user_add``
   - ``on_guild_scheduled_event_user_remove``
   - ``on_raw_guild_scheduled_event_user_remove``
+
+December 22, 2021
+-----------------
+
+Added the ``file`` and ``files`` keyword arguments to ``Message.edit`` for editing/adding files to a message.
