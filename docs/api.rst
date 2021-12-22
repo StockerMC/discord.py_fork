@@ -4185,7 +4185,7 @@ RawTypingEvent
     :members:
 
 RawGuildScheduledEventUserEvent
-~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. attributetable:: RawGuildScheduledEventUserEvent
 
