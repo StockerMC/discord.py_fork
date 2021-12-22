@@ -96,7 +96,7 @@ def handle_create_interaction_response_message_parameters(
     if embeds is not MISSING and embed is not MISSING:
         raise TypeError('Cannot mix embed and embeds keyword arguments.')
 
-    data: Dict[str, Any] = {
+    data: Optional[Dict[str, Any]] = {
         'type': InteractionResponseType.channel_message.value,
     }
     if embeds is not MISSING:
@@ -140,6 +140,7 @@ def handle_create_interaction_response_message_parameters(
     form = None
     if files:
         form = utils._generate_multipart(data, files)
+        data = None
 
     return ExecuteWebhookParameters(payload=data, multipart=form, files=files)
 

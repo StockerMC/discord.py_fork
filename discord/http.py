@@ -233,8 +233,10 @@ class HTTPClient:
             headers['Authorization'] = 'Bot ' + self.token
         # some checking if it's a JSON request
         if 'json' in kwargs:
-            headers['Content-Type'] = 'application/json'
-            kwargs['data'] = utils._to_json(kwargs.pop('json'))
+            json_data = kwargs.pop('json')
+            if json_data is not None:
+                headers['Content-Type'] = 'application/json'
+                kwargs['data'] = utils._to_json(json_data)
 
         try:
             reason = kwargs.pop('reason')
@@ -1820,7 +1822,7 @@ class HTTPClient:
         embeds: Optional[List[embed.Embed]] = None,
         allowed_mentions: Optional[message.AllowedMentions] = None,
     ):
-        payload: Dict[str, Any] = {}
+        payload: Optional[Dict[str, Any]] = {}
         if content:
             payload['content'] = content
         if embeds:
@@ -1831,8 +1833,9 @@ class HTTPClient:
         form = None
         if file:
             form = utils._generate_multipart(payload, [file])
+            payload = None
 
-        return self.request(route, form=form, files=[file] if file else None)
+        return self.request(route, payload=payload, form=form, files=[file] if file else None)
 
     def create_interaction_response(
         self,
