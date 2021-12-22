@@ -76,7 +76,7 @@ Implemented guild scheduled events:
   - ``on_guild_scheduled_event_delete``
   - ``on_guild_scheduled_event_update``
   - ``on_guild_scheduled_event_user_add``
-  - ``on_guild_scheduled_event_user_add``
-  - ``on_raw_guild_scheduled_event_user_remove``
+  - ``on_raw_guild_scheduled_event_user_add``
+  - ``on_guild_scheduled_event_user_remove``
   - ``on_raw_guild_scheduled_event_user_remove``
 
