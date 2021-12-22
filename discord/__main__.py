@@ -263,7 +263,7 @@ def newcog(parser: argparse.ArgumentParser, args: argparse.Namespace) -> None:
     else:
         print('successfully made cog at', directory)
 
-def add_newbot_args(subparser: argparse._SubParsersAction) -> None:
+def add_newbot_args(subparser: argparse._SubParsersAction[argparse.ArgumentParser]) -> None:
     parser = subparser.add_parser('newbot', help='creates a command bot project quickly')
     parser.set_defaults(func=newbot)
 
@@ -273,7 +273,7 @@ def add_newbot_args(subparser: argparse._SubParsersAction) -> None:
     parser.add_argument('--sharded', help='whether to use AutoShardedBot', action='store_true')
     parser.add_argument('--no-git', help='do not create a .gitignore file', action='store_true', dest='no_git')
 
-def add_newcog_args(subparser: argparse._SubParsersAction) -> None:
+def add_newcog_args(subparser: argparse._SubParsersAction[argparse.ArgumentParser]) -> None:
     parser = subparser.add_parser('newcog', help='creates a new cog template quickly')
     parser.set_defaults(func=newcog)
 

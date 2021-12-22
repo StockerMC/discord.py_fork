@@ -400,7 +400,7 @@ async def tuple_convert_flag(ctx: Context[Any], argument: str, flag: Flag, conve
     return tuple(results)
 
 
-async def convert_flag(ctx: Context[Any], argument: str, flag: Flag, annotation: Any = None) -> Any:
+async def convert_flag(ctx: Context[Any], argument: str, flag: Flag, annotation: Any = MISSING) -> Any:
     param: inspect.Parameter = ctx.current_parameter  # type: ignore
     annotation = annotation or flag.annotation
     try:

@@ -222,7 +222,7 @@ class ReactionIterator(_AsyncIterator[Union['User', 'Member']]):
             retrieve = self.limit if self.limit <= 100 else 100
 
             after = self.after.id if self.after else None
-            data: List[PartialUserPayload] = await self.getter(
+            data: List[UserPayload] = await self.getter(
                 self.channel_id, self.message.id, self.emoji, retrieve, after
             )
 

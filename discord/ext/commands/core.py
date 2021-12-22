@@ -664,7 +664,7 @@ class Command(discord._types._BaseCommand, Generic[CogT, P, T]):
         return ' '.join(reversed(entries))
 
     @property
-    def parents(self) -> List[Group]:
+    def parents(self) -> List[Group[CogT, Any, Any]]:
         """List[:class:`Group`]: Retrieves the parents of this command.
 
         If the command has no parents then it returns an empty :class:`list`.
@@ -905,7 +905,7 @@ class Command(discord._types._BaseCommand, Generic[CogT, P, T]):
         ctx.invoked_subcommand = None
         ctx.subcommand_passed = None
         injected = hooked_wrapped_callback(self, ctx, self.callback)
-        await injected(*ctx.args, **ctx.kwargs)
+        await injected(*ctx.args, **ctx.kwargs)  # type: ignore
 
     async def reinvoke(self, ctx: Context[Any], *, call_hooks: bool = False) -> None:
         ctx.command = self
@@ -1453,7 +1453,7 @@ class Group(GroupMixin[CogT], Command[CogT, P, T]):
 
         if early_invoke:
             injected = hooked_wrapped_callback(self, ctx, self.callback)
-            await injected(*ctx.args, **ctx.kwargs)
+            await injected(*ctx.args, **ctx.kwargs)  # type: ignore
 
         ctx.invoked_parents.append(ctx.invoked_with)  # type: ignore
 

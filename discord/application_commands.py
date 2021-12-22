@@ -292,8 +292,8 @@ class ApplicationCommandOption(Generic[ApplicationCommandOptionChoiceType]):
         name: str,
         description: str,
         required: bool = MISSING,
-        choices: Optional[ApplicationCommandOptionChoiceTypes] = None,
-        options: Optional[Iterable[ApplicationCommandOption]] = None,
+        choices: Optional[Iterable[ApplicationCommandOptionChoice[ApplicationCommandOptionChoiceType]]] = None,
+        options: Optional[Iterable[ApplicationCommandOption[Union[str, int, float]]]] = None,
         default: Optional[Union[ApplicationCommandOptionDefault, Any]] = None,
         channel_types: Optional[Iterable[ChannelType]] = None,
         min_value: Optional[Union[int, float]] = None,
@@ -303,10 +303,8 @@ class ApplicationCommandOption(Generic[ApplicationCommandOptionChoiceType]):
         self.name: str = name
         self.description: str = description
         self.required: bool = required
-        self.choices: List[Union[
-            ApplicationCommandOptionChoice[int], ApplicationCommandOptionChoice[str], ApplicationCommandOptionChoice[float]
-        ]] = list(choices) if choices is not None else []
-        self.options: Iterable[ApplicationCommandOption] = options if options is not None else []
+        self.choices: List[ApplicationCommandOptionChoice[ApplicationCommandOptionChoiceType]] = list(choices) if choices is not None else []
+        self.options: Iterable[ApplicationCommandOption[Union[str, int, float]]] = options if options is not None else []
         self.default: Optional[Union[ApplicationCommandOptionDefault, Any]] = default
         self.channel_types: Set[ChannelType] = set(channel_types) if channel_types is not None else set()
         self.min_value: Optional[Union[int, float]] = min_value
@@ -612,7 +610,7 @@ def _get_options(
     annotation_namespace: Dict[str, Any],
     globals: Dict[str, Any],
     locals: Dict[str, Any],
-) -> Dict[str, ApplicationCommandOption]:
+) -> Dict[str, ApplicationCommandOption[Union[str, int, float]]]:
     options: Dict[str, ApplicationCommandOption] = {}
     cache: Dict[str, Any] = {}
     for attr_name, attr in attr_namespace.items():
@@ -736,7 +734,7 @@ class ApplicationCommandOptions:
         options: Optional[List[ApplicationCommandInteractionDataOption]],
         resolved_data: Optional[ApplicationCommandInteractionDataResolved],
         state: ConnectionState,
-        command_options: List[ApplicationCommandOption],
+        command_options: List[ApplicationCommandOption[Union[str, int, float]]],
     ) -> None:
         self.__application_command_options__: Dict[str, Any] = {option.name: None for option in command_options if not option.required}
         if options is None:
@@ -893,7 +891,7 @@ def _get_used_subcommand(options: List[ApplicationCommandInteractionDataOption])
 
 # the original function is flatten_user in member.py
 def flatten(
-    original_cls: Union[Type[Interaction], Type[InteractionResponse]], original_attr: str
+    original_cls: Union[Type[Interaction[Any]], Type[InteractionResponse]], original_attr: str
 ) -> Callable[[Type[BaseApplicationCommandResponse[Any]]], Type[BaseApplicationCommandResponse[Any]]]:
     def decorator(cls: Type[BaseApplicationCommandResponse[Any]]) -> Type[BaseApplicationCommandResponse[Any]]:
         for attr, value in original_cls.__dict__.items():
@@ -1211,7 +1209,7 @@ def _get_overridden_method(method: FuncT) -> Optional[FuncT]:
 
 class BaseApplicationCommand:
     if TYPE_CHECKING:
-        __application_command_options__: ClassVar[Dict[str, ApplicationCommandOption]]
+        __application_command_options__: ClassVar[Dict[str, ApplicationCommandOption[Union[str, int, float]]]]
         __application_command_name__: ClassVar[str]
         __application_command_description__: ClassVar[str]
         __application_command_type__: ClassVar[ApplicationCommandType]
@@ -1541,7 +1539,7 @@ class BaseApplicationCommand:
         return self.__application_command_description__
 
     @property
-    def options(self) -> List[ApplicationCommandOption]:
+    def options(self) -> List[ApplicationCommandOption[Union[str, int, float]]]:
         return list(self.__application_command_options__.values())
 
     @property
@@ -1699,10 +1697,10 @@ class SlashCommand(BaseApplicationCommand, type=ApplicationCommandType.slash):
             raise TypeError(f'parent must be a SlashCommand not {parent.__class__.__name__}')
 
         parent.__application_command_subcommands__[self.__application_command_name__] = self
-        self.__application_command_parent__ = parent
+        self.__application_command_parent__: SlashCommand = parent
 
     @classmethod
-    def add_option(cls, option: ApplicationCommandOption) -> None:
+    def add_option(cls, option: ApplicationCommandOption[Union[str, int, float]]) -> None:
         """Adds an option to the slash command.
 
         Parameters
@@ -1716,7 +1714,7 @@ class SlashCommand(BaseApplicationCommand, type=ApplicationCommandType.slash):
         cls.__application_command_options__[option.name] = option
 
     @classmethod
-    def remove_option(cls, name: str) -> Optional[ApplicationCommandOption]:
+    def remove_option(cls, name: str) -> Optional[ApplicationCommandOption[Union[str, int, float]]]:
         """Removes an option from the slash command by name.
 
         Parameters

@@ -109,7 +109,7 @@ class EventListener(NamedTuple):
     predicate: Predicate
     event: str
     result: Result
-    future: asyncio.Future
+    future: asyncio.Future[Any]
 
 
 class GatewayRatelimiter:
@@ -416,7 +416,7 @@ class DiscordWebSocket:
         await ws.resume()
         return ws
 
-    def wait_for(self, event: str, predicate: Predicate, result: Result = None) -> asyncio.Future:
+    def wait_for(self, event: str, predicate: Predicate, result: Result = None) -> asyncio.Future[Any]:
         """Waits for a DISPATCH'd event that meets the predicate.
 
         Parameters

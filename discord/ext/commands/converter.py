@@ -649,7 +649,7 @@ class ColourConverter(Converter[discord.Colour]):
             raise BadColourArgument(argument)
         return value
 
-    def parse_rgb(self, argument: str, *, regex: re.Pattern = RGB_REGEX) -> discord.Colour:
+    def parse_rgb(self, argument: str, *, regex: re.Pattern[str] = RGB_REGEX) -> discord.Colour:
         match = regex.match(argument)
         if match is None:
             raise BadColourArgument(argument)
@@ -1160,7 +1160,7 @@ async def _actual_conversion(ctx: Context[Any], converter: Any, argument: str, p
     except CommandError:
         raise
     except Exception as exc:
-        raise ConversionError(converter, exc) from exc
+        raise ConversionError(converter, exc) from exc  # type: ignore
 
     try:
         return converter(argument)
@@ -1170,7 +1170,7 @@ async def _actual_conversion(ctx: Context[Any], converter: Any, argument: str, p
         try:
             name = converter.__name__
         except AttributeError:
-            name = converter.__class__.__name__
+            name = converter.__class__.__name__  # type: ignore
 
         raise BadArgument(f'Converting to "{name}" failed for parameter "{param.name}".') from exc
 

@@ -313,7 +313,7 @@ class Loop(Generic[C, P, T]):
 
         return await self.coro(*args, **kwargs)
 
-    def start(self, *args: P.args, **kwargs: P.kwargs) -> asyncio.Task:
+    def start(self, *args: P.args, **kwargs: P.kwargs) -> asyncio.Task[None]:
         r"""Starts the internal task in the event loop.
 
         Parameters
@@ -454,7 +454,7 @@ class Loop(Generic[C, P, T]):
         self._valid_exception = tuple(x for x in self._valid_exception if x not in exceptions)
         return len(self._valid_exception) == old_length - len(exceptions)
 
-    def get_task(self) -> Optional[asyncio.Task]:
+    def get_task(self) -> Optional[asyncio.Task[None]]:
         """Optional[:class:`asyncio.Task`]: Fetches the internal task or ``None`` if there isn't one running."""
         return self._task
 

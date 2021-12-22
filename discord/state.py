@@ -193,9 +193,9 @@ class ConnectionState:
     def __init__(
         self,
         *,
-        dispatch: Callable,
-        handlers: Dict[str, Callable],
-        hooks: Dict[str, Callable],
+        dispatch: Callable[..., None],
+        handlers: Dict[str, Callable[..., None]],
+        hooks: Dict[str, Callable[..., Coroutine[Any, Any, None]]],
         http: HTTPClient,
         loop: asyncio.AbstractEventLoop,
         **options: Any,
@@ -206,9 +206,9 @@ class ConnectionState:
         if self.max_messages is not None and self.max_messages <= 0:
             self.max_messages = 1000
 
-        self.dispatch: Callable = dispatch
-        self.handlers: Dict[str, Callable] = handlers
-        self.hooks: Dict[str, Callable] = hooks
+        self.dispatch: Callable[..., None] = dispatch
+        self.handlers: Dict[str, Callable[..., None]] = handlers
+        self.hooks: Dict[str, Callable[..., Coroutine[Any, Any, None]]] = hooks
         self.shard_count: Optional[int] = None
         self._ready_task: Optional[asyncio.Task[None]] = None
         self._application_command_task: Optional[asyncio.Task[None]] = None

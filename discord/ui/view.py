@@ -138,7 +138,7 @@ class View:
     """
 
     __discord_ui_view__: ClassVar[bool] = True
-    __view_children_items__: ClassVar[List[ItemCallbackType[Item]]] = []
+    __view_children_items__: ClassVar[List[ItemCallbackType[Item[Any]]]] = []
 
     def __init_subclass__(cls) -> None:
         children: List[ItemCallbackType] = []
@@ -154,7 +154,7 @@ class View:
 
     def __init__(self, *, timeout: Optional[float] = 180.0) -> None:
         self.timeout: Optional[float] = timeout
-        self.children: List[Item] = []
+        self.children: List[Item[Any]] = []
         for func in self.__view_children_items__:
             item: Item[Any] = func.__discord_ui_model_type__(**func.__discord_ui_model_kwargs__)
             item.callback = partial(func, self, item)

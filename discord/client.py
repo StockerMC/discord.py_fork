@@ -301,11 +301,11 @@ class Client:
         unsync_clock: bool = options.pop('assume_unsync_clock', True)
         self.http: HTTPClient = HTTPClient(connector, proxy=proxy, proxy_auth=proxy_auth, unsync_clock=unsync_clock, loop=self.loop)
 
-        self._handlers: Dict[str, Callable] = {
+        self._handlers: Dict[str, Callable[..., None]] = {
             'ready': self._handle_ready
         }
 
-        self._hooks: Dict[str, Callable] = {
+        self._hooks: Dict[str, Callable[..., Coroutine[Any, Any, None]]] = {
             'before_identify': self._call_before_identify_hook
         }
 
@@ -2281,7 +2281,7 @@ class Client:
                 # parent won't be None
                 application_command.__application_command_subcommands__[name] = subcommand()  # type: ignore
 
-            subcommands.extend(subcommand.__application_command_subcommands__.items())
+            subcommands.extend(subcommand.__application_command_subcommands__.items())  # type: ignore
 
     def remove_application_command(self, application_command: Union[ApplicationCommand, Type[ApplicationCommand]]) -> Optional[ApplicationCommand]:
         """Removes an application command from the client.

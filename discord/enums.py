@@ -90,7 +90,7 @@ class EnumMeta(type):
         _enum_member_map_: ClassVar[Dict[str, Any]]
         _enum_value_map_: ClassVar[Dict[Any, Any]]
 
-    def __new__(cls: Type[EMT], name: str, bases: Tuple[Type, ...], attrs: Dict[str, Any], *, comparable: bool = False) -> EMT:
+    def __new__(cls: Type[EMT], name: str, bases: Tuple[type, ...], attrs: Dict[str, Any], *, comparable: bool = False) -> EMT:
         value_mapping = {}
         member_mapping = {}
         member_names = []
