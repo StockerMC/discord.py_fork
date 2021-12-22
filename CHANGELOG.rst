@@ -1,7 +1,7 @@
 Change Log
 ==========
 
-- Fully typehinted the library
+- Fully typed the library.
 
 September 10, 2021
 ------------------
@@ -9,7 +9,7 @@ September 10, 2021
 Implemented welcome screens:
 
 - Added the ``discord.WelcomeScreen`` and ``discord.WelcomeScreenChannel`` classes.
-- Added the ``discord.Guild.welcome_screen`` method.
+- Added the ``discord.Guild.welcome_screen`` and ``discord.Guild.edit_welcome_screen`` methods.
 
 Application Commands
 --------------------
@@ -79,4 +79,3 @@ Implemented guild scheduled events:
   - ``on_raw_guild_scheduled_event_user_add``
   - ``on_guild_scheduled_event_user_remove``
   - ``on_raw_guild_scheduled_event_user_remove``
-
