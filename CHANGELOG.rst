@@ -43,6 +43,7 @@ September 28, 2021
 Implemented role icons:
 
 - Added the ``discord.Role.icon`` property.
+- Added the ``discord.Member.role_icon`` property.
 
 Member Timeouts
 ---------------
