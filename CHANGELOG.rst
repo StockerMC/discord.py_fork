@@ -56,6 +56,11 @@ Implemented member timeouts:
 - Added the ``Member.timeout_until`` attribute.
 - Added the ``timeout_until`` keyword argument to ``Member.edit``.
 
+December 25, 2021
+^^^^^^^^^^^^^^^^^
+
+Renamed all occurrences of ``timeout_until`` to ``timed_out_until``.
+
 December 21, 2021
 ^^^^^^^^^^^^^^^^^
 

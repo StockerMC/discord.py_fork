@@ -253,7 +253,7 @@ class Member(discord.abc.Messageable, _UserTag):
     premium_since: Optional[:class:`datetime.datetime`]
         An aware datetime object that specifies the date and time in UTC when the member used their
         "Nitro boost" on the guild, if available. This could be ``None``.
-    timeout_until: Optional[:class:`datetime.datetime`]
+    timed_out_until: Optional[:class:`datetime.datetime`]
         An aware datetime object that specifies the date and time in UTC when the member will have their
         timeout removed. This could be ``None``.
     """
@@ -261,7 +261,7 @@ class Member(discord.abc.Messageable, _UserTag):
     __slots__ = (
         'joined_at',
         'premium_since',
-        'timeout_until',
+        'timed_out_until',
         'activities',
         'guild',
         'pending',
@@ -297,7 +297,7 @@ class Member(discord.abc.Messageable, _UserTag):
         self.guild: Guild = guild
         self.joined_at: Optional[datetime.datetime] = utils.parse_time(data.get('joined_at'))
         self.premium_since: Optional[datetime.datetime] = utils.parse_time(data.get('premium_since'))
-        self.timeout_until: Optional[datetime.datetime] = utils.parse_time(data.get('communication_disabled_until'))
+        self.timed_out_until: Optional[datetime.datetime] = utils.parse_time(data.get('communication_disabled_until'))
         self._roles: utils.SnowflakeList = utils.SnowflakeList(map(int, data['roles']))
         self._client_status: Dict[Optional[str], str] = {None: 'offline'}
         self.activities: Tuple[ActivityTypes, ...] = tuple()
@@ -361,7 +361,7 @@ class Member(discord.abc.Messageable, _UserTag):
         self.activities = member.activities
         self._state = member._state
         self._avatar = member._avatar
-        self.timeout_until = member.timeout_until
+        self.timed_out_until = member.timed_out_until
 
         # Reference will not be copied unless necessary by PRESENCE_UPDATE
         # See below
@@ -636,7 +636,7 @@ class Member(discord.abc.Messageable, _UserTag):
     @property
     def timed_out(self) -> bool:
         """:class:`bool`: Whether the member is currently timed out."""
-        return self.timeout_until is not None and self.timeout_until > utils.utcnow()
+        return self.timed_out_until is not None and self.timed_out_until > utils.utcnow()
 
     async def ban(
         self,
@@ -673,7 +673,7 @@ class Member(discord.abc.Messageable, _UserTag):
         suppress: bool = MISSING,
         roles: List[discord.abc.Snowflake] = MISSING,
         voice_channel: Optional[VocalGuildChannel] = MISSING,
-        timeout_until: Optional[datetime.datetime] = MISSING,
+        timed_out_until: Optional[datetime.datetime] = MISSING,
         reason: Optional[str] = None,
     ) -> Optional[Member]:
         """|coro|
@@ -695,7 +695,7 @@ class Member(discord.abc.Messageable, _UserTag):
         +------------------------------+--------------------------------------+
         | voice_channel                | :attr:`Permissions.move_members`     |
         +------------------------------+--------------------------------------+
-        | timeout_until                | :attr:`Permissions.moderate_members` |
+        | timed_out_until                | :attr:`Permissions.moderate_members` |
         +------------------------------+--------------------------------------+
 
         All parameters are optional.
@@ -724,7 +724,7 @@ class Member(discord.abc.Messageable, _UserTag):
         voice_channel: Optional[:class:`VoiceChannel`]
             The voice channel to move the member to.
             Pass ``None`` to kick them from voice.
-        timeout_until: Optional[:class:`datetime.datetime`]
+        timed_out_until: Optional[:class:`datetime.datetime`]
             A datetime object when indicating when the user should be timed out until.
             Pass ``None`` to remove their timeout.
         reason: Optional[:class:`str`]
@@ -783,14 +783,14 @@ class Member(discord.abc.Messageable, _UserTag):
         if roles is not MISSING:
             payload['roles'] = tuple(r.id for r in roles)
 
-        if timeout_until is not MISSING:
-            if timeout_until is None:
+        if timed_out_until is not MISSING:
+            if timed_out_until is None:
                 payload['communication_disabled_until'] = None
             else:
-                if timeout_until.tzinfo:
-                    timestamp = timeout_until.astimezone(tz=datetime.timezone.utc).isoformat()
+                if timed_out_until.tzinfo:
+                    timestamp = timed_out_until.astimezone(tz=datetime.timezone.utc).isoformat()
                 else:
-                    timestamp = timeout_until.replace(tzinfo=datetime.timezone.utc).isoformat()
+                    timestamp = timed_out_until.replace(tzinfo=datetime.timezone.utc).isoformat()
 
                 payload['communication_disabled_until'] = timestamp
 
