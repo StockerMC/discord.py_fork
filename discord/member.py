@@ -335,6 +335,7 @@ class Member(discord.abc.Messageable, _UserTag):
         self._roles = utils.SnowflakeList(map(int, data['roles']))
         self.nick = data.get('nick', None)
         self.pending = data.get('pending', False)
+        self.timed_out_until = utils.parse_time(data.get('communication_disabled_until'))
 
     @classmethod
     def _try_upgrade(cls: Type[M], *, data: UserWithMemberPayload, guild: Guild, state: ConnectionState) -> Union[User, M]:
@@ -388,6 +389,7 @@ class Member(discord.abc.Messageable, _UserTag):
         self.premium_since = utils.parse_time(data.get('premium_since'))
         self._roles = utils.SnowflakeList(map(int, data['roles']))
         self._avatar = data.get('avatar')
+        self.timed_out_until = utils.parse_time(data.get('communication_disabled_until'))
 
     def _presence_update(self, data: PartialPresenceUpdate, user: Union[UserPayload, PartialUserPayload]) -> Optional[Tuple[User, User]]:
         self.activities = tuple(create_activity(activity, self._state) for activity in data['activities'])
