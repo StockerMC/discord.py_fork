@@ -25,7 +25,6 @@ from __future__ import annotations
 
 import array
 import asyncio
-import collections.abc
 from typing import (
     Any,
     AsyncIterator,
@@ -200,7 +199,7 @@ def cached_slot_property(name: str) -> Callable[[Callable[[T], T_co]], CachedSlo
     return decorator
 
 
-class SequenceProxy(Generic[T_co], collections.abc.Sequence[T_co]):
+class SequenceProxy(Sequence[T_co]):
     """Read-only proxy of a Sequence."""
 
     def __init__(self, proxied: Sequence[T_co]):
@@ -579,7 +578,7 @@ async def sane_wait_for(futures: Iterable[Awaitable[T]], *, timeout: Optional[fl
 def get_slots(cls: type) -> Iterator[str]:
     for mro in reversed(cls.__mro__):
         try:
-            yield from mro.__slots__
+            yield from mro.__slots__  # type: ignore
         except AttributeError:
             continue
 
