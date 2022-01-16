@@ -172,6 +172,12 @@ class Interaction(Generic[ClientT]):
     token: :class:`str`
         The token to continue the interaction. These are valid
         for 15 minutes.
+    locale: Optional[:class:`str`]
+        The selected language of the user that sent the interaction.
+        If :attr:`.type` is :attr:`InteractionType.ping`, this will be ``None``.
+    guild_locale: Optional[:class:`str`]
+        The primary language of the guild, if the interaction was sent from
+        a guild. This is set in community settings.
     data: :class:`dict`
         The raw interaction data.
     client: :class:`Client`
@@ -188,6 +194,8 @@ class Interaction(Generic[ClientT]):
         'message',
         'user',
         'token',
+        'locale',
+        'guild_locale',
         'version',
         'client',
         '_permissions',
@@ -211,6 +219,8 @@ class Interaction(Generic[ClientT]):
         self.type: InteractionType = try_enum(InteractionType, data['type'])
         self.data: Optional[InteractionData] = data.get('data')
         self.token: str = data['token']
+        self.locale: Optional[str] = data.get('locale')
+        self.guild_locale: Optional[str] = data.get('guild_locale')
         self.version: int = data['version']
         self.channel_id: Optional[int] = utils._get_as_snowflake(data, 'channel_id')
         self.guild_id: Optional[int] = utils._get_as_snowflake(data, 'guild_id')
