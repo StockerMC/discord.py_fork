@@ -62,6 +62,7 @@ __all__ = (
     'ScheduledEventPrivacyLevel',
     'ScheduledEventEntityType',
     'ScheduledEventStatus',
+    'Locale',
 )
 
 
