@@ -172,10 +172,10 @@ class Interaction(Generic[ClientT]):
     token: :class:`str`
         The token to continue the interaction. These are valid
         for 15 minutes.
-    locale: Optional[:class:`Locale`]
+    locale: :class:`Locale`
         The selected locale of the user that sent the interaction, if
         :attr:`.type` is not :attr:`InteractionType.ping`.
-    guild_locale: Optional[:class:`Locale`]
+    guild_locale: :class:`Locale`
         The primary locale of the guild, if the interaction was sent from
         a guild. This is set in community settings.
     data: :class:`dict`
