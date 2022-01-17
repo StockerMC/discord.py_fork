@@ -948,6 +948,8 @@ class BaseApplicationCommandResponse(Generic[ClientT]):
         type: InteractionType
         data: Optional[InteractionData]
         token: str
+        locale: Optional[str]
+        guild_locale: Optional[str]
         version: int
         channel_id: Optional[int]
         guild_id: Optional[int]

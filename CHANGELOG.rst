@@ -90,3 +90,8 @@ December 22, 2021
 -----------------
 
 Added the ``file`` and ``files`` keyword arguments to ``Message.edit`` for editing/adding files to a message.
+
+January 16, 2022
+----------------
+
+Added the ``Interaction.locale`` and ``Interaction.guild_locale`` attributes
