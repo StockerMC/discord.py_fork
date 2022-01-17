@@ -653,6 +653,39 @@ class ScheduledEventStatus(Enum):
     cancelled = 4
 
 
+class Locale(Enum):
+    en_us = 'en-US'
+    en_gb = 'en-GB'
+    bg = 'bg'
+    zh_cn = 'zh-CN'
+    zh_tw = 'zh-TW'
+    hr = 'hr'
+    cs = 'cs'
+    da = 'da'
+    nl = 'nl'
+    fi = 'fi'
+    fr = 'fr'
+    de = 'de'
+    el = 'el'
+    hi = 'hi'
+    hu = 'hu'
+    it = 'it'
+    ja = 'ja'
+    ko = 'ko'
+    lt = 'lt'
+    no = 'no'
+    pl = 'pl'
+    pt_br = 'pt-BR'
+    ro = 'ro'
+    ru = 'ru'
+    es_es = 'es-ES'
+    sv_se = 'sv-SE'
+    th = 'th'
+    tr = 'tr'
+    uk = 'uk'
+    vi = 'vi'
+
+
 T = TypeVar('T')
 
 

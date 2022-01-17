@@ -2833,6 +2833,132 @@ of :class:`enum.Enum`.
 
         Any float or integer between -2^53 and 2^53.
 
+..class:: Locale
+
+    Specifies the selected locale of a user or guild.
+
+    .. versionadded:: 2.0
+
+    .. attribute:: en_us
+
+        The English (United States) locale.
+
+    .. attribute:: en_gb
+
+        The English (Great Britain) locale.
+
+    .. attribute:: bg
+
+        The bulgarian locale.
+
+    .. attribute:: zh_cn
+
+        The Chinese (China) locale.
+
+    .. attribute:: zh_tw
+
+        The Chinese (Taiwan) locale.
+
+    .. attribute:: hr
+
+        The Croation locale.
+
+    .. attribute:: cs
+
+        The Czech locale.
+
+    .. attribute:: da
+
+        The Danish locale.
+
+    .. attribute:: nl
+
+        The Dutch locale.
+
+    .. attribute:: fi
+
+        The Finnish locale.
+
+    .. attribute:: fr
+
+        The French locale.
+
+    .. attribute:: de
+
+        The German locale.
+
+    .. attribute:: el
+
+        The Greek locale.
+
+    .. attribute:: hi
+
+        The Hindi locale.
+
+    .. attribute:: hu
+
+        The Hungraian locale.
+
+    .. attribute:: it
+
+        The Italian locale.
+
+    .. attribute:: ja
+
+        The Japanese locale.
+
+    .. attribute:: ko
+
+        The Korean locale.
+
+    .. attribute:: lt
+
+        The Lithuanian locale.
+
+    .. attribute:: no
+
+        The Norweigian locale.
+
+    .. attribute:: pl
+
+        The Polish locale.
+
+    .. attribute:: pt_br
+
+        The Portuguese (Brazil) locale.
+
+    .. attribute:: ro
+
+        The Romanian locale.
+
+    .. attribute:: ru
+
+        The Russian locale.
+
+    .. attribute:: es_es
+
+        The Spanish (Spain) locale.
+
+    .. attribute:: sv_se
+
+        The Swedish locale.
+
+    .. attribute:: th
+
+        The Thai locale.
+
+    .. attribute:: tr
+
+        The Turkish locale.
+
+    .. attribute:: uk
+
+        The Ukranian locale.
+
+    .. attribute:: vi
+
+        The Vietnamese locale.
+
 Async Iterator
 ----------------
 
