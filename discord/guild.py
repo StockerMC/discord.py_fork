@@ -223,6 +223,7 @@ class Guild(Hashable):
         They are currently as follows:
 
         - ``ANIMATED_ICON``: Guild can upload an animated icon.
+        - ``ANIMATED_BANNER``: Guild can upload and use an animated banner.
         - ``BANNER``: Guild can upload and use a banner. (i.e. :attr:`.banner`)
         - ``COMMERCE``: Guild can sell things using store channels.
         - ``COMMUNITY``: Guild is a community server.
@@ -1705,6 +1706,7 @@ class Guild(Hashable):
             Could be ``None`` to denote removal of the icon.
         banner: :class:`bytes`
             A :term:`py:bytes-like object` representing the banner.
+            GIF is only available to guilds that contain ``ANIMATED_BANNER`` in :attr:`Guild.features`.
             Could be ``None`` to denote removal of the banner. This is only available to guilds that contain
             ``BANNER`` in :attr:`Guild.features`.
         splash: :class:`bytes`
