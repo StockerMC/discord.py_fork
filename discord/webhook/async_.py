@@ -558,7 +558,7 @@ def handle_message_parameters(
     if files:
         form = utils._generate_multipart(payload, files)
         payload = None
-    print(payload)
+
     return ExecuteWebhookParameters(payload=payload, multipart=form, files=files)
 
 
