@@ -38,6 +38,7 @@ from .member import Member
 from .message import Message, Attachment
 from .object import Object
 from .permissions import Permissions
+from .flags import MessageFlags
 from .webhook.async_ import async_context, Webhook, ExecuteWebhookParameters, handle_message_parameters
 
 __all__ = (
@@ -90,6 +91,7 @@ def handle_create_interaction_response_message_parameters(
     view: Optional[View] = MISSING,
     allowed_mentions: Optional[AllowedMentions] = MISSING,
     previous_allowed_mentions: Optional[AllowedMentions] = None,
+    suppress: bool = False,
 ) -> ExecuteWebhookParameters:
     if files is not MISSING and file is not MISSING:
         raise TypeError('Cannot mix file and files keyword arguments.')
@@ -123,8 +125,12 @@ def handle_create_interaction_response_message_parameters(
             data['components'] = []
 
     data['tts'] = tts
-    if ephemeral:
-        data['flags'] = 64
+
+    if suppress or ephemeral:
+        flags = MessageFlags._from_value(0)
+        flags.suppress_embeds = suppress
+        flags.ephemeral = ephemeral
+        data['flags'] = flags.value
 
     if allowed_mentions:
         if previous_allowed_mentions is not None:
@@ -596,6 +602,7 @@ class InteractionResponse:
         tts: bool = False,
         ephemeral: bool = False,
         allowed_mentions: Optional[AllowedMentions] = None,
+        suppress: bool = True,
     ) -> None: ...
 
     @overload
@@ -609,6 +616,7 @@ class InteractionResponse:
         tts: bool = False,
         ephemeral: bool = False,
         allowed_mentions: Optional[AllowedMentions] = None,
+        suppress: bool = True,
     ) -> None: ...
 
     @overload
@@ -622,6 +630,7 @@ class InteractionResponse:
         tts: bool = False,
         ephemeral: bool = False,
         allowed_mentions: Optional[AllowedMentions] = None,
+        suppress: bool = True,
     ) -> None: ...
 
     @overload
@@ -634,6 +643,7 @@ class InteractionResponse:
         tts: bool = False,
         ephemeral: bool = False,
         allowed_mentions: Optional[AllowedMentions] = None,
+        suppress: bool = True,
     ) -> None:
         ...
 
@@ -648,6 +658,7 @@ class InteractionResponse:
         tts: bool = False,
         ephemeral: bool = False,
         allowed_mentions: Optional[AllowedMentions] = None,
+        suppress: bool = True,
     ) -> None:
         ...
 
@@ -662,6 +673,7 @@ class InteractionResponse:
         tts: bool = False,
         ephemeral: bool = False,
         allowed_mentions: Optional[AllowedMentions] = None,
+        suppress: bool = True,
     ) -> None:
         ...
 
@@ -677,6 +689,7 @@ class InteractionResponse:
         tts: bool = False,
         ephemeral: bool = False,
         allowed_mentions: Optional[AllowedMentions] = None,
+        suppress: bool = True,
     ) -> None:
         """|coro|
 
@@ -712,6 +725,10 @@ class InteractionResponse:
             to the object, otherwise it uses the attributes set in :attr:`~discord.Client.allowed_mentions`.
             If no object is passed at all then the defaults given by :attr:`~discord.Client.allowed_mentions`
             are used instead.
+        suppress: :class:`bool`
+            Whether to suppress embeds for the message. This removes all the embeds if set to ``True``.
+
+            .. versionadded:: 2.0
 
         Raises
         -------
@@ -741,6 +758,7 @@ class InteractionResponse:
             tts=tts,
             allowed_mentions=allowed_mentions,
             previous_allowed_mentions=previous_mentions,
+            suppress=suppress,
         )
         parent = self._parent
         adapter = async_context.get()

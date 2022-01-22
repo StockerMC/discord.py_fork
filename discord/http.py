@@ -49,10 +49,11 @@ import weakref
 
 import aiohttp
 
+from . import __version__, utils
 from .errors import HTTPException, Forbidden, NotFound, LoginFailure, DiscordServerError, GatewayNotFound, InvalidArgument
 from .gateway import DiscordClientWebSocketResponse
-from . import __version__, utils
 from .utils import MISSING
+from .flags import MessageFlags
 
 _log = logging.getLogger(__name__)
 
@@ -427,6 +428,7 @@ class HTTPClient:
         message_reference: Optional[message.MessageReference] = None,
         stickers: Optional[SnowflakeList] = None,
         components: Optional[List[components.Component]] = None,
+        suppress: bool = False,
     ) -> Response[message.Message]:
         r = Route('POST', '/channels/{channel_id}/messages', channel_id=channel_id)
         payload = {}
@@ -458,6 +460,11 @@ class HTTPClient:
         if stickers:
             payload['sticker_ids'] = stickers
 
+        if suppress:
+            flags = MessageFlags._from_value(0)
+            flags.suppress_embeds = suppress
+            payload['flags'] = flags.value
+
         return self.request(r, json=payload)
 
     def send_typing(self, channel_id: Snowflake) -> Response[None]:
@@ -477,8 +484,11 @@ class HTTPClient:
         message_reference: Optional[message.MessageReference] = None,
         stickers: Optional[SnowflakeList] = None,
         components: Optional[List[components.Component]] = None,
+        suppress: bool = False,
     ) -> Response[message.Message]:
-        payload: Optional[Dict[str, Any]] = {'tts': tts}
+        flags = MessageFlags._from_value(0)
+        flags.suppress_embeds = suppress
+        payload: Optional[Dict[str, Any]] = {'tts': tts, 'flags': flags.value}
         if content:
             payload['content'] = content
         if embed:
@@ -517,6 +527,7 @@ class HTTPClient:
         message_reference: Optional[message.MessageReference] = None,
         stickers: Optional[SnowflakeList] = None,
         components: Optional[List[components.Component]] = None,
+        suppress: bool = False,
     ) -> Response[message.Message]:
         r = Route('POST', '/channels/{channel_id}/messages', channel_id=channel_id)
         return self.send_multipart_helper(
@@ -531,6 +542,7 @@ class HTTPClient:
             message_reference=message_reference,
             stickers=stickers,
             components=components,
+            suppress=suppress,
         )
 
     def edit_files(
