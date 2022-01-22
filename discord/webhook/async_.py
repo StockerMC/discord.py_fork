@@ -44,6 +44,7 @@ from ..asset import Asset
 from ..http import Route
 from ..mixins import Hashable
 from ..channel import PartialMessageable
+from ..flags import MessageFlags
 
 __all__ = (
     'Webhook',
@@ -500,6 +501,7 @@ def handle_message_parameters(
     view: Optional[View] = MISSING,
     allowed_mentions: Optional[AllowedMentions] = MISSING,
     previous_allowed_mentions: Optional[AllowedMentions] = None,
+    suppress: bool = False,
 ) -> ExecuteWebhookParameters:
     if files is not MISSING and file is not MISSING:
         raise TypeError('Cannot mix file and files keyword arguments.')
@@ -535,8 +537,11 @@ def handle_message_parameters(
         payload['avatar_url'] = str(avatar_url)
     if username:
         payload['username'] = username
-    if ephemeral:
-        payload['flags'] = 64
+    if suppress or ephemeral:
+        flags = MessageFlags._from_value(0)
+        flags.suppress_embeds = suppress
+        flags.ephemeral = ephemeral
+        payload['flags'] = flags.value
 
     if allowed_mentions:
         if previous_allowed_mentions is not None:
@@ -553,7 +558,7 @@ def handle_message_parameters(
     if files:
         form = utils._generate_multipart(payload, files)
         payload = None
-
+    print(payload)
     return ExecuteWebhookParameters(payload=payload, multipart=form, files=files)
 
 
@@ -1267,15 +1272,33 @@ class Webhook(BaseWebhook):
         avatar_url: Any = MISSING,
         tts: bool = MISSING,
         ephemeral: bool = MISSING,
-        file: File = MISSING,
         files: List[File] = MISSING,
-        embed: Embed = MISSING,
         embeds: List[Embed] = MISSING,
         allowed_mentions: AllowedMentions = MISSING,
         view: View = MISSING,
         thread: Snowflake = MISSING,
         wait: Literal[True],
-    ) -> WebhookMessage:
+        suppress: bool = False,
+    ) -> None:
+        ...
+
+    @overload
+    async def send(
+        self,
+        content: str = MISSING,
+        *,
+        username: str = MISSING,
+        avatar_url: Any = MISSING,
+        tts: bool = MISSING,
+        ephemeral: bool = MISSING,
+        files: List[File] = MISSING,
+        embed: Embed = MISSING,
+        allowed_mentions: AllowedMentions = MISSING,
+        view: View = MISSING,
+        thread: Snowflake = MISSING,
+        wait: Literal[True],
+        suppress: bool = False,
+    ) -> None:
         ...
 
     @overload
@@ -1288,13 +1311,107 @@ class Webhook(BaseWebhook):
         tts: bool = MISSING,
         ephemeral: bool = MISSING,
         file: File = MISSING,
-        files: List[File] = MISSING,
         embed: Embed = MISSING,
+        allowed_mentions: AllowedMentions = MISSING,
+        view: View = MISSING,
+        thread: Snowflake = MISSING,
+        wait: Literal[True],
+        suppress: bool = False,
+    ) -> None:
+        ...
+
+    @overload
+    async def send(
+        self,
+        content: str = MISSING,
+        *,
+        username: str = MISSING,
+        avatar_url: Any = MISSING,
+        tts: bool = MISSING,
+        ephemeral: bool = MISSING,
+        file: File = MISSING,
+        embeds: List[Embed] = MISSING,
+        allowed_mentions: AllowedMentions = MISSING,
+        view: View = MISSING,
+        thread: Snowflake = MISSING,
+        wait: Literal[True],
+        suppress: bool = False,
+    ) -> None:
+        ...
+
+    @overload
+    async def send(
+        self,
+        content: str = MISSING,
+        *,
+        username: str = MISSING,
+        avatar_url: Any = MISSING,
+        tts: bool = MISSING,
+        ephemeral: bool = MISSING,
+        files: List[File] = MISSING,
         embeds: List[Embed] = MISSING,
         allowed_mentions: AllowedMentions = MISSING,
         view: View = MISSING,
         thread: Snowflake = MISSING,
         wait: Literal[False] = ...,
+        suppress: bool = False,
+    ) -> None:
+        ...
+
+    @overload
+    async def send(
+        self,
+        content: str = MISSING,
+        *,
+        username: str = MISSING,
+        avatar_url: Any = MISSING,
+        tts: bool = MISSING,
+        ephemeral: bool = MISSING,
+        files: List[File] = MISSING,
+        embed: Embed = MISSING,
+        allowed_mentions: AllowedMentions = MISSING,
+        view: View = MISSING,
+        thread: Snowflake = MISSING,
+        wait: Literal[False] = ...,
+        suppress: bool = False,
+    ) -> None:
+        ...
+
+    @overload
+    async def send(
+        self,
+        content: str = MISSING,
+        *,
+        username: str = MISSING,
+        avatar_url: Any = MISSING,
+        tts: bool = MISSING,
+        ephemeral: bool = MISSING,
+        file: File = MISSING,
+        embed: Embed = MISSING,
+        allowed_mentions: AllowedMentions = MISSING,
+        view: View = MISSING,
+        thread: Snowflake = MISSING,
+        wait: Literal[False] = ...,
+        suppress: bool = False,
+    ) -> None:
+        ...
+
+    @overload
+    async def send(
+        self,
+        content: str = MISSING,
+        *,
+        username: str = MISSING,
+        avatar_url: Any = MISSING,
+        tts: bool = MISSING,
+        ephemeral: bool = MISSING,
+        file: File = MISSING,
+        embeds: List[Embed] = MISSING,
+        allowed_mentions: AllowedMentions = MISSING,
+        view: View = MISSING,
+        thread: Snowflake = MISSING,
+        wait: Literal[False] = ...,
+        suppress: bool = False,
     ) -> None:
         ...
 
@@ -1314,6 +1431,7 @@ class Webhook(BaseWebhook):
         view: View = MISSING,
         thread: Snowflake = MISSING,
         wait: bool = False,
+        suppress: bool = False,
     ) -> Optional[WebhookMessage]:
         """|coro|
 
@@ -1379,6 +1497,10 @@ class Webhook(BaseWebhook):
             The thread to send this webhook to.
 
             .. versionadded:: 2.0
+        suppress: :class:`bool`
+            Whether to suppress embeds for the message. This removes all the embeds if set to ``True``.
+
+            .. versionadded:: 2.0
 
         Raises
         --------
@@ -1436,6 +1558,7 @@ class Webhook(BaseWebhook):
             view=view,
             allowed_mentions=allowed_mentions,
             previous_allowed_mentions=previous_mentions,
+            suppress=suppress,
         )
         adapter = async_context.get()
         thread_id: Optional[int] = None
