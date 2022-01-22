@@ -124,15 +124,15 @@ class Thread(Messageable, Hashable):
         Usually a value of 60, 1440, 4320 and 10080.
     archive_timestamp: :class:`datetime.datetime`
         An aware timestamp of when the thread's archived status was last updated in UTC.
+    created_at: Optional[:class:`datetime.datetime`]
+        Returns the thread's creation time in UTC. If thread was not created after January 9,
+        2022, this will be ``None``.
     """
 
     __slots__ = (
         'name',
         'id',
         'guild',
-        '_type',
-        '_state',
-        '_members',
         'owner_id',
         'parent_id',
         'last_message_id',
@@ -146,6 +146,10 @@ class Thread(Messageable, Hashable):
         'archiver_id',
         'auto_archive_duration',
         'archive_timestamp',
+        'created_at',
+        '_type',
+        '_state',
+        '_members',
     )
 
     def __init__(self, *, guild: Guild, state: ConnectionState, data: ThreadPayload):
@@ -166,7 +170,7 @@ class Thread(Messageable, Hashable):
     def __str__(self) -> str:
         return self.name
 
-    def _from_data(self, data: ThreadPayload):
+    def _from_data(self, data: ThreadPayload) -> None:
         self.id: int = int(data['id'])
         self.parent_id: int = int(data['parent_id'])
         self.owner_id: int = int(data['owner_id'])
@@ -185,13 +189,14 @@ class Thread(Messageable, Hashable):
         else:
             self.me: Optional[ThreadMember] = ThreadMember(self, member)
 
-    def _unroll_metadata(self, data: ThreadMetadata):
+    def _unroll_metadata(self, data: ThreadMetadata) -> None:
         self.archived: bool = data['archived']
         self.archiver_id: Optional[int] = _get_as_snowflake(data, 'archiver_id')
         self.auto_archive_duration: int = data['auto_archive_duration']
         self.archive_timestamp: datetime.datetime = parse_time(data['archive_timestamp'])
         self.locked: bool = data.get('locked', False)
         self.invitable: bool = data.get('invitable', True)
+        self.created_at: Optional[datetime.datetime] = parse_time(data.get('create_timestamp'))
 
     def _update(self, data: ThreadPayload) -> None:
         try:
