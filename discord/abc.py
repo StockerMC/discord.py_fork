@@ -233,9 +233,6 @@ class _Overwrites:
         return self.type == 1
 
 
-GCH = TypeVar('GCH', bound='GuildChannel')
-
-
 class GuildChannel:
     """An ABC that details the common operations on a Discord guild channel.
 
@@ -864,7 +861,7 @@ class GuildChannel:
         self.guild._channels[obj.id] = obj  # type: ignore
         return obj
 
-    async def clone(self: GCH, *, name: Optional[str] = None, reason: Optional[str] = None) -> GCH:
+    async def clone(self, *, name: Optional[str] = None, reason: Optional[str] = None) -> Self:
         """|coro|
 
         Clones this channel. This creates a channel with the same properties

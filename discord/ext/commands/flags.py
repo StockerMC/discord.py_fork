@@ -70,8 +70,6 @@ if TYPE_CHECKING:
 
     from .context import Context
 
-    FMT = TypeVar('FMT', bound='FlagsMeta')
-
 @dataclass
 class Flag:
     """Represents a flag parameter for :class:`FlagConverter`.
@@ -433,9 +431,6 @@ async def convert_flag(ctx: Context[Any], argument: str, flag: Flag, annotation:
         raise
     except Exception as e:
         raise BadFlagArgument(flag) from e
-
-
-F = TypeVar('F', bound='FlagConverter')
 
 
 class FlagConverter(metaclass=FlagsMeta):

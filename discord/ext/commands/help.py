@@ -62,7 +62,6 @@ if TYPE_CHECKING:
 
     import inspect
 
-    HCT = TypeVar('HCT', bound='HelpCommand')
     CommandMapping = Mapping[Optional[Cog], List[Command[Any, Any, Any]]]
 
 __all__ = (

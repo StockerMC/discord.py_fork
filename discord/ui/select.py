@@ -44,6 +44,8 @@ __all__ = (
 )
 
 if TYPE_CHECKING:
+    from typing_extensions import Self
+
     from .view import View
     from ..types.components import SelectMenu as SelectMenuPayload
     from ..types.interactions import (
