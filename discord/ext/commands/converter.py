@@ -47,6 +47,8 @@ import discord
 from .errors import *
 
 if TYPE_CHECKING:
+    from typing_extensions import Self
+
     from .context import Context
     from .bot import Bot
 

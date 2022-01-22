@@ -27,17 +27,15 @@ from __future__ import annotations
 import time
 import asyncio
 from typing import (
+    TYPE_CHECKING,
     Any,
-    Callable,
     Dict,
-    Iterable,
     List,
+    Callable,
+    Iterable,
     Mapping,
     Optional,
-    TYPE_CHECKING,
     Tuple,
-    Type,
-    TypeVar,
     Union,
     overload,
 )
@@ -68,6 +66,8 @@ __all__ = (
 )
 
 if TYPE_CHECKING:
+    from typing_extensions import Self
+
     from .types.threads import ThreadArchiveDuration
     from .role import Role
     from .member import Member, VoiceState
@@ -199,7 +199,7 @@ class TextChannel(discord.abc.Messageable, discord.abc.GuildChannel, Hashable):
         self.last_message_id: Optional[int] = utils._get_as_snowflake(data, 'last_message_id')
         self._fill_overwrites(data)
 
-    async def _get_channel(self):
+    async def _get_channel(self) -> Self:
         return self
 
     @property
@@ -1700,9 +1700,6 @@ class StoreChannel(discord.abc.GuildChannel, Hashable):
             return self.__class__(state=self._state, guild=self.guild, data=payload)
 
 
-DMC = TypeVar('DMC', bound='DMChannel')
-
-
 class DMChannel(discord.abc.Messageable, Hashable):
     """Represents a Discord direct message channel.
 
@@ -1744,7 +1741,7 @@ class DMChannel(discord.abc.Messageable, Hashable):
         self.me: ClientUser = me
         self.id: int = int(data['id'])
 
-    async def _get_channel(self):
+    async def _get_channel(self) -> Self:
         return self
 
     def __str__(self) -> str:
@@ -1756,8 +1753,8 @@ class DMChannel(discord.abc.Messageable, Hashable):
         return f'<DMChannel id={self.id} recipient={self.recipient!r}>'
 
     @classmethod
-    def _from_message(cls: Type[DMC], state: ConnectionState, channel_id: int) -> DMC:
-        self: DMC = cls.__new__(cls)
+    def _from_message(cls, state: ConnectionState, channel_id: int) -> Self:
+        self = cls.__new__(cls)
         self._state = state
         self.id = channel_id
         self.recipient = None
@@ -1888,7 +1885,7 @@ class GroupChannel(discord.abc.Messageable, Hashable):
         else:
             self.owner = utils.find(lambda u: u.id == self.owner_id, self.recipients)
 
-    async def _get_channel(self):
+    async def _get_channel(self) -> Self:
         return self
 
     def __str__(self) -> str:

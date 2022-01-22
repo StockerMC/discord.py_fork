@@ -66,6 +66,8 @@ __all__ = (
 
 
 if TYPE_CHECKING:
+    from typing_extensions import Self
+
     from .context import Context
 
     FMT = TypeVar('FMT', bound='FlagsMeta')
@@ -266,7 +268,7 @@ class FlagsMeta(type):
         __commands_flag_prefix__: str
 
     def __new__(
-        cls: Type[FMT],
+        cls,
         name: str,
         bases: Tuple[type, ...],
         attrs: Dict[str, Any],
@@ -274,7 +276,7 @@ class FlagsMeta(type):
         case_insensitive: bool = MISSING,
         delimiter: str = MISSING,
         prefix: str = MISSING,
-    ) -> FMT:
+    ) -> Self:
         attrs['__commands_is_flag__'] = True
 
         try:
@@ -482,8 +484,8 @@ class FlagConverter(metaclass=FlagsMeta):
             yield (flag.name, getattr(self, flag.attribute))
 
     @classmethod
-    async def _construct_default(cls: Type[F], ctx: Context[Any]) -> F:
-        self: F = cls.__new__(cls)
+    async def _construct_default(cls, ctx: Context[Any]) -> Self:
+        self = cls.__new__(cls)
         flags = cls.__commands_flags__
         for flag in flags.values():
             if callable(flag.default):
@@ -548,7 +550,7 @@ class FlagConverter(metaclass=FlagsMeta):
         return result
 
     @classmethod
-    async def convert(cls: Type[F], ctx: Context[Any], argument: str) -> F:
+    async def convert(cls, ctx: Context[Any], argument: str) -> Self:
         """|coro|
 
         The method that actually converters an argument to the flag mapping.
@@ -577,7 +579,7 @@ class FlagConverter(metaclass=FlagsMeta):
         arguments = cls.parse_flags(argument)
         flags = cls.__commands_flags__
 
-        self: F = cls.__new__(cls)
+        self = cls.__new__(cls)
         for name, flag in flags.items():
             try:
                 values = arguments[name]

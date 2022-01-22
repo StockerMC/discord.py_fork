@@ -35,6 +35,8 @@ from discord.abc import PrivateChannel
 from .errors import MaxConcurrencyReached
 
 if TYPE_CHECKING:
+    from typing_extensions import Self
+
     from discord.message import Message
 
     T = TypeVar('T')
@@ -355,7 +357,7 @@ class MaxConcurrency:
         if not isinstance(per, BucketType):
             raise TypeError(f'max_concurrency \'per\' must be of type BucketType not {type(per)!r}')
 
-    def copy(self: MC) -> MC:
+    def copy(self) -> Self:
         return self.__class__(self.number, per=self.per, wait=self.wait)
 
     def __repr__(self) -> str:

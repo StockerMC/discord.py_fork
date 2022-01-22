@@ -30,7 +30,7 @@ import json
 import re
 
 from urllib.parse import quote as urlquote
-from typing import Any, Dict, List, Literal, NamedTuple, Optional, TYPE_CHECKING, Tuple, Union, TypeVar, Type, overload
+from typing import Any, Dict, List, Literal, NamedTuple, Optional, TYPE_CHECKING, Tuple, Union, Type, overload
 from contextvars import ContextVar
 
 import aiohttp
@@ -55,6 +55,8 @@ __all__ = (
 _log = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
+    from typing_extensions import Self
+
     from ..types.webhook import (
         Webhook as WebhookPayload,
         SourceGuild as SourceGuildPayload,
@@ -83,9 +85,6 @@ if TYPE_CHECKING:
     from types import TracebackType
     import datetime
 
-    WT = TypeVar('WT', bound='Webhook')
-    ADLT = TypeVar('ADLT', bound='AsyncDeferredLock')
-
 MISSING = utils.MISSING
 
 
@@ -94,7 +93,7 @@ class AsyncDeferredLock:
         self.lock: asyncio.Lock = lock
         self.delta: Optional[float] = None
 
-    async def __aenter__(self: ADLT) -> ADLT:
+    async def __aenter__(self) -> Self:
         await self.lock.acquire()
         return self
 
@@ -991,7 +990,7 @@ class Webhook(BaseWebhook):
         return f'https://discord.com/api/webhooks/{self.id}/{self.token}'
 
     @classmethod
-    def partial(cls: Type[WT], id: int, token: str, *, session: aiohttp.ClientSession, bot_token: Optional[str] = None) -> Webhook:
+    def partial(cls, id: int, token: str, *, session: aiohttp.ClientSession, bot_token: Optional[str] = None) -> Self:
         """Creates a partial :class:`Webhook`.
 
         Parameters
@@ -1027,7 +1026,7 @@ class Webhook(BaseWebhook):
         return cls(data, session, token=bot_token)
 
     @classmethod
-    def from_url(cls: Type[WT], url: str, *, session: aiohttp.ClientSession, bot_token: Optional[str] = None) -> WT:
+    def from_url(cls, url: str, *, session: aiohttp.ClientSession, bot_token: Optional[str] = None) -> Self:
         """Creates a partial :class:`Webhook` from a webhook URL.
 
         Parameters
@@ -1066,7 +1065,7 @@ class Webhook(BaseWebhook):
         return cls(data, session, token=bot_token)  # type: ignore
 
     @classmethod
-    def _as_follower(cls: Type[WT], data: FollowedChannel, *, channel: TextChannel, user) -> WT:
+    def _as_follower(cls, data: FollowedChannel, *, channel: TextChannel, user) -> Self:
         name = f"{channel.guild} #{channel}"
         feed: WebhookPayload = {
             'id': data['webhook_id'],
@@ -1087,7 +1086,7 @@ class Webhook(BaseWebhook):
         return cls(feed, session=session, state=state, token=state.http.token)
 
     @classmethod
-    def from_state(cls: Type[WT], data: WebhookPayload, state: ConnectionState) -> WT:
+    def from_state(cls, data: WebhookPayload, state: ConnectionState) -> Self:
         session = state.http._HTTPClient__session  # type: ignore
         return cls(data, session=session, state=state, token=state.http.token)
 

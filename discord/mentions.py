@@ -23,14 +23,14 @@ DEALINGS IN THE SOFTWARE.
 """
 
 from __future__ import annotations
-from typing import Type, TypeVar, Union, List, TYPE_CHECKING, Any, Union, Literal
+from typing import TYPE_CHECKING, Any, List, Union, Literal
 
 __all__ = (
     'AllowedMentions',
 )
 
 if TYPE_CHECKING:
-    from typing_extensions import TypeGuard
+    from typing_extensions import TypeGuard, Self
 
     from .types.message import AllowedMentions as AllowedMentionsPayload
     from .abc import Snowflake
@@ -48,8 +48,6 @@ class _FakeBool:
 
 
 default: Any = _FakeBool()
-
-A = TypeVar('A', bound='AllowedMentions')
 
 
 class AllowedMentions:
@@ -103,7 +101,7 @@ class AllowedMentions:
         self.replied_user: bool = replied_user
 
     @classmethod
-    def all(cls: Type[A]) -> A:
+    def all(cls) -> Self:
         """A factory method that returns a :class:`AllowedMentions` with all fields explicitly set to ``True``
 
         .. versionadded:: 1.5
@@ -111,7 +109,7 @@ class AllowedMentions:
         return cls(everyone=True, users=True, roles=True, replied_user=True)
 
     @classmethod
-    def none(cls: Type[A]) -> A:
+    def none(cls) -> Self:
         """A factory method that returns a :class:`AllowedMentions` with all fields set to ``False``
 
         .. versionadded:: 1.5

@@ -61,6 +61,8 @@ from .enums import SpeakingState
 from .errors import ConnectionClosed, InvalidArgument 
 
 if TYPE_CHECKING:
+    from typing_extensions import Self
+
     from .client import Client
     from .state import ConnectionState
     from .voice_client import VoiceClient
@@ -68,8 +70,6 @@ if TYPE_CHECKING:
     from .types.voice import SessionDescription
 
     T = TypeVar('T')
-    DWS = TypeVar('DWS', bound='DiscordWebSocket')
-    DVWS = TypeVar('DVWS', bound='DiscordVoiceWebSocket')
 
     Coro = Callable[..., Coroutine[Any, Any, Any]]
     Predicate = Callable[[Dict[str, Any]], bool]
@@ -365,7 +365,7 @@ class DiscordWebSocket:
 
     @classmethod
     async def from_client(
-        cls: Type[DWS],
+        cls,
         client: Client,
         *,
         initial: bool = False,
@@ -374,7 +374,7 @@ class DiscordWebSocket:
         session: Optional[str] = None,
         sequence: Optional[int] = None,
         resume: bool = False
-    ) -> DWS:
+    ) -> Self:
         """Creates a main websocket for Discord from a :class:`Client`.
 
         This is for internal use only.
@@ -845,7 +845,7 @@ class DiscordVoiceWebSocket:
         await self.send_as_json(payload)
 
     @classmethod
-    async def from_client(cls: Type[DVWS], client: VoiceClient, *, resume: bool = False, hook: Optional[Coro] = None) -> DVWS:
+    async def from_client(cls, client: VoiceClient, *, resume: bool = False, hook: Optional[Coro] = None) -> Self:
         """Creates a voice websocket for the :class:`VoiceClient`."""
         gateway = 'wss://' + client.endpoint + '/?v=4'
         http = client._state.http

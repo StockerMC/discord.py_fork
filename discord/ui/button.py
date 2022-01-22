@@ -200,7 +200,7 @@ class Button(Item[V]):
             self._underlying.emoji = None
 
     @classmethod
-    def from_component(cls: Type[B], button: ButtonComponent) -> B:
+    def from_component(cls, button: ButtonComponent) -> Self:
         return cls(
             style=button.style,
             label=button.label,

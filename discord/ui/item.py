@@ -77,7 +77,7 @@ class Item(Generic[V]):
         return None
 
     @classmethod
-    def from_component(cls: Type[I], component: Component) -> I:
+    def from_component(cls, component: Component) -> Self:
         return cls()
 
     @property

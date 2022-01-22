@@ -55,6 +55,8 @@ __all__ = (
 _log = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
+    from typing_extensions import Self
+
     from ..file import File
     from ..embeds import Embed
     from ..mentions import AllowedMentions
@@ -71,8 +73,6 @@ if TYPE_CHECKING:
     from types import TracebackType
     from requests import Session, Response
 
-    DLT = TypeVar('DLT', bound='DeferredLock')
-    SWT = TypeVar('SWT', bound='SyncWebhook')
     T = TypeVar('T')
 
 MISSING = utils.MISSING
@@ -83,7 +83,7 @@ class DeferredLock:
         self.lock: threading.Lock = lock
         self.delta: Optional[float] = None
 
-    def __enter__(self: DLT) -> DLT:
+    def __enter__(self) -> Self:
         self.lock.acquire()
         return self
 
@@ -586,7 +586,7 @@ class SyncWebhook(BaseWebhook):
         return f'https://discord.com/api/webhooks/{self.id}/{self.token}'
 
     @classmethod
-    def partial(cls: Type[SWT], id: int, token: str, *, session: Session = MISSING, bot_token: Optional[str] = None) -> SWT:
+    def partial(cls, id: int, token: str, *, session: Session = MISSING, bot_token: Optional[str] = None) -> Self:
         """Creates a partial :class:`Webhook`.
 
         Parameters
@@ -625,7 +625,7 @@ class SyncWebhook(BaseWebhook):
         return cls(data, session, token=bot_token)
 
     @classmethod
-    def from_url(cls: Type[SWT], url: str, *, session: Session = MISSING, bot_token: Optional[str] = None) -> SyncWebhook:
+    def from_url(cls, url: str, *, session: Session = MISSING, bot_token: Optional[str] = None) -> Self:
         """Creates a partial :class:`Webhook` from a webhook URL.
 
         Parameters

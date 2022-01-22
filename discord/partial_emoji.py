@@ -24,7 +24,7 @@ DEALINGS IN THE SOFTWARE.
 
 from __future__ import annotations
 
-from typing import Any, Dict, Optional, TYPE_CHECKING, Type, TypeVar, Union
+from typing import Any, Dict, Optional, TYPE_CHECKING, Union
 import re
 
 from .asset import Asset, AssetMixin
@@ -38,6 +38,8 @@ __all__ = (
 if TYPE_CHECKING:
     import datetime
 
+    from typing_extensions import Self
+
     from .types.message import PartialEmoji as PartialEmojiPayload
     from .state import ConnectionState
     from .webhook.async_ import _WebhookState
@@ -49,9 +51,6 @@ class _EmojiTag:
 
     def _to_partial(self) -> PartialEmoji:
         raise NotImplementedError
-
-
-PE = TypeVar('PE', bound='PartialEmoji')
 
 
 class PartialEmoji(_EmojiTag, AssetMixin):
@@ -103,7 +102,7 @@ class PartialEmoji(_EmojiTag, AssetMixin):
         self._state: Optional[Union[ConnectionState, _WebhookState]] = None
 
     @classmethod
-    def from_dict(cls: Type[PE], data: Union[PartialEmojiPayload, Dict[str, Any]]) -> PE:
+    def from_dict(cls, data: Union[PartialEmojiPayload, Dict[str, Any]]) -> Self:
         return cls(
             animated=data.get('animated', False),
             id=utils._get_as_snowflake(data, 'id'),
@@ -111,7 +110,7 @@ class PartialEmoji(_EmojiTag, AssetMixin):
         )
 
     @classmethod
-    def from_str(cls: Type[PE], value: str) -> PE:
+    def from_str(cls, value: str) -> Self:
         """Converts a Discord string representation of an emoji to a :class:`PartialEmoji`.
 
         The formats accepted are:
@@ -158,8 +157,8 @@ class PartialEmoji(_EmojiTag, AssetMixin):
 
     @classmethod
     def with_state(
-        cls: Type[PE], state: ConnectionState, *, name: Optional[str], animated: bool = False, id: Optional[int] = None
-    ) -> PE:
+        cls, state: ConnectionState, *, name: Optional[str], animated: bool = False, id: Optional[int] = None
+    ) -> Self:
         self = cls(name=name, animated=animated, id=id)
         self._state = state
         return self

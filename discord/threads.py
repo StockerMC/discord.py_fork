@@ -24,7 +24,7 @@ DEALINGS IN THE SOFTWARE.
 
 from __future__ import annotations
 
-from typing import Callable, Dict, Iterable, List, Optional, Union, TypeVar, TYPE_CHECKING
+from typing import Callable, Dict, Iterable, List, Optional, Union, TYPE_CHECKING
 import time
 import asyncio
 
@@ -40,6 +40,8 @@ __all__ = (
 )
 
 if TYPE_CHECKING:
+    from typing_extensions import Self
+
     from .types.threads import (
         Thread as ThreadPayload,
         ThreadMember as ThreadMemberPayload,
@@ -57,8 +59,6 @@ if TYPE_CHECKING:
     from .state import ConnectionState
 
     import datetime
-
-    ThreadT = TypeVar('ThreadT', bound='Thread')
 
 class Thread(Messageable, Hashable):
     """Represents a Discord thread.
@@ -154,7 +154,7 @@ class Thread(Messageable, Hashable):
         self._members: Dict[int, ThreadMember] = {}
         self._from_data(data)
 
-    async def _get_channel(self: ThreadT) -> ThreadT:
+    async def _get_channel(self) -> Self:
         return self
 
     def __repr__(self) -> str:

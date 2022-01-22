@@ -67,6 +67,8 @@ __all__ = (
 T = TypeVar('T', bound=VoiceProtocol)
 
 if TYPE_CHECKING:
+    from typing_extensions import Self
+
     from datetime import datetime
 
     from .client import Client
@@ -844,12 +846,12 @@ class GuildChannel:
             raise InvalidArgument('Invalid overwrite type provided.')
 
     async def _clone_impl(
-        self: GCH,
+        self,
         base_attrs: Dict[str, Any],
         *,
         name: Optional[str] = None,
         reason: Optional[str] = None,
-    ) -> GCH:
+    ) -> Self:
         base_attrs['permission_overwrites'] = [x._asdict() for x in self._overwrites]
         base_attrs['parent_id'] = self.category_id
         base_attrs['name'] = name or self.name
