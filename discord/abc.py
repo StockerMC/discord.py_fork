@@ -1205,6 +1205,7 @@ class Messageable:
         reference: Union[Message, MessageReference, PartialMessage] = ...,
         mention_author: bool = ...,
         view: View = ...,
+        suppress: bool = ...,
     ) -> Message:
         ...
 
@@ -1223,6 +1224,7 @@ class Messageable:
         reference: Union[Message, MessageReference, PartialMessage] = ...,
         mention_author: bool = ...,
         view: View = ...,
+        suppress: bool = ...,
     ) -> Message:
         ...
 
@@ -1241,6 +1243,7 @@ class Messageable:
         reference: Union[Message, MessageReference, PartialMessage] = ...,
         mention_author: bool = ...,
         view: View = ...,
+        suppress: bool = ...,
     ) -> Message:
         ...
 
@@ -1259,6 +1262,7 @@ class Messageable:
         reference: Union[Message, MessageReference, PartialMessage] = ...,
         mention_author: bool = ...,
         view: View = ...,
+        suppress: bool = ...,
     ) -> Message:
         ...
 
@@ -1278,6 +1282,7 @@ class Messageable:
         reference: Optional[Union[Message, MessageReference, PartialMessage]] = None,
         mention_author: Optional[bool] = None,
         view: Optional[View] = None,
+        suppress: bool = False,
     ) -> Message:
         """|coro|
 
@@ -1346,6 +1351,10 @@ class Messageable:
             .. versionadded:: 2.0
         stickers: Sequence[Union[:class:`~discord.GuildSticker`, :class:`~discord.StickerItem`]]
             A list of stickers to upload. Must be a maximum of 3.
+
+            .. versionadded:: 2.0
+        suppress: :class:`bool`
+            Whether to suppress embeds for the message. This removes all the embeds if set to ``True``.
 
             .. versionadded:: 2.0
 
@@ -1434,6 +1443,7 @@ class Messageable:
                     message_reference=reference_payload,
                     stickers=stickers_payload,
                     components=components,
+                    suppress=suppress,
                 )
             finally:
                 file.close()
@@ -1457,6 +1467,7 @@ class Messageable:
                     message_reference=reference_payload,
                     stickers=stickers_payload,
                     components=components,
+                    suppress=suppress,
                 )
             finally:
                 for f in files:
@@ -1473,6 +1484,7 @@ class Messageable:
                 message_reference=reference_payload,
                 stickers=stickers_payload,
                 components=components,
+                suppress=suppress,
             )
 
         ret = state.create_message(channel=channel, data=data)
