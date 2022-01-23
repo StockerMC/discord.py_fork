@@ -720,11 +720,7 @@ class HTTPClient:
 
     def kick(self, user_id: Snowflake, guild_id: Snowflake, reason: Optional[str] = None) -> Response[None]:
         r = Route('DELETE', '/guilds/{guild_id}/members/{user_id}', guild_id=guild_id, user_id=user_id)
-        if reason:
-            # thanks aiohttp
-            r.url = f'{r.url}?reason={_uriquote(reason)}'
-
-        return self.request(r)
+        return self.request(r, reason=reason)
 
     def ban(
         self,
@@ -1276,7 +1272,7 @@ class HTTPClient:
         )
 
     def create_guild_sticker(
-        self, guild_id: Snowflake, payload: sticker.CreateGuildSticker, file: File, reason: Optional[str]
+        self, guild_id: Snowflake, payload: sticker.CreateGuildSticker, file: File, reason: Optional[str] = None
     ) -> Response[sticker.GuildSticker]:
         initial_bytes = file.fp.read(16)
 
@@ -1312,7 +1308,7 @@ class HTTPClient:
         )
 
     def modify_guild_sticker(
-        self, guild_id: Snowflake, sticker_id: Snowflake, payload: sticker.EditGuildSticker, reason: Optional[str],
+        self, guild_id: Snowflake, sticker_id: Snowflake, payload: sticker.EditGuildSticker, reason: Optional[str] = None,
     ) -> Response[sticker.GuildSticker]:
         return self.request(
             Route('PATCH', '/guilds/{guild_id}/stickers/{sticker_id}', guild_id=guild_id, sticker_id=sticker_id),
@@ -1320,7 +1316,7 @@ class HTTPClient:
             reason=reason,
         )
 
-    def delete_guild_sticker(self, guild_id: Snowflake, sticker_id: Snowflake, reason: Optional[str]) -> Response[None]:
+    def delete_guild_sticker(self, guild_id: Snowflake, sticker_id: Snowflake, reason: Optional[str] = None) -> Response[None]:
         return self.request(
             Route('DELETE', '/guilds/{guild_id}/stickers/{sticker_id}', guild_id=guild_id, sticker_id=sticker_id),
             reason=reason,
@@ -1433,8 +1429,14 @@ class HTTPClient:
     def get_widget(self, guild_id: Snowflake) -> Response[widget.Widget]:
         return self.request(Route('GET', '/guilds/{guild_id}/widget.json', guild_id=guild_id))
 
-    def edit_widget(self, guild_id: Snowflake, payload: widget.EditWidget) -> Response[widget.WidgetSettings]:
-        return self.request(Route('PATCH', '/guilds/{guild_id}/widget', guild_id=guild_id), json=payload)
+    def edit_widget(
+        self,
+        guild_id: Snowflake,
+        payload: widget.EditWidget,
+        *,
+        reason: Optional[str] = None
+    ) -> Response[widget.WidgetSettings]:
+        return self.request(Route('PATCH', '/guilds/{guild_id}/widget', guild_id=guild_id), json=payload, reason=reason)
 
     # Invite management
 
@@ -1667,7 +1669,7 @@ class HTTPClient:
     def get_stage_instance(self, channel_id: Snowflake) -> Response[channel.StageInstance]:
         return self.request(Route('GET', '/stage-instances/{channel_id}', channel_id=channel_id))
 
-    def create_stage_instance(self, *, reason: Optional[str], **payload: Any) -> Response[channel.StageInstance]:
+    def create_stage_instance(self, *, reason: Optional[str] = None, **payload: Any) -> Response[channel.StageInstance]:
         valid_keys = (
             'channel_id',
             'topic',
