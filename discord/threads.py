@@ -124,7 +124,7 @@ class Thread(Messageable, Hashable):
         Usually a value of 60, 1440, 4320 and 10080.
     archive_timestamp: :class:`datetime.datetime`
         An aware timestamp of when the thread's archived status was last updated in UTC.
-    created_at: Optional[:class:`datetime.datetime`]
+    create_timestamp: Optional[:class:`datetime.datetime`]
         Returns the thread's creation time in UTC. If thread was not created after January 9,
         2022, this will be ``None``.
     """
@@ -146,7 +146,7 @@ class Thread(Messageable, Hashable):
         'archiver_id',
         'auto_archive_duration',
         'archive_timestamp',
-        'created_at',
+        'create_timestamp',
         '_type',
         '_state',
         '_members',
@@ -196,7 +196,7 @@ class Thread(Messageable, Hashable):
         self.archive_timestamp: datetime.datetime = parse_time(data['archive_timestamp'])
         self.locked: bool = data.get('locked', False)
         self.invitable: bool = data.get('invitable', True)
-        self.created_at: Optional[datetime.datetime] = parse_time(data.get('create_timestamp'))
+        self.create_timestamp: Optional[datetime.datetime] = parse_time(data.get('create_timestamp'))
 
     def _update(self, data: ThreadPayload) -> None:
         try:
