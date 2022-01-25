@@ -48,6 +48,7 @@ class _ScheduledEventOptional(TypedDict, total=False):
     description: Optional[str]
     creator: User
     user_count: int
+    cover: str
 
 
 ScheduledEventStatus = Literal[1, 2, 3, 4]

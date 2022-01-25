@@ -27,6 +27,7 @@ from __future__ import annotations
 import datetime
 from typing import TYPE_CHECKING, Optional, Union
 
+from .asset import Asset
 from .mixins import Hashable
 from .errors import ClientException
 from .utils import MISSING, _get_as_snowflake, snowflake_time, parse_time
@@ -113,6 +114,7 @@ class ScheduledEvent(Hashable):
         'location',
         'user_count',
         '_creator',
+        '_cover',
         '_state',
     )
 
@@ -133,8 +135,9 @@ class ScheduledEvent(Hashable):
         self.entity_type: ScheduledEventEntityType = try_enum(ScheduledEventEntityType, data['entity_type'])
         self.entity_id: Optional[int] = _get_as_snowflake(data, 'entity_id')
         self.user_count: Optional[int] = _get_as_snowflake(data, 'user_count')
-
         self.creator_id: Optional[int] = _get_as_snowflake(data, 'creator_id')
+        self._cover: Optional[str] = data.get('image')
+
         self._creator: Optional[User] = None
         try:
             # circular import
@@ -187,6 +190,13 @@ class ScheduledEvent(Hashable):
             return self._state.get_user(self.creator_id) or self._creator
 
         return self.guild.get_member(self.creator_id)
+
+    @property
+    def cover(self) -> Optional[Asset]:
+        """Optional[:class:`Asset`]: Returns the scheduled event's cover image asset, if any."""
+        if self._cover is None:
+            return None
+        return Asset._from_scheduled_event_image(self._state, self.id, self._cover)
 
     # TODO: should with_member be removed?
     def fetch_users(

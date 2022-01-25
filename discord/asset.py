@@ -253,6 +253,15 @@ class Asset(AssetMixin):
             animated=animated
         )
 
+    @classmethod
+    def _from_scheduled_event_image(cls: Type[AT], state: Union[ConnectionState, _WebhookState], scheduled_event_id: int, cover_hash: str) -> AT:
+        return cls(
+            state,
+            url=f'{cls.BASE}/guild-events/{scheduled_event_id}/{cover_hash}.png?size=1024',
+            key=cover_hash,
+            animated=False,
+        )
+
     def __str__(self) -> str:
         return self._url
 

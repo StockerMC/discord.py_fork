@@ -120,3 +120,8 @@ January 23, 2022
 ----------------
 
 Added ``Thread.created_at``.
+
+January 25, 2022
+----------------
+
+Added ``ScheduledEvent.cover``.
