@@ -298,6 +298,14 @@ class MessageFlags(BaseFlags):
         """
         return 64
 
+    @flag_value
+    def loading(self):
+        """:class:`bool`: Returns ``True`` if the source message is an interaction response and the bot is "thinking".
+        
+        .. versionadded:: 2.0
+        """
+        return 128
+
 
 @fill_with_flags()
 class PublicUserFlags(BaseFlags):

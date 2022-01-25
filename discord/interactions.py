@@ -602,7 +602,7 @@ class InteractionResponse:
         tts: bool = False,
         ephemeral: bool = False,
         allowed_mentions: Optional[AllowedMentions] = None,
-        suppress: bool = True,
+        suppress: bool = False,
     ) -> None: ...
 
     @overload
@@ -616,7 +616,7 @@ class InteractionResponse:
         tts: bool = False,
         ephemeral: bool = False,
         allowed_mentions: Optional[AllowedMentions] = None,
-        suppress: bool = True,
+        suppress: bool = False,
     ) -> None: ...
 
     @overload
@@ -630,7 +630,7 @@ class InteractionResponse:
         tts: bool = False,
         ephemeral: bool = False,
         allowed_mentions: Optional[AllowedMentions] = None,
-        suppress: bool = True,
+        suppress: bool = False,
     ) -> None: ...
 
     @overload
@@ -643,7 +643,7 @@ class InteractionResponse:
         tts: bool = False,
         ephemeral: bool = False,
         allowed_mentions: Optional[AllowedMentions] = None,
-        suppress: bool = True,
+        suppress: bool = False,
     ) -> None:
         ...
 
@@ -658,7 +658,7 @@ class InteractionResponse:
         tts: bool = False,
         ephemeral: bool = False,
         allowed_mentions: Optional[AllowedMentions] = None,
-        suppress: bool = True,
+        suppress: bool = False,
     ) -> None:
         ...
 
@@ -673,7 +673,7 @@ class InteractionResponse:
         tts: bool = False,
         ephemeral: bool = False,
         allowed_mentions: Optional[AllowedMentions] = None,
-        suppress: bool = True,
+        suppress: bool = False,
     ) -> None:
         ...
 
@@ -689,7 +689,7 @@ class InteractionResponse:
         tts: bool = False,
         ephemeral: bool = False,
         allowed_mentions: Optional[AllowedMentions] = None,
-        suppress: bool = True,
+        suppress: bool = False,
     ) -> None:
         """|coro|
 

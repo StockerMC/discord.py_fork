@@ -830,12 +830,27 @@ class SyncWebhook(BaseWebhook):
         username: str = MISSING,
         avatar_url: Any = MISSING,
         tts: bool = MISSING,
-        file: File = MISSING,
         files: List[File] = MISSING,
-        embed: Embed = MISSING,
         embeds: List[Embed] = MISSING,
         allowed_mentions: AllowedMentions = MISSING,
         wait: Literal[True],
+        suppress: bool = False,
+    ) -> SyncWebhookMessage:
+        ...
+
+    @overload
+    def send(
+        self,
+        content: str = MISSING,
+        *,
+        username: str = MISSING,
+        avatar_url: Any = MISSING,
+        tts: bool = MISSING,
+        files: List[File] = MISSING,
+        embed: Embed = MISSING,
+        allowed_mentions: AllowedMentions = MISSING,
+        wait: Literal[True],
+        suppress: bool = False,
     ) -> SyncWebhookMessage:
         ...
 
@@ -848,11 +863,90 @@ class SyncWebhook(BaseWebhook):
         avatar_url: Any = MISSING,
         tts: bool = MISSING,
         file: File = MISSING,
-        files: List[File] = MISSING,
+        embeds: List[Embed] = MISSING,
+        allowed_mentions: AllowedMentions = MISSING,
+        wait: Literal[True],
+        suppress: bool = False,
+    ) -> SyncWebhookMessage:
+        ...
+
+    @overload
+    def send(
+        self,
+        content: str = MISSING,
+        *,
+        username: str = MISSING,
+        avatar_url: Any = MISSING,
+        tts: bool = MISSING,
+        file: File = MISSING,
         embed: Embed = MISSING,
+        allowed_mentions: AllowedMentions = MISSING,
+        wait: Literal[True],
+        suppress: bool = False,
+    ) -> SyncWebhookMessage:
+        ...
+
+    @overload
+    def send(
+        self,
+        content: str = MISSING,
+        *,
+        username: str = MISSING,
+        avatar_url: Any = MISSING,
+        tts: bool = MISSING,
+        files: List[File] = MISSING,
         embeds: List[Embed] = MISSING,
         allowed_mentions: AllowedMentions = MISSING,
         wait: Literal[False] = ...,
+        suppress: bool = False,
+    ) -> None:
+        ...
+
+    @overload
+    def send(
+        self,
+        content: str = MISSING,
+        *,
+        username: str = MISSING,
+        avatar_url: Any = MISSING,
+        tts: bool = MISSING,
+        files: List[File] = MISSING,
+        embed: Embed = MISSING,
+        allowed_mentions: AllowedMentions = MISSING,
+        wait: Literal[False] = ...,
+        suppress: bool = False,
+    ) -> None:
+        ...
+
+    @overload
+    def send(
+        self,
+        content: str = MISSING,
+        *,
+        username: str = MISSING,
+        avatar_url: Any = MISSING,
+        tts: bool = MISSING,
+        file: File = MISSING,
+        embeds: List[Embed] = MISSING,
+        allowed_mentions: AllowedMentions = MISSING,
+        wait: Literal[False] = ...,
+        suppress: bool = False,
+    ) -> None:
+        ...
+
+    @overload
+    def send(
+        self,
+        content: str = MISSING,
+        *,
+        username: str = MISSING,
+        avatar_url: Any = MISSING,
+        tts: bool = MISSING,
+        file: File = MISSING,
+        embed: Embed = MISSING,
+        allowed_mentions: AllowedMentions = MISSING,
+        wait: Literal[False] = ...,
+        suppress: bool = False,
     ) -> None:
         ...
 
@@ -870,6 +964,7 @@ class SyncWebhook(BaseWebhook):
         allowed_mentions: AllowedMentions = MISSING,
         thread: Snowflake = MISSING,
         wait: bool = False,
+        suppress: bool = False,
     ) -> Optional[SyncWebhookMessage]:
         """Sends a message using the webhook.
 
@@ -918,6 +1013,10 @@ class SyncWebhook(BaseWebhook):
             The thread to send this message to.
 
             .. versionadded:: 2.0
+        suppress: :class:`bool`
+            Whether to suppress embeds for the message. This removes all the embeds if set to ``True``.
+
+            .. versionadded:: 2.0
 
         Raises
         --------
@@ -958,6 +1057,7 @@ class SyncWebhook(BaseWebhook):
             embeds=embeds,
             allowed_mentions=allowed_mentions,
             previous_allowed_mentions=previous_mentions,
+            suppress=suppress,
         )
         adapter: WebhookAdapter = _get_webhook_adapter()
         thread_id: Optional[int] = None
