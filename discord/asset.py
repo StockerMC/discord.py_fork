@@ -254,7 +254,7 @@ class Asset(AssetMixin):
         )
 
     @classmethod
-    def _from_scheduled_event_image(cls: Type[AT], state: Union[ConnectionState, _WebhookState], scheduled_event_id: int, cover_hash: str) -> AT:
+    def _from_scheduled_event_image(cls, state: Union[ConnectionState, _WebhookState], scheduled_event_id: int, cover_hash: str) -> Self:
         return cls(
             state,
             url=f'{cls.BASE}/guild-events/{scheduled_event_id}/{cover_hash}.png?size=1024',
