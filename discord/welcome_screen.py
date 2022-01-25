@@ -24,12 +24,14 @@ DEALINGS IN THE SOFTWARE.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Optional, List, TypeVar, Type, Union
+from typing import TYPE_CHECKING, Optional, List, Union
 
 from .utils import MISSING, _get_as_snowflake
 from .partial_emoji import PartialEmoji
 
 if TYPE_CHECKING:
+    from typing_extensions import Self
+
     from .state import ConnectionState
     from .channel import TextChannel
     from .guild import Guild
@@ -41,8 +43,6 @@ if TYPE_CHECKING:
         EditWelcomeScreen as EditWelcomeScreenPayload,
     )
     from .types.emoji import Emoji as EmojiPayload
-
-    WCT = TypeVar('WCT', bound='WelcomeScreenChannel')
 
 
 __all__ = (
@@ -93,7 +93,7 @@ class WelcomeScreen:
         welcome_channels: Optional[List[WelcomeScreenChannel]] = MISSING,
         description: Optional[str] = MISSING,
         reason: Optional[str] = None,
-    ) -> WelcomeScreen:
+    ) -> Self:
         """|coro|
 
         Edits the welcome screen in place.
@@ -185,7 +185,7 @@ class WelcomeScreenChannel:
         return state and state.get_channel(self.channel_id)  # type: ignore
 
     @classmethod
-    def from_data(cls: Type[WCT], *, parent: WelcomeScreen, data: WelcomeScreenChannelPayload) -> WCT:
+    def from_data(cls, *, parent: WelcomeScreen, data: WelcomeScreenChannelPayload) -> Self:
         channel_id = int(data['channel_id'])
         description = data['description']
         emoji_name = data['emoji_name']

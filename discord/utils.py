@@ -72,6 +72,8 @@ else:
     HAS_ORJSON = True
 
 if TYPE_CHECKING:
+    from typing_extensions import Self
+
     from .file import File
 
 
@@ -92,7 +94,6 @@ __all__ = (
 
 T = TypeVar('T')
 T_co = TypeVar('T_co', covariant=True)
-SLT = TypeVar('SLT', bound='SnowflakeList')
 
 DISCORD_EPOCH = 1420070400000
 
@@ -658,7 +659,7 @@ class SnowflakeList(_SnowflakeListBase):
         def __init__(self, data: Iterable[int], *, is_sorted: bool = False) -> None:
             ...
 
-    def __new__(cls: Type[SLT], data: Iterable[int], *, is_sorted: bool = False) -> SLT:
+    def __new__(cls, data: Iterable[int], *, is_sorted: bool = False) -> Self:
         return array.array.__new__(cls, 'Q', data if is_sorted else sorted(data))  # type: ignore
 
     def add(self, element: int) -> None:

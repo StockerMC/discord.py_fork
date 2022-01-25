@@ -1233,7 +1233,7 @@ class BaseApplicationCommand:
 
     @overload
     def __init_subclass__(
-        cls: Type[BaseApplicationCommand],
+        cls,
         *,
         name: Optional[str] = None,
         description: str = MISSING,
@@ -1248,7 +1248,7 @@ class BaseApplicationCommand:
 
     @overload
     def __init_subclass__(
-        cls: Type[BaseApplicationCommand],
+        cls,
         *,
         name: Optional[str] = None,
         description: str = MISSING,
@@ -1261,7 +1261,7 @@ class BaseApplicationCommand:
         ...
 
     def __init_subclass__(
-        cls: Type[BaseApplicationCommand],
+        cls,
         *,
         name: Optional[str] = None,
         description: str = MISSING,

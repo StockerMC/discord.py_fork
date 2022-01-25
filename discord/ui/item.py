@@ -33,6 +33,8 @@ __all__ = (
 )
 
 if TYPE_CHECKING:
+    from typing_extensions import Self
+
     from ..enums import ComponentType
     from .view import View
     from ..components import Component
@@ -77,7 +79,7 @@ class Item(Generic[V]):
         return None
 
     @classmethod
-    def from_component(cls: Type[I], component: Component) -> I:
+    def from_component(cls, component: Component) -> Self:
         return cls()
 
     @property

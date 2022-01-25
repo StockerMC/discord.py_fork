@@ -32,18 +32,18 @@ from typing import (
     Optional,
     Tuple,
     Type,
-    TypeVar,
     Union,
     Callable,
     TYPE_CHECKING,
 )
 
+if TYPE_CHECKING:
+    from typing_extensions import Self
+
 __all__ = (
     'Colour',
     'Color',
 )
-
-CT = TypeVar('CT', bound='Colour')
 
 
 class Colour:
@@ -129,23 +129,23 @@ class Colour:
         return (self.r, self.g, self.b)
 
     @classmethod
-    def from_rgb(cls: Type[CT], r: int, g: int, b: int) -> CT:
+    def from_rgb(cls, r: int, g: int, b: int) -> Self:
         """Constructs a :class:`Colour` from an RGB tuple."""
         return cls((r << 16) + (g << 8) + b)
 
     @classmethod
-    def from_hsv(cls: Type[CT], h: float, s: float, v: float) -> CT:
+    def from_hsv(cls, h: float, s: float, v: float) -> Self:
         """Constructs a :class:`Colour` from an HSV tuple."""
         rgb = colorsys.hsv_to_rgb(h, s, v)
         return cls.from_rgb(*(int(x * 255) for x in rgb))
 
     @classmethod
-    def default(cls: Type[CT]) -> CT:
+    def default(cls) -> Self:
         """A factory method that returns a :class:`Colour` with a value of ``0``."""
         return cls(0)
 
     @classmethod
-    def random(cls: Type[CT], *, seed: Optional[Union[int, str, float, bytes, bytearray]] = None) -> CT:
+    def random(cls, *, seed: Optional[Union[int, str, float, bytes, bytearray]] = None) -> Self:
         """A factory method that returns a :class:`Colour` with a random hue.
 
         .. note::
@@ -166,17 +166,17 @@ class Colour:
         return cls.from_hsv(rand.random(), 1, 1)
 
     @classmethod
-    def teal(cls: Type[CT]) -> CT:
+    def teal(cls) -> Self:
         """A factory method that returns a :class:`Colour` with a value of ``0x1abc9c``."""
         return cls(0x1abc9c)
 
     @classmethod
-    def dark_teal(cls: Type[CT]) -> CT:
+    def dark_teal(cls) -> Self:
         """A factory method that returns a :class:`Colour` with a value of ``0x11806a``."""
         return cls(0x11806a)
 
     @classmethod
-    def brand_green(cls: Type[CT]) -> CT:
+    def brand_green(cls) -> Self:
         """A factory method that returns a :class:`Colour` with a value of ``0x57F287``.
 
         .. versionadded:: 2.0
@@ -184,67 +184,67 @@ class Colour:
         return cls(0x57F287)
 
     @classmethod
-    def green(cls: Type[CT]) -> CT:
+    def green(cls) -> Self:
         """A factory method that returns a :class:`Colour` with a value of ``0x2ecc71``."""
         return cls(0x2ecc71)
 
     @classmethod
-    def dark_green(cls: Type[CT]) -> CT:
+    def dark_green(cls) -> Self:
         """A factory method that returns a :class:`Colour` with a value of ``0x1f8b4c``."""
         return cls(0x1f8b4c)
 
     @classmethod
-    def blue(cls: Type[CT]) -> CT:
+    def blue(cls) -> Self:
         """A factory method that returns a :class:`Colour` with a value of ``0x3498db``."""
         return cls(0x3498db)
 
     @classmethod
-    def dark_blue(cls: Type[CT]) -> CT:
+    def dark_blue(cls) -> Self:
         """A factory method that returns a :class:`Colour` with a value of ``0x206694``."""
         return cls(0x206694)
 
     @classmethod
-    def purple(cls: Type[CT]) -> CT:
+    def purple(cls) -> Self:
         """A factory method that returns a :class:`Colour` with a value of ``0x9b59b6``."""
         return cls(0x9b59b6)
 
     @classmethod
-    def dark_purple(cls: Type[CT]) -> CT:
+    def dark_purple(cls) -> Self:
         """A factory method that returns a :class:`Colour` with a value of ``0x71368a``."""
         return cls(0x71368a)
 
     @classmethod
-    def magenta(cls: Type[CT]) -> CT:
+    def magenta(cls) -> Self:
         """A factory method that returns a :class:`Colour` with a value of ``0xe91e63``."""
         return cls(0xe91e63)
 
     @classmethod
-    def dark_magenta(cls: Type[CT]) -> CT:
+    def dark_magenta(cls) -> Self:
         """A factory method that returns a :class:`Colour` with a value of ``0xad1457``."""
         return cls(0xad1457)
 
     @classmethod
-    def gold(cls: Type[CT]) -> CT:
+    def gold(cls) -> Self:
         """A factory method that returns a :class:`Colour` with a value of ``0xf1c40f``."""
         return cls(0xf1c40f)
 
     @classmethod
-    def dark_gold(cls: Type[CT]) -> CT:
+    def dark_gold(cls) -> Self:
         """A factory method that returns a :class:`Colour` with a value of ``0xc27c0e``."""
         return cls(0xc27c0e)
 
     @classmethod
-    def orange(cls: Type[CT]) -> CT:
+    def orange(cls) -> Self:
         """A factory method that returns a :class:`Colour` with a value of ``0xe67e22``."""
         return cls(0xe67e22)
 
     @classmethod
-    def dark_orange(cls: Type[CT]) -> CT:
+    def dark_orange(cls) -> Self:
         """A factory method that returns a :class:`Colour` with a value of ``0xa84300``."""
         return cls(0xa84300)
 
     @classmethod
-    def brand_red(cls: Type[CT]) -> CT:
+    def brand_red(cls) -> Self:
         """A factory method that returns a :class:`Colour` with a value of ``0xED4245``.
 
         .. versionadded:: 2.0
@@ -252,17 +252,17 @@ class Colour:
         return cls(0xED4245)
 
     @classmethod
-    def red(cls: Type[CT]) -> CT:
+    def red(cls) -> Self:
         """A factory method that returns a :class:`Colour` with a value of ``0xe74c3c``."""
         return cls(0xe74c3c)
 
     @classmethod
-    def dark_red(cls: Type[CT]) -> CT:
+    def dark_red(cls) -> Self:
         """A factory method that returns a :class:`Colour` with a value of ``0x992d22``."""
         return cls(0x992d22)
 
     @classmethod
-    def lighter_grey(cls: Type[CT]) -> CT:
+    def lighter_grey(cls) -> Self:
         """A factory method that returns a :class:`Colour` with a value of ``0x95a5a6``."""
         return cls(0x95a5a6)
 
@@ -272,7 +272,7 @@ class Colour:
         lighter_gray = lighter_grey
 
     @classmethod
-    def dark_grey(cls: Type[CT]) -> CT:
+    def dark_grey(cls) -> Self:
         """A factory method that returns a :class:`Colour` with a value of ``0x607d8b``."""
         return cls(0x607d8b)
 
@@ -282,7 +282,7 @@ class Colour:
         dark_gray = dark_grey
 
     @classmethod
-    def light_grey(cls: Type[CT]) -> CT:
+    def light_grey(cls) -> Self:
         """A factory method that returns a :class:`Colour` with a value of ``0x979c9f``."""
         return cls(0x979c9f)
 
@@ -292,7 +292,7 @@ class Colour:
         light_gray = light_grey
 
     @classmethod
-    def darker_grey(cls: Type[CT]) -> CT:
+    def darker_grey(cls) -> Self:
         """A factory method that returns a :class:`Colour` with a value of ``0x546e7a``."""
         return cls(0x546e7a)
 
@@ -302,22 +302,22 @@ class Colour:
         darker_gray = darker_grey
 
     @classmethod
-    def og_blurple(cls: Type[CT]) -> CT:
+    def og_blurple(cls) -> Self:
         """A factory method that returns a :class:`Colour` with a value of ``0x7289da``."""
         return cls(0x7289da)
 
     @classmethod
-    def blurple(cls: Type[CT]) -> CT:
+    def blurple(cls) -> Self:
         """A factory method that returns a :class:`Colour` with a value of ``0x5865F2``."""
         return cls(0x5865F2)
 
     @classmethod
-    def greyple(cls: Type[CT]) -> CT:
+    def greyple(cls) -> Self:
         """A factory method that returns a :class:`Colour` with a value of ``0x99aab5``."""
         return cls(0x99aab5)
 
     @classmethod
-    def dark_theme(cls: Type[CT]) -> CT:
+    def dark_theme(cls) -> Self:
         """A factory method that returns a :class:`Colour` with a value of ``0x36393F``.
         This will appear transparent on Discord's dark theme.
 
@@ -326,7 +326,7 @@ class Colour:
         return cls(0x36393F)
 
     @classmethod
-    def fuchsia(cls: Type[CT]) -> CT:
+    def fuchsia(cls) -> Self:
         """A factory method that returns a :class:`Colour` with a value of ``0xEB459E``.
 
         .. versionadded:: 2.0
@@ -334,7 +334,7 @@ class Colour:
         return cls(0xEB459E)
 
     @classmethod
-    def yellow(cls: Type[CT]) -> CT:
+    def yellow(cls) -> Self:
         """A factory method that returns a :class:`Colour` with a value of ``0xFEE75C``.
 
         .. versionadded:: 2.0

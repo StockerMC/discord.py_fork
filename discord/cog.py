@@ -30,6 +30,8 @@ from ._types import _BaseCommand
 from typing import Any, Callable, ClassVar, Dict, Generator, List, Optional, TYPE_CHECKING, Tuple, TypeVar, Type, Union
 
 if TYPE_CHECKING:
+    from typing_extensions import Self
+
     from .ext.commands.context import Context
     from .ext.commands.core import Command
     from .ext.commands.bot import Bot
@@ -61,7 +63,6 @@ __all__ = (
     'Cog',
 )
 
-CogT = TypeVar('CogT', bound='Cog')
 FuncT = TypeVar('FuncT', bound=Callable[..., Any])
 
 
@@ -129,7 +130,7 @@ class CogMeta(type):
     __cog_commands__: List[Command[Any, Any, Any]]
     __cog_listeners__: List[Tuple[str, str]]
 
-    def __new__(cls: Type[CogMeta], *args: Any, **kwargs: Any) -> CogMeta:
+    def __new__(cls, *args: Any, **kwargs: Any) -> Self:
         name, bases, attrs = args
         attrs['__cog_name__'] = kwargs.pop('name', name)
         attrs['__cog_settings__'] = kwargs.pop('command_attrs', {})
@@ -210,7 +211,7 @@ class Cog(metaclass=CogMeta):
     __cog_listeners__: ClassVar[List[Tuple[str, str]]]
     __cog_application_commands__: Dict[ApplicationCommandKey, ApplicationCommand] = {}
 
-    def __new__(cls: Type[CogT], *args: Any, **kwargs: Any) -> CogT:
+    def __new__(cls, *args: Any, **kwargs: Any) -> Self:
         # For issue 426, we need to store a copy of the command objects
         # since we modify them to inject `self` to them.
         # To do this, we need to interfere with the Cog creation process.
@@ -491,7 +492,7 @@ class Cog(metaclass=CogMeta):
         """
         pass
 
-    def _inject(self: CogT, client: Union[Client, Bot]) -> CogT:
+    def _inject(self, client: Union[Client, Bot]) -> Self:
         cls = self.__class__
         client_no_commands = "Client doesn't support ext.commands commands."
 

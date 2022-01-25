@@ -58,6 +58,8 @@ from .flags import MessageFlags
 _log = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
+    from typing_extensions import Self
+
     from .file import File
     from .enums import (
         AuditLogAction,
@@ -94,7 +96,6 @@ if TYPE_CHECKING:
 
     T = TypeVar('T')
     BE = TypeVar('BE', bound=BaseException)
-    MU = TypeVar('MU', bound='MaybeUnlock')
     Response = Coroutine[Any, Any, T]
 
 
@@ -138,7 +139,7 @@ class MaybeUnlock:
         self.lock: asyncio.Lock = lock
         self._unlock: bool = True
 
-    def __enter__(self: MU) -> MU:
+    def __enter__(self) -> Self:
         return self
 
     def defer(self) -> None:

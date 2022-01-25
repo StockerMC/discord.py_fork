@@ -44,6 +44,8 @@ __all__ = (
 )
 
 if TYPE_CHECKING:
+    from typing_extensions import Self
+
     from .view import View
     from ..types.components import SelectMenu as SelectMenuPayload
     from ..types.interactions import (
@@ -275,7 +277,7 @@ class Select(Item[V]):
         self._selected_values = data.get('values', [])
 
     @classmethod
-    def from_component(cls: Type[S], component: SelectMenu) -> S:
+    def from_component(cls, component: SelectMenu) -> Self:
         return cls(
             custom_id=component.custom_id,
             placeholder=component.placeholder,

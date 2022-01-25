@@ -26,7 +26,22 @@ from __future__ import annotations
 
 import types
 from collections import namedtuple
-from typing import Any, ClassVar, Dict, List, Optional, TYPE_CHECKING, Type, TypeVar, Type, Tuple, NoReturn, Iterator, Mapping
+from typing import (
+    Any,
+    ClassVar,
+    Dict,
+    List,
+    Optional,
+    TYPE_CHECKING, 
+    Type,
+    TypeVar,
+    Type,
+    Tuple,
+    NoReturn,
+    Iterator,
+    Mapping,
+    NamedTuple,
+    )
 
 __all__ = (
     'Enum',
@@ -65,11 +80,11 @@ __all__ = (
     'Locale',
 )
 
+if TYPE_CHECKING:
+    from typing_extensions import Self
 
-EMT = TypeVar('EMT', bound='EnumMeta')
 
-
-def _create_value_cls(name, comparable):
+def _create_value_cls(name: str, comparable: bool) -> Type[NamedTuple]:
     cls = namedtuple('_EnumValue_' + name, 'name value')
     cls.__repr__ = lambda self: f'<{name}.{self.name}: {self.value!r}>'  # type: ignore
     cls.__str__ = lambda self: f'{name}.{self.name}'  # type: ignore
@@ -80,7 +95,7 @@ def _create_value_cls(name, comparable):
         cls.__gt__ = lambda self, other: isinstance(other, self.__class__) and self.value > other.value # type: ignore
     return cls
 
-def _is_descriptor(obj):
+def _is_descriptor(obj: Any) -> bool:
     return hasattr(obj, '__get__') or hasattr(obj, '__set__') or hasattr(obj, '__delete__')
 
 
@@ -91,7 +106,7 @@ class EnumMeta(type):
         _enum_member_map_: ClassVar[Dict[str, Any]]
         _enum_value_map_: ClassVar[Dict[Any, Any]]
 
-    def __new__(cls: Type[EMT], name: str, bases: Tuple[type, ...], attrs: Dict[str, Any], *, comparable: bool = False) -> EMT:
+    def __new__(cls, name: str, bases: Tuple[type, ...], attrs: Dict[str, Any], *, comparable: bool = False) -> Self:
         value_mapping = {}
         member_mapping = {}
         member_names = []
@@ -171,13 +186,12 @@ class EnumMeta(type):
 
 if TYPE_CHECKING:
     import enum
-    ET = TypeVar('ET')
 
     class Enum(enum.Enum):
-        def __le__(self: ET, other: ET) -> bool: ...
-        def __ge__(self: ET, other: ET) -> bool: ...
-        def __lt__(self: ET, other: ET) -> bool: ...
-        def __gt__(self: ET, other: ET) -> bool: ...
+        def __le__(self, other: Self) -> bool: ...
+        def __ge__(self, other: Self) -> bool: ...
+        def __lt__(self, other: Self) -> bool: ...
+        def __gt__(self, other: Self) -> bool: ...
 else:
 
     class Enum(metaclass=EnumMeta):

@@ -26,7 +26,7 @@ from __future__ import annotations
 
 import io
 import os
-from typing import Any, Literal, Optional, TYPE_CHECKING, Tuple, Union, TypeVar, Type
+from typing import Any, Literal, Optional, TYPE_CHECKING, Tuple, Union
 from .errors import DiscordException
 from .errors import InvalidArgument
 from . import utils
@@ -38,13 +38,13 @@ __all__ = (
 )
 
 if TYPE_CHECKING:
+    from typing_extensions import Self
+
     from .state import ConnectionState
     from .webhook.async_ import _WebhookState
 
     ValidStaticFormatTypes = Literal['webp', 'jpeg', 'jpg', 'png']
     ValidAssetFormatTypes = Literal['webp', 'jpeg', 'jpg', 'png', 'gif']
-
-    AT = TypeVar('AT', bound='Asset')
 
 VALID_STATIC_FORMATS = frozenset({"jpeg", "jpg", "webp", "png"})
 VALID_ASSET_FORMATS = VALID_STATIC_FORMATS | {"gif"}
@@ -163,7 +163,7 @@ class Asset(AssetMixin):
         self._key: str = key
 
     @classmethod
-    def _from_default_avatar(cls: Type[AT], state: Union[ConnectionState, _WebhookState], index: int) -> AT:
+    def _from_default_avatar(cls, state: Union[ConnectionState, _WebhookState], index: int) -> Self:
         return cls(
             state,
             url=f'{cls.BASE}/embed/avatars/{index}.png',
@@ -172,7 +172,7 @@ class Asset(AssetMixin):
         )
 
     @classmethod
-    def _from_avatar(cls: Type[AT], state: Union[ConnectionState, _WebhookState], user_id: int, avatar: str) -> AT:
+    def _from_avatar(cls, state: Union[ConnectionState, _WebhookState], user_id: int, avatar: str) -> Self:
         animated = avatar.startswith('a_')
         format = 'gif' if animated else 'png'
         return cls(
@@ -183,7 +183,7 @@ class Asset(AssetMixin):
         )
 
     @classmethod
-    def _from_guild_avatar(cls: Type[AT], state: Union[ConnectionState, _WebhookState], guild_id: int, member_id: int, avatar: str) -> AT:
+    def _from_guild_avatar(cls, state: Union[ConnectionState, _WebhookState], guild_id: int, member_id: int, avatar: str) -> Self:
         animated = avatar.startswith('a_')
         format = 'gif' if animated else 'png'
         return cls(
@@ -194,7 +194,7 @@ class Asset(AssetMixin):
         )
 
     @classmethod
-    def _from_icon(cls: Type[AT], state: Union[ConnectionState, _WebhookState], object_id: int, icon_hash: str, path: str) -> AT:
+    def _from_icon(cls, state: Union[ConnectionState, _WebhookState], object_id: int, icon_hash: str, path: str) -> Self:
         return cls(
             state,
             url=f'{cls.BASE}/{path}-icons/{object_id}/{icon_hash}.png?size=1024',
@@ -203,7 +203,7 @@ class Asset(AssetMixin):
         )
 
     @classmethod
-    def _from_cover_image(cls: Type[AT], state: Union[ConnectionState, _WebhookState], object_id: int, cover_image_hash: str) -> AT:
+    def _from_cover_image(cls, state: Union[ConnectionState, _WebhookState], object_id: int, cover_image_hash: str) -> Self:
         return cls(
             state,
             url=f'{cls.BASE}/app-assets/{object_id}/store/{cover_image_hash}.png?size=1024',
@@ -212,7 +212,7 @@ class Asset(AssetMixin):
         )
 
     @classmethod
-    def _from_guild_image(cls: Type[AT], state: Union[ConnectionState, _WebhookState], guild_id: int, image: str, path: str) -> AT:
+    def _from_guild_image(cls, state: Union[ConnectionState, _WebhookState], guild_id: int, image: str, path: str) -> Self:
         animated = image.startswith('a_')
         format = 'gif' if animated else 'png'
         return cls(
@@ -223,7 +223,7 @@ class Asset(AssetMixin):
         )
 
     @classmethod
-    def _from_guild_icon(cls: Type[AT], state: Union[ConnectionState, _WebhookState], guild_id: int, icon_hash: str) -> AT:
+    def _from_guild_icon(cls, state: Union[ConnectionState, _WebhookState], guild_id: int, icon_hash: str) -> Self:
         animated = icon_hash.startswith('a_')
         format = 'gif' if animated else 'png'
         return cls(
@@ -234,7 +234,7 @@ class Asset(AssetMixin):
         )
 
     @classmethod
-    def _from_sticker_banner(cls: Type[AT], state: Union[ConnectionState, _WebhookState], banner: int) -> AT:
+    def _from_sticker_banner(cls, state: Union[ConnectionState, _WebhookState], banner: int) -> Self:
         return cls(
             state,
             url=f'{cls.BASE}/app-assets/710982414301790216/store/{banner}.png',
@@ -243,7 +243,7 @@ class Asset(AssetMixin):
         )
 
     @classmethod
-    def _from_user_banner(cls: Type[AT], state: Union[ConnectionState, _WebhookState], user_id: int, banner_hash: str) -> AT:
+    def _from_user_banner(cls, state: Union[ConnectionState, _WebhookState], user_id: int, banner_hash: str) -> Self:
         animated = banner_hash.startswith('a_')
         format = 'gif' if animated else 'png'
         return cls(
@@ -254,7 +254,7 @@ class Asset(AssetMixin):
         )
 
     @classmethod
-    def _from_scheduled_event_image(cls: Type[AT], state: Union[ConnectionState, _WebhookState], scheduled_event_id: int, cover_hash: str) -> AT:
+    def _from_scheduled_event_image(cls, state: Union[ConnectionState, _WebhookState], scheduled_event_id: int, cover_hash: str) -> Self:
         return cls(
             state,
             url=f'{cls.BASE}/guild-events/{scheduled_event_id}/{cover_hash}.png?size=1024',

@@ -66,7 +66,6 @@ T = TypeVar('T')
 Coro = Coroutine[Any, Any, T]
 CoroFunc = TypeVar('CoroFunc', bound=Callable[..., Coro[Any]])
 ET = TypeVar('ET', bound=Callable[[Any, BaseException], Coroutine[Any, Any, Any]])
-LT = TypeVar('LT', bound='Loop')
 
 
 class SleepHandle:
@@ -754,5 +753,5 @@ def loop(
             'reconnect': reconnect,
             'loop': loop,
         }
-        return Loop[C, P, T](func, **kwargs)
+        return Loop(func, **kwargs)
     return decorator

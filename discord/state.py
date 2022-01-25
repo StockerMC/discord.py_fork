@@ -123,7 +123,6 @@ if TYPE_CHECKING:
         ScheduledEventUserEvent,
     )
 
-    CS = TypeVar('CS', bound='ConnectionState')
     Channel = Union[GuildChannel, VocalGuildChannel, PrivateChannel]
 
 

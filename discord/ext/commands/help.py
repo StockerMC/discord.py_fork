@@ -51,6 +51,8 @@ from .core import Group, Command
 from .errors import CommandError
 
 if TYPE_CHECKING:
+    from typing_extensions import Self
+
     from ._types import Check
 
     from .context import Context
@@ -60,7 +62,6 @@ if TYPE_CHECKING:
 
     import inspect
 
-    HCT = TypeVar('HCT', bound='HelpCommand')
     CommandMapping = Mapping[Optional[Cog], List[Command[Any, Any, Any]]]
 
 __all__ = (
@@ -337,7 +338,7 @@ class HelpCommand:
 
     MENTION_PATTERN = re.compile('|'.join(MENTION_TRANSFORMS.keys()))
 
-    def __new__(cls: Type[HCT], *args: Any, **kwargs: Any) -> HCT:
+    def __new__(cls, *args: Any, **kwargs: Any) -> Self:
         # To prevent race conditions of a single instance while also allowing
         # for settings to be passed the original arguments passed must be assigned
         # to allow for easier copies (which will be made when the help command is actually called)
@@ -362,7 +363,7 @@ class HelpCommand:
         self.context: Context[Any] = discord.utils.MISSING
         self._command_impl: _HelpCommandImpl = _HelpCommandImpl(self, **self.command_attrs)
 
-    def copy(self: HCT) -> HCT:
+    def copy(self) -> Self:
         obj = self.__class__(*self.__original_args__, **self.__original_kwargs__)
         obj._command_impl = self._command_impl
         return obj
