@@ -95,3 +95,28 @@ January 16, 2022
 ----------------
 
 Added the ``Interaction.locale`` and ``Interaction.guild_locale`` attributes
+
+January 18, 2022
+----------------
+
+Allow guild banner assets to be animated.
+
+Suppress Embeds When Sending Messages
+-------------------------------------
+
+Added the ability to suppress embeds when sending messages:
+
+January 22, 2022
+^^^^^^^^^^^^^^^^
+
+Added the ``suppress`` parameter to ``abc.Messageable.send`` and ``InteractionResponse.send_message``
+
+January 25, 2022
+^^^^^^^^^^^^^^^^
+
+Added the ``suppress`` parameter to ``Webhook.send`` and ``SyncWebhook.send``
+
+January 23, 2022
+----------------
+
+Added ``Thread.created_at``.
