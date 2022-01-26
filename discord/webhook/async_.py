@@ -37,7 +37,7 @@ import aiohttp
 
 from .. import utils
 from ..errors import InvalidArgument, HTTPException, Forbidden, NotFound, DiscordServerError
-from ..message import Message
+from ..message import Message, Attachment
 from ..enums import try_enum, WebhookType
 from ..user import BaseUser, User
 from ..asset import Asset
@@ -501,6 +501,8 @@ def handle_message_parameters(
     allowed_mentions: Optional[AllowedMentions] = MISSING,
     previous_allowed_mentions: Optional[AllowedMentions] = None,
     suppress: bool = False,
+    attachments: List[Attachment] = MISSING,
+    interaction_type: int = MISSING,
 ) -> ExecuteWebhookParameters:
     if files is not MISSING and file is not MISSING:
         raise TypeError('Cannot mix file and files keyword arguments.')
@@ -508,6 +510,9 @@ def handle_message_parameters(
         raise TypeError('Cannot mix embed and embeds keyword arguments.')
 
     payload = {}
+    if interaction_type is not MISSING:
+        payload['type'] = interaction_type
+
     if embeds is not MISSING:
         if len(embeds) > 10:
             raise InvalidArgument('embeds has a maximum of 10 elements.')
@@ -530,6 +535,9 @@ def handle_message_parameters(
             payload['components'] = view.to_components()
         else:
             payload['components'] = []
+
+    if attachments is not MISSING:
+        payload['attachments'] = [a.to_dict() for a in attachments]
 
     payload['tts'] = tts
     if avatar_url:

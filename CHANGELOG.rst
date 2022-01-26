@@ -124,4 +124,19 @@ Added ``Thread.created_at``.
 January 25, 2022
 ----------------
 
-Added ``ScheduledEvent.cover``.
+- Added ``ScheduledEvent.cover``.
+- Added missing parameters to interaction methods
+
+  * ``Interaction.edit_original_message``
+  
+    * ``attachments``
+  
+  * ``InteractionResponse.edit_message``
+  
+    * ``file``
+    * ``files``
+    * ``allowed_mentions``
+  
+  * ``InteractionMessage.edit``
+  
+    * ``attachments``

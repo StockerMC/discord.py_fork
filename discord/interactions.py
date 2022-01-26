@@ -79,77 +79,6 @@ if TYPE_CHECKING:
 MISSING: Any = utils.MISSING
 ClientT = TypeVar('ClientT', bound='Client')
 
-def handle_create_interaction_response_message_parameters(
-    content: Optional[str] = MISSING,
-    *,
-    tts: bool = False,
-    ephemeral: bool = False,
-    file: File = MISSING,
-    files: List[File] = MISSING,
-    embed: Optional[Embed] = MISSING,
-    embeds: List[Embed] = MISSING,
-    view: Optional[View] = MISSING,
-    allowed_mentions: Optional[AllowedMentions] = MISSING,
-    previous_allowed_mentions: Optional[AllowedMentions] = None,
-    suppress: bool = False,
-) -> ExecuteWebhookParameters:
-    if files is not MISSING and file is not MISSING:
-        raise TypeError('Cannot mix file and files keyword arguments.')
-    if embeds is not MISSING and embed is not MISSING:
-        raise TypeError('Cannot mix embed and embeds keyword arguments.')
-
-    data: Optional[Dict[str, Any]] = {
-        'type': InteractionResponseType.channel_message.value,
-    }
-    if embeds is not MISSING:
-        if len(embeds) > 10:
-            raise InvalidArgument('embeds has a maximum of 10 elements.')
-        data['embeds'] = [e.to_dict() for e in embeds]
-
-    if embed is not MISSING:
-        if embed is None:
-            data['embeds'] = []
-        else:
-            data['embeds'] = [embed.to_dict()]
-
-    if content is not MISSING:
-        if content is not None:
-            data['content'] = str(content)
-        else:
-            data['content'] = None
-
-    if view is not MISSING:
-        if view is not None:
-            data['components'] = view.to_components()
-        else:
-            data['components'] = []
-
-    data['tts'] = tts
-
-    if suppress or ephemeral:
-        flags = MessageFlags._from_value(0)
-        flags.suppress_embeds = suppress
-        flags.ephemeral = ephemeral
-        data['flags'] = flags.value
-
-    if allowed_mentions:
-        if previous_allowed_mentions is not None:
-            data['allowed_mentions'] = previous_allowed_mentions.merge(allowed_mentions).to_dict()
-        else:
-            data['allowed_mentions'] = allowed_mentions.to_dict()
-    elif previous_allowed_mentions is not None:
-        data['allowed_mentions'] = previous_allowed_mentions.to_dict()
-
-    if file is not MISSING:
-        files = [file]
-
-    form = None
-    if files:
-        form = utils._generate_multipart(data, files)
-        data = None
-
-    return ExecuteWebhookParameters(payload=data, multipart=form, files=files)
-
 
 class Interaction(Generic[ClientT]):
     """Represents a Discord interaction.
@@ -357,6 +286,7 @@ class Interaction(Generic[ClientT]):
         file: File = MISSING,
         view: Optional[View] = MISSING,
         allowed_mentions: Optional[AllowedMentions] = None,
+        attachments: List[Attachment] = MISSING,
     ) -> InteractionMessage: ...
 
     @overload
@@ -368,6 +298,7 @@ class Interaction(Generic[ClientT]):
         files: List[File] = MISSING,
         view: Optional[View] = MISSING,
         allowed_mentions: Optional[AllowedMentions] = None,
+        attachments: List[Attachment] = MISSING,
     ) -> InteractionMessage: ...
 
     @overload
@@ -379,6 +310,7 @@ class Interaction(Generic[ClientT]):
         file: File = MISSING,
         view: Optional[View] = MISSING,
         allowed_mentions: Optional[AllowedMentions] = None,
+        attachments: List[Attachment] = MISSING,
     ) -> InteractionMessage: ...
 
     @overload
@@ -390,6 +322,7 @@ class Interaction(Generic[ClientT]):
         files: List[File] = MISSING,
         view: Optional[View] = MISSING,
         allowed_mentions: Optional[AllowedMentions] = None,
+        attachments: List[Attachment] = MISSING,
     ) -> InteractionMessage: ...
 
     async def edit_original_message(
@@ -402,6 +335,7 @@ class Interaction(Generic[ClientT]):
         files: List[File] = MISSING,
         view: Optional[View] = MISSING,
         allowed_mentions: Optional[AllowedMentions] = None,
+        attachments: List[Attachment] = MISSING,
     ) -> InteractionMessage:
         """|coro|
 
@@ -433,6 +367,9 @@ class Interaction(Generic[ClientT]):
         view: Optional[:class:`~discord.ui.View`]
             The updated view to update this message with. If ``None`` is passed then
             the view is removed.
+        attachments: List[:class:`Attachment`]
+            A list of attachments to keep in the message. If ``[]`` is passed
+            then all attachments are removed.
 
         Raises
         -------
@@ -461,16 +398,22 @@ class Interaction(Generic[ClientT]):
             view=view,
             allowed_mentions=allowed_mentions,
             previous_allowed_mentions=previous_mentions,
+            attachments=attachments,
         )
         adapter = async_context.get()
-        data = await adapter.edit_original_interaction_response(
-            self.application_id,
-            self.token,
-            session=self._session,
-            payload=params.payload,
-            multipart=params.multipart,
-            files=params.files,
-        )
+        try:
+            data = await adapter.edit_original_interaction_response(
+                self.application_id,
+                self.token,
+                session=self._session,
+                payload=params.payload,
+                multipart=params.multipart,
+                files=params.files,
+            )
+        finally:
+            if params.files:
+                for file in params.files:
+                    file.close()
 
         state = _InteractionMessageState(self, self._state)
         # The state is artificial and the message channel types should always match
@@ -747,7 +690,7 @@ class InteractionResponse:
             raise InteractionResponded(self._parent)
 
         previous_mentions: Optional[AllowedMentions] = self._parent._state.allowed_mentions
-        params = handle_create_interaction_response_message_parameters(
+        params = handle_message_parameters(
             content=content,
             embed=embed,
             embeds=embeds,
@@ -759,6 +702,7 @@ class InteractionResponse:
             allowed_mentions=allowed_mentions,
             previous_allowed_mentions=previous_mentions,
             suppress=suppress,
+            interaction_type=InteractionResponseType.channel_message.value,
         )
         parent = self._parent
         adapter = async_context.get()
@@ -793,6 +737,20 @@ class InteractionResponse:
         embed: Optional[Embed] = MISSING,
         attachments: List[Attachment] = MISSING,
         view: Optional[View] = MISSING,
+        files: List[File] = MISSING,
+        allowed_mentions: Optional[AllowedMentions] = None,
+    ) -> None: ...
+
+    @overload
+    async def edit_message(
+        self,
+        *,
+        content: Optional[Any] = MISSING,
+        embed: Optional[Embed] = MISSING,
+        attachments: List[Attachment] = MISSING,
+        view: Optional[View] = MISSING,
+        file: File = MISSING,
+        allowed_mentions: Optional[AllowedMentions] = None,
     ) -> None: ...
 
     @overload
@@ -803,6 +761,20 @@ class InteractionResponse:
         embeds: List[Embed] = MISSING,
         attachments: List[Attachment] = MISSING,
         view: Optional[View] = MISSING,
+        files: List[File] = MISSING,
+        allowed_mentions: Optional[AllowedMentions] = None,
+    ) -> None: ...
+
+    @overload
+    async def edit_message(
+        self,
+        *,
+        content: Optional[Any] = MISSING,
+        embeds: List[Embed] = MISSING,
+        attachments: List[Attachment] = MISSING,
+        view: Optional[View] = MISSING,
+        file: File = MISSING,
+        allowed_mentions: Optional[AllowedMentions] = None,
     ) -> None: ...
 
     async def edit_message(
@@ -813,6 +785,9 @@ class InteractionResponse:
         embeds: List[Embed] = MISSING,
         attachments: List[Attachment] = MISSING,
         view: Optional[View] = MISSING,
+        file: File = MISSING,
+        files: List[File] = MISSING,
+        allowed_mentions: Optional[AllowedMentions] = None,
     ) -> None:
         """|coro|
 
@@ -834,6 +809,14 @@ class InteractionResponse:
         view: Optional[:class:`~discord.ui.View`]
             The updated view to update this message with. If ``None`` is passed then
             the view is removed.
+        file: :class:`File`
+            The file to upload. This cannot be mixed with ``files`` parameter.
+        files: List[:class:`File`]
+            A list of files to send with the content. This cannot be mixed with the
+            ``file`` parameter.
+        allowed_mentions: :class:`AllowedMentions`
+            Controls the mentions being processed in this message.
+            See :meth:`.abc.Messageable.send` for more information.
 
         Raises
         -------
@@ -854,43 +837,34 @@ class InteractionResponse:
         if parent.type is not InteractionType.component:
             return
 
-        payload = {}
-        if content is not MISSING:
-            if content is None:
-                payload['content'] = None
-            else:
-                payload['content'] = str(content)
-
-        if embed is not MISSING and embeds is not MISSING:
-            raise TypeError('cannot mix both embed and embeds keyword arguments')
-
-        if embed is not MISSING:
-            if embed is None:
-                embeds = []
-            else:
-                embeds = [embed]
-
-        if embeds is not MISSING:
-            payload['embeds'] = [e.to_dict() for e in embeds]
-
-        if attachments is not MISSING:
-            payload['attachments'] = [a.to_dict() for a in attachments]
-
-        if view is not MISSING:
-            state.prevent_view_updates_for(message_id)
-            if view is None:
-                payload['components'] = []
-            else:
-                payload['components'] = view.to_components()
-
-        adapter = async_context.get()
-        await adapter.create_interaction_response(
-            parent.id,
-            parent.token,
-            session=parent._session,
-            type=InteractionResponseType.message_update.value,
-            data=payload,
+        previous_mentions: Optional[AllowedMentions] = state.allowed_mentions
+        params = handle_message_parameters(
+            content=content,
+            file=file,
+            files=files,
+            embed=embed,
+            embeds=embeds,
+            view=view,
+            allowed_mentions=allowed_mentions,
+            previous_allowed_mentions=previous_mentions,
+            attachments=attachments,
+            interaction_type=InteractionResponseType.message_update.value,
         )
+        adapter = async_context.get()
+        try:
+            await adapter.create_interaction_response(
+                parent.id,
+                parent.token,
+                session=parent._session,
+                data=params.payload,
+                multipart=params.multipart,
+                files=params.files,
+                type=InteractionResponseType.message_update.value,
+            )
+        finally:
+            if params.files:
+                for file in params.files:
+                    file.close()
 
         if view and not view.is_finished():
             state.store_view(view, message_id)
@@ -957,6 +931,7 @@ class InteractionMessage(Message):
         files: List[File] = MISSING,
         view: Optional[View] = MISSING,
         allowed_mentions: Optional[AllowedMentions] = None,
+        attachments: List[Attachment] = MISSING,
     ) -> InteractionMessage: ...
 
     @overload
@@ -968,6 +943,7 @@ class InteractionMessage(Message):
         file: File = MISSING,
         view: Optional[View] = MISSING,
         allowed_mentions: Optional[AllowedMentions] = None,
+        attachments: List[Attachment] = MISSING,
     ) -> InteractionMessage: ...
 
     @overload
@@ -979,6 +955,7 @@ class InteractionMessage(Message):
         files: List[File] = MISSING,
         view: Optional[View] = MISSING,
         allowed_mentions: Optional[AllowedMentions] = None,
+        attachments: List[Attachment] = MISSING,
     ) -> InteractionMessage: ...
 
     async def edit(
@@ -990,6 +967,7 @@ class InteractionMessage(Message):
         files: List[File] = MISSING,
         view: Optional[View] = MISSING,
         allowed_mentions: Optional[AllowedMentions] = None,
+        attachments: List[Attachment] = MISSING,
     ) -> InteractionMessage:
         """|coro|
 
@@ -1015,6 +993,9 @@ class InteractionMessage(Message):
         view: Optional[:class:`~discord.ui.View`]
             The updated view to update this message with. If ``None`` is passed then
             the view is removed.
+        attachments: List[:class:`Attachment`]
+            A list of attachments to keep in the message. If ``[]`` is passed
+            then all attachments are removed.
 
         Raises
         -------
@@ -1040,6 +1021,7 @@ class InteractionMessage(Message):
             files=files,
             view=view,
             allowed_mentions=allowed_mentions,
+            attachments=attachments,
         )  # type: ignore
 
     async def delete(self, *, delay: Optional[float] = None) -> None:
