@@ -196,7 +196,7 @@ class Thread(Messageable, Hashable):
         self.archive_timestamp: datetime.datetime = parse_time(data['archive_timestamp'])
         self.locked: bool = data.get('locked', False)
         self.invitable: bool = data.get('invitable', True)
-        self.created_at: Optional[datetime.datetime] = parse_time(data.get('created_at'))
+        self.created_at: Optional[datetime.datetime] = parse_time(data.get('create_timestamp'))
 
     def _update(self, data: ThreadPayload) -> None:
         try:
