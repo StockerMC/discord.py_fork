@@ -157,7 +157,7 @@ class View:
         self.children: List[Item[Any]] = []
         for func in self.__view_children_items__:
             item: Item[Any] = func.__discord_ui_model_type__(**func.__discord_ui_model_kwargs__)
-            item.callback = partial(func, self, item)
+            item.callback = lambda interaction: func(self, item, interaction)
             item._view = self
             setattr(self, func.__name__, item)
             self.children.append(item)
