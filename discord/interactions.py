@@ -68,6 +68,7 @@ if TYPE_CHECKING:
     from aiohttp import ClientSession
     from .embeds import Embed
     from .ui.view import View
+    from .ui.modal import Modal
     from .channel import VoiceChannel, StageChannel, TextChannel, CategoryChannel, StoreChannel, PartialMessageable
     from .threads import Thread
     from .client import Client
@@ -868,6 +869,40 @@ class InteractionResponse:
 
         if view and not view.is_finished():
             state.store_view(view, message_id)
+
+        self._responded = True
+
+    async def send_modal(self, modal: Modal) -> None:
+        # TODO: note that you can't respond to modal submit interactions with modals
+        """|coro|
+        
+        """
+        if self._responded:
+            raise InteractionResponded(self._parent)
+
+        if not isinstance(modal, Modal):
+            raise TypeError(f'expected an instance of Modal not {modal.__class__!r}')
+
+        parent = self._parent
+        msg = parent.message
+        state = parent._state
+        message_id = msg.id if msg else None
+        if parent.type not in (InteractionType.component, InteractionType.application_command):
+            return
+
+        data: Dict[str, Any] = modal.to_callback_data()
+
+        adapter = async_context.get()
+        await adapter.create_interaction_response(
+            parent.id,
+            parent.token,
+            session=parent._session,
+            type=InteractionResponseType.modal.value,
+            data=data,
+        )
+
+        if not modal.is_finished():
+            state.store_modal(modal)
 
         self._responded = True
 

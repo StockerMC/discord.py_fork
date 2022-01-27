@@ -78,6 +78,7 @@ __all__ = (
     'ScheduledEventEntityType',
     'ScheduledEventStatus',
     'Locale',
+    'InputTextStyle',
 )
 
 if TYPE_CHECKING:
@@ -564,6 +565,7 @@ class InteractionType(Enum):
     ping = 1
     application_command = 2
     component = 3
+    modal_submit = 5
 
 
 class InteractionResponseType(Enum):
@@ -575,7 +577,7 @@ class InteractionResponseType(Enum):
     deferred_message_update = 6  # for components
     message_update = 7  # for components
     application_command_autocomplete_result = 8  # for autocomplete application command options
-
+    modal = 9 # for modal interactions
 
 class VideoQualityMode(Enum):
     auto = 1
@@ -589,6 +591,7 @@ class ComponentType(Enum):
     action_row = 1
     button = 2
     select = 3
+    input_text = 4
 
     def __int__(self) -> int:
         return self.value
@@ -699,6 +702,11 @@ class Locale(Enum):
     tr = 'tr'
     uk = 'uk'
     vi = 'vi'
+
+
+class InputTextStyle(Enum):
+    short = 1  # for short single-line text
+    paragraph = 2  # for much longer inputs
 
 
 T = TypeVar('T')

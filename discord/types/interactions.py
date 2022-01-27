@@ -180,7 +180,23 @@ class ComponentInteractionData(_ComponentInteractionDataOptional):
     component_type: ComponentType
 
 
-InteractionData = Union[ApplicationCommandInteractionData, ComponentInteractionData]
+class ModalComponentData(TypedDict):
+    value: str
+    custom_id: str
+    type: Literal[4]
+
+
+class _ModalComponentInteractionData(TypedDict):
+    type: Literal[1]
+    components: List[ModalComponentData]
+
+
+class ModalInteractionData(TypedDict):
+    custom_id: str
+    components: List[_ModalComponentInteractionData]
+
+
+InteractionData = Union[ApplicationCommandInteractionData, ComponentInteractionData, ModalInteractionData]
 
 
 class _InteractionOptional(TypedDict, total=False):
@@ -209,7 +225,13 @@ class InteractionApplicationCommandCallbackData(TypedDict, total=False):
     components: List[Component]
 
 
-InteractionResponseType = Literal[1, 4, 5, 6, 7, 8]
+class InteractionModalInteractionCallbackData(TypedDict):
+    title: str
+    custom_id: str
+    components: List[Component]
+
+
+InteractionResponseType = Literal[1, 4, 5, 6, 7, 8, 9]
 
 
 class _InteractionResponseOptional(TypedDict, total=False):
