@@ -62,7 +62,7 @@ class _ModalWeights:
         'weights',
     )
 
-    def __init__(self, children: List[InputText]):
+    def __init__(self, children: List[InputText[Any]]):
         self.weights: List[int] = [0, 0, 0, 0, 0]
 
         key = lambda i: sys.maxsize if i.row is None else i.row
@@ -71,14 +71,14 @@ class _ModalWeights:
             for item in group:
                 self.add_item(item)
 
-    def find_open_space(self, item: InputText) -> int:
+    def find_open_space(self, item: InputText[Any]) -> int:
         for index, weight in enumerate(self.weights):
             if weight + item.width <= 5:
                 return index
 
         raise ValueError('could not find open space for item')
 
-    def add_item(self, item: InputText) -> None:
+    def add_item(self, item: InputText[Any]) -> None:
         if item.row is not None:
             total = self.weights[item.row] + item.width
             if total > 5:
@@ -90,7 +90,7 @@ class _ModalWeights:
             self.weights[index] += item.width
             item._rendered_row = index
 
-    def remove_item(self, item: InputText) -> None:
+    def remove_item(self, item: InputText[Any]) -> None:
         if item._rendered_row is not None:
             self.weights[item._rendered_row] -= item.width
             item._rendered_row = None
@@ -126,10 +126,10 @@ class Modal:
         title: str,
         timeout: Optional[float] = 180,
         custom_id: str = MISSING,
-        children: List[InputText] = MISSING,
+        children: List[InputText[Any]] = MISSING,
     ) -> None:
         self.title: str = title
-        self.children: List[InputText] = children
+        self.children: List[InputText[Any]] = children
         self.custom_id: str = os.urandom(16).hex() if custom_id is MISSING else custom_id
         self.timeout: Optional[float] = timeout
         self.id: str = os.urandom(16).hex()
@@ -163,7 +163,7 @@ class Modal:
             await asyncio.sleep(self.__timeout_expiry - now)
 
     def to_components(self) -> List[InputTextPayload]:
-        def key(item: InputText) -> int:
+        def key(item: InputText[Any]) -> int:
             return item._rendered_row or 0
 
         children = sorted(self.children, key=key)
@@ -188,7 +188,7 @@ class Modal:
             return time.monotonic() + self.timeout
         return None
 
-    def add_item(self, item: InputText) -> None:
+    def add_item(self, item: InputText[Any]) -> None:
         """Adds an item to the modal.
 
         Parameters
@@ -216,7 +216,7 @@ class Modal:
         item._modal = self
         self.children.append(item)
 
-    def remove_item(self, item: InputText) -> None:
+    def remove_item(self, item: InputText[Any]) -> None:
         """Removes an item from the nidak.
 
         Parameters

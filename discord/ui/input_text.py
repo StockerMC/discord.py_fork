@@ -37,6 +37,7 @@ __all__ = (
 
 if TYPE_CHECKING:
     from .modal import Modal
+    from .view import View
 
     from ..types.components import (
         InputText as InputTextPayload,
