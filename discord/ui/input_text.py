@@ -36,17 +36,22 @@ __all__ = (
 )
 
 if TYPE_CHECKING:
+    from .modal import Modal
+
     from ..types.components import (
         InputText as InputTextPayload,
     )
 
-    from .view import View
-
 IT = TypeVar('IT', bound='InputText')
-V = TypeVar('V', bound='View', covariant=True)
+V = TypeVar('V', bound='None', covariant=True)
 
-class InputText(Item[V]):
+class InputText(Item):  # check if pyright is fine with this (no generic)
     """Represents a UI text input.
+
+    .. note::
+
+        :meth:`callback` will never be called.
+        See :meth:`Modal.callback` for more information.
 
     .. versionadded:: 2.0
 
@@ -60,6 +65,10 @@ class InputText(Item[V]):
         The ID of the text input that gets received during an interaction.
     placeholder: Optional[:class:`str`]
         The placeholder text that is shown if nothing is typed, if any.
+    required: :class:`bool`
+        Whether the text input is required. Defaults to ``True``.
+    value: Optional[:class:`str`]
+        The pre-filled text of the text input.
     min_length: Optional[:class:`int`]
         The minimum length of the text input.
     max_length: Optional[:class:`int`]
@@ -77,6 +86,8 @@ class InputText(Item[V]):
         'style',
         'custom_id',
         'placeholder',
+        'required',
+        'value',
         'min_length',
         'max_length',
         'row',
@@ -89,11 +100,15 @@ class InputText(Item[V]):
         style: InputTextStyle,
         custom_id: Optional[str] = None,
         placeholder: Optional[str] = None,
+        required: bool = True,
+        value: Optional[str] = None,
         min_length: Optional[int] = None,
         max_length: Optional[int] = None,
         row: Optional[int] = None,
     ):
         super().__init__()
+        self._modal: Optional[Modal] = None
+        self._received_value: Optional[str] = None
         self._provided_custom_id = custom_id is not None
         if custom_id is None:
             custom_id = os.urandom(16).hex()
@@ -104,6 +119,8 @@ class InputText(Item[V]):
             label=label,
             custom_id=custom_id,
             placeholder=placeholder,
+            required=required,
+            value=value,
             min_length=min_length,
             max_length=max_length,
         )
@@ -176,6 +193,30 @@ class InputText(Item[V]):
         if value is not None and not isinstance(value, int):
             raise TypeError('max_length must be None or int')
 
+    @property
+    def required(self) -> bool:
+        """:class:`bool`: Whether the text input is required."""
+        return self._underlying.required
+
+    @required.setter
+    def required(self, value: bool):
+        if not isinstance(value, bool):
+            raise TypeError('required must be bool')
+
+        self._underlying.required = value
+
+    @property
+    def value(self) -> Optional[str]:
+        """Optional[:class:`str`]: The received text from a user or the pre-filled text of the text input."""
+        return self._received_value or self._underlying.value
+
+    @value.setter
+    def value(self, value: Optional[str]) -> None:
+        if value is not None and not isinstance(value, str):
+            raise TypeError('value must be None or str')
+
+        self._underlying.value = value
+
     @classmethod
     def from_component(cls: Type[IT], component: InputTextComponent) -> IT:
         return cls(
@@ -197,3 +238,11 @@ class InputText(Item[V]):
 
     def refresh_component(self, component: InputTextComponent) -> None:
         self._underlying = component
+
+    #         data: ModalInteractionData = interaction.data  # type: ignore
+        # for component in data.get('components', []):
+        #     if component['type'] == 1:
+        #         for sub_component in component.get('components', []):
+        #             if sub_component['type'] == 4:  # text input
+        #                 # refactor this (style will be an unknown enum)
+        #                 self._provided_values.append(sub_component)

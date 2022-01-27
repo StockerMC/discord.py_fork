@@ -57,6 +57,7 @@ from .invite import Invite
 from .integrations import _integration_factory
 from .interactions import Interaction
 from .ui.view import ViewStore, View
+from .ui.modal import ModalStore, Modal
 from .stage_instance import StageInstance
 from .threads import Thread, ThreadMember
 from .sticker import GuildSticker
@@ -278,7 +279,7 @@ class ConnectionState:
 
         self.clear()
 
-    def clear(self, *, views: bool = True) -> None:
+    def clear(self, *, views: bool = True, modals: bool = True) -> None:
         self.user: Optional[ClientUser] = None
         # Originally, this code used WeakValueDictionary to maintain references to the
         # global user mapping.
@@ -298,6 +299,8 @@ class ConnectionState:
         self._guilds: Dict[int, Guild] = {}
         if views:
             self._view_store: ViewStore = ViewStore(self)
+        if modals:
+            self._modal_store: ModalStore = ModalStore(self)
 
         self._voice_clients: Dict[int, VoiceProtocol] = {}
 
@@ -619,7 +622,7 @@ class ConnectionState:
             self._ready_task.cancel()
 
         self._ready_state = asyncio.Queue()
-        self.clear(views=False)
+        self.clear(views=False, modals=False)
         self.user = ClientUser(state=self, data=data['user'])
         self.store_user(data['user'])
 
@@ -862,7 +865,7 @@ class ConnectionState:
 
         elif data['type'] == 5:  # modal submit
             custom_id = interaction.data['custom_id']  # type: ignore
-            self._view_store.dispatch(None, custom_id, interaction)
+            self._modal_store.dispatch(custom_id, interaction)
 
         self.dispatch('interaction', interaction)
 

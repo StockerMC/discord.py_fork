@@ -78,6 +78,8 @@ class _InputTextOptional(TypedDict, total=False):
     placeholder: str
     min_length: int
     max_length: int
+    required: bool
+    value: str
 
 
 class InputText(_InputTextOptional):

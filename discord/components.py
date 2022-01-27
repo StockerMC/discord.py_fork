@@ -395,16 +395,14 @@ class InputText(Component):
         The ID of the input text that gets received during an interaction.
     placeholder: Optional[:class:`str`]
         The placeholder text that is shown if nothing is typed, if any.
+        The maximum length of the text input.
+    required: :class:`bool`
+        Whether the text input is required.
+    value: Optional[:class:`str`]
+        ...
     min_length: Optional[:class:`int`]
         The minimum length of the text input.
     max_length: Optional[:class:`int`]
-        The maximum length of the text input.
-    row: Optional[:class:`int`]
-        The relative row this text input belongs to. A Discord component can only have 5
-        rows. By default, items are arranged automatically into those 5 rows. If you'd
-        like to control the relative positioning of the row then passing an index is advised.
-        For example, row=1 will show up before row=2. Defaults to ``None``, which is automatic
-        ordering. The row number must be between 0 and 4 (i.e. zero indexed).
     """
 
     __slots__: Tuple[str, ...] = (
@@ -412,6 +410,8 @@ class InputText(Component):
         'label',
         'custom_id',
         'placeholder',
+        'required',
+        'value',
         'min_length',
         'max_length',
     )
@@ -419,15 +419,17 @@ class InputText(Component):
     __repr_info__: ClassVar[Tuple[str, ...]] = __slots__
 
     def __init__(self, data: InputTextPayload) -> None:
-        super().__init__()
         self.type: ComponentType = ComponentType.input_text
         self.label: str = data['label']
         self.style: InputTextStyle = try_enum(InputTextStyle, data['style'])
         self.custom_id: str = data['custom_id']
         self.placeholder: Optional[str] = data.get('placeholder')
+        self.required: bool = data.get('required', True)
+        self.value: Optional[str] = data.get('value')
         self.min_length: Optional[int] = None
         self.max_length: Optional[int] = None
 
+        # are the int calls necessary?
         try:
             self.min_length = int(data['min_length'])
         except KeyError:
@@ -444,7 +446,11 @@ class InputText(Component):
             'custom_id': self.custom_id,
             'label': self.label,
             'style': self.style.value,
+            'required': self.required,
         }
+
+        if self.value is not None:
+            payload['value'] = self.value
 
         if self.min_length is not None:
             payload['min_length'] = self.min_length
