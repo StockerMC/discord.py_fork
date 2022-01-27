@@ -43,10 +43,15 @@ if TYPE_CHECKING:
     )
 
 IT = TypeVar('IT', bound='InputText')
-V = TypeVar('V', bound='None', covariant=True)
+V = TypeVar('V', bound='View', covariant=True)
 
-class InputText(Item):  # check if pyright is fine with this (no generic)
+class InputText(Item[V]):
     """Represents a UI text input.
+
+    .. note::
+
+        Unlike other UI items, text inputs do not belong to a :class:`View`.
+        See :class:`Modal` for more information.
 
     .. note::
 

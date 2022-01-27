@@ -52,10 +52,9 @@ __all__ = (
 
 if TYPE_CHECKING:
     from .input_text import InputText
-    from ..components import InputText as InputTextComponent
     from ..interactions import Interaction
     from ..state import ConnectionState
-    from ..types.interactions import ModalInteractionData, ModalComponentData
+    from ..types.interactions import ModalComponentData
     from ..types.components import InputText as InputTextPayload
 
 class _ModalWeights:
@@ -130,7 +129,7 @@ class Modal:
         children: List[InputText] = MISSING,
     ) -> None:
         self.title: str = title
-        self.children = children
+        self.children: List[InputText] = children
         self.custom_id: str = os.urandom(16).hex() if custom_id is MISSING else custom_id
         self.timeout: Optional[float] = timeout
         self.id: str = os.urandom(16).hex()
@@ -379,7 +378,7 @@ class Modal:
         """
         return await self.__stopped
 
-    async def callback(self, interaction: Interaction) -> None:
+    async def callback(self, interaction: Interaction[Any]) -> None:
         """|coro|
         
         """
