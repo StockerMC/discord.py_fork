@@ -24,7 +24,7 @@ DEALINGS IN THE SOFTWARE.
 
 from __future__ import annotations
 
-from typing import Callable, Optional, TYPE_CHECKING, Tuple, Type, TypeVar, Union
+from typing import Callable, Optional, TYPE_CHECKING, Tuple, TypeVar, Union
 import inspect
 import os
 

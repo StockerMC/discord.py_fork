@@ -25,12 +25,12 @@ DEALINGS IN THE SOFTWARE.
 """
 
 from __future__ import annotations
-from typing import Any, Dict, List, Optional, TYPE_CHECKING, Tuple, Union, TypeVar, Generic, overload
+from typing import Any, Dict, List, Optional, TYPE_CHECKING, Union, TypeVar, Generic, overload
 import asyncio
 
 from . import utils
 from .enums import try_enum, InteractionType, InteractionResponseType, Locale
-from .errors import InteractionResponded, HTTPException, ClientException, InvalidArgument
+from .errors import InteractionResponded, HTTPException, ClientException
 from .channel import PartialMessageable, ChannelType
 
 from .user import User

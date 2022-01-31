@@ -28,7 +28,6 @@ import colorsys
 import random
 
 from typing import (
-    Any,
     Optional,
     Tuple,
     Type,
