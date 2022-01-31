@@ -38,7 +38,6 @@ from typing import (
     Iterable,
     Any,
     Tuple,
-    Type,
     TypeVar,
     Sequence,
     Mapping,
@@ -63,6 +62,7 @@ if TYPE_CHECKING:
     import inspect
 
     CommandMapping = Mapping[Optional[Cog], List[Command[Any, Any, Any]]]
+    FuncT = TypeVar('FuncT', bound=Callable[..., Any])
 
 __all__ = (
     'Paginator',
@@ -206,7 +206,7 @@ class Paginator:
         return fmt.format(self)
 
 
-def _not_overriden(f):
+def _not_overriden(f: FuncT) -> FuncT:
     f.__help_command_not_overriden__ = True
     return f
 
@@ -325,9 +325,8 @@ class HelpCommand:
         ones passed in the :class:`.Command` constructor.
     """
 
-    if TYPE_CHECKING:
-        __original_args__: Tuple[Any, ...]
-        __original_kwargs__: Dict[str, Any]
+    __original_args__: Tuple[Any, ...]
+    __original_kwargs__: Dict[str, Any]
 
     MENTION_TRANSFORMS = {
         '@everyone': '@\u200beveryone',

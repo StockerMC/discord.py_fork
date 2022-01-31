@@ -167,7 +167,7 @@ class TextChannel(discord.abc.Messageable, discord.abc.GuildChannel, Hashable):
         'default_auto_archive_duration',
     )
 
-    def __init__(self, *, state: ConnectionState, guild: Guild, data: TextChannelPayload):
+    def __init__(self, *, state: ConnectionState, guild: Guild, data: TextChannelPayload) -> None:
         self._state: ConnectionState = state
         self.id: int = int(data['id'])
         self._type: int = data['type']
@@ -801,7 +801,7 @@ class VocalGuildChannel(discord.abc.Connectable, discord.abc.GuildChannel, Hasha
         'video_quality_mode',
     )
 
-    def __init__(self, *, state: ConnectionState, guild: Guild, data: Union[VoiceChannelPayload, StageChannelPayload]):
+    def __init__(self, *, state: ConnectionState, guild: Guild, data: Union[VoiceChannelPayload, StageChannelPayload]) -> None:
         self._state: ConnectionState = state
         self.id: int = int(data['id'])
         self._update(guild, data)
@@ -820,8 +820,8 @@ class VocalGuildChannel(discord.abc.Connectable, discord.abc.GuildChannel, Hasha
         self.video_quality_mode: VideoQualityMode = try_enum(VideoQualityMode, data.get('video_quality_mode', 1))
         self.category_id: Optional[int] = utils._get_as_snowflake(data, 'parent_id')
         self.position: int = data['position']
-        self.bitrate: int = data.get('bitrate')
-        self.user_limit: int = data.get('user_limit')
+        self.bitrate: int = data['bitrate']
+        self.user_limit: int = data['user_limit']
         self._fill_overwrites(data)
 
     @property
@@ -1353,7 +1353,7 @@ class CategoryChannel(discord.abc.GuildChannel, Hashable):
 
     __slots__ = ('name', 'id', 'guild', 'nsfw', '_state', 'position', '_overwrites', 'category_id')
 
-    def __init__(self, *, state: ConnectionState, guild: Guild, data: CategoryChannelPayload):
+    def __init__(self, *, state: ConnectionState, guild: Guild, data: CategoryChannelPayload) -> None:
         self._state: ConnectionState = state
         self.id: int = int(data['id'])
         self._update(guild, data)
@@ -1585,7 +1585,7 @@ class StoreChannel(discord.abc.GuildChannel, Hashable):
         '_overwrites',
     )
 
-    def __init__(self, *, state: ConnectionState, guild: Guild, data: StoreChannelPayload):
+    def __init__(self, *, state: ConnectionState, guild: Guild, data: StoreChannelPayload) -> None:
         self._state: ConnectionState = state
         self.id: int = int(data['id'])
         self._update(guild, data)
@@ -1735,7 +1735,7 @@ class DMChannel(discord.abc.Messageable, Hashable):
 
     __slots__ = ('id', 'recipient', 'me', '_state')
 
-    def __init__(self, *, me: ClientUser, state: ConnectionState, data: DMChannelPayload):
+    def __init__(self, *, me: ClientUser, state: ConnectionState, data: DMChannelPayload) -> None:
         self._state: ConnectionState = state
         self.recipient: Optional[User] = state.store_user(data['recipients'][0])
         self.me: ClientUser = me
@@ -1867,7 +1867,7 @@ class GroupChannel(discord.abc.Messageable, Hashable):
 
     __slots__ = ('id', 'recipients', 'owner_id', 'owner', '_icon', 'name', 'me', '_state')
 
-    def __init__(self, *, me: ClientUser, state: ConnectionState, data: GroupChannelPayload):
+    def __init__(self, *, me: ClientUser, state: ConnectionState, data: GroupChannelPayload) -> None:
         self._state: ConnectionState = state
         self.id: int = int(data['id'])
         self.me: ClientUser = me
@@ -2001,7 +2001,7 @@ class PartialMessageable(discord.abc.Messageable, Hashable):
         The channel type associated with this partial messageable, if given.
     """
 
-    def __init__(self, state: Union[ConnectionState, _WebhookState], id: int, type: Optional[ChannelType] = None):
+    def __init__(self, state: Union[ConnectionState, _WebhookState], id: int, type: Optional[ChannelType] = None) -> None:
         self._state: Union[ConnectionState, _WebhookState] = state
         self._channel: Object = Object(id=id)
         self.id: int = id

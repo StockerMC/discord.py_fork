@@ -853,10 +853,10 @@ class ApplicationCommandOptions:
         except KeyError:
             raise AttributeError(name) from None
 
-    def __eq__(self, other: Any) -> bool:
+    def __eq__(self, other: object) -> bool:
         return isinstance(other, self.__class__) and self.__application_command_options__ == other.__application_command_options__
 
-    def __ne__(self, other: Any) -> bool:
+    def __ne__(self, other: object) -> bool:
         return not self.__eq__(other)
 
     def __bool__(self) -> bool:
@@ -1210,25 +1210,23 @@ def _get_overridden_method(method: FuncT) -> Optional[FuncT]:
 
 
 class BaseApplicationCommand:
-    if TYPE_CHECKING:
-        __application_command_options__: ClassVar[Dict[str, ApplicationCommandOption[Union[str, int, float]]]]
-        __application_command_name__: ClassVar[str]
-        __application_command_description__: ClassVar[str]
-        __application_command_type__: ClassVar[ApplicationCommandType]
-        __application_command_default_permission__: ClassVar[bool]
-        __application_command_group_command__: ClassVar[bool]
-        __application_command_subcommands__: ClassVar[Dict[str, SlashCommand]]
-        __application_command_parent__: Optional[Union[Type[SlashCommand], SlashCommand]]
-        __application_command_guild_ids__: Optional[List[int]]
-        __application_command_global_command__: bool
+    __application_command_options__: ClassVar[Dict[str, ApplicationCommandOption[Union[str, int, float]]]]
+    __application_command_name__: ClassVar[str]
+    __application_command_description__: ClassVar[str]
+    __application_command_type__: ClassVar[ApplicationCommandType]
+    __application_command_default_permission__: ClassVar[bool]
+    __application_command_group_command__: ClassVar[bool]
+    __application_command_subcommands__: ClassVar[Dict[str, SlashCommand]]
+    __application_command_parent__: Optional[Union[Type[SlashCommand], SlashCommand]]
+    __application_command_guild_ids__: Optional[List[int]]
+    __application_command_global_command__: bool
 
     __discord_application_command__: ClassVar[bool] = True
-
-    __application_command_repr_attrs__: Dict[str, str] = {  # actual key: key to display
+    # attribute: key to display
+    __application_command_repr_attrs__: Dict[str, str] = {
         '__application_command_name__': 'name',
         '__application_command_type__': 'type',
     }
-
     _cog: Optional[Cog] = None
 
     @overload

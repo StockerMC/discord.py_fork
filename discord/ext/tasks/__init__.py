@@ -38,6 +38,7 @@ from typing import (
     TypeVar,
     Union,
     Tuple,
+    Dict,
 )
 
 import aiohttp
@@ -102,7 +103,8 @@ class Loop(Generic[C, P, T]):
 
     The main interface to create this is through :func:`loop`.
     """
-    def __init__(self,
+    def __init__(
+        self,
         coro: Callable[P, Coro[T]],
         seconds: float,
         hours: float,
@@ -390,7 +392,7 @@ class Loop(Generic[C, P, T]):
             The keyword arguments to use.
         """
 
-        def restart_when_over(fut, *, args=args, kwargs=kwargs):
+        def restart_when_over(_, *, args: Tuple[Any, ...] = args, kwargs: Dict[str, Any] = kwargs):
             self._task.remove_done_callback(restart_when_over)  # type: ignore
             self.start(*args, **kwargs)
 

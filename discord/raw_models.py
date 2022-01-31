@@ -62,7 +62,7 @@ __all__ = (
 
 
 class _RawReprMixin:
-    __slots__: Tuple[str, ...]
+    __slots__
 
     def __repr__(self) -> str:
         value = ' '.join(f'{attr}={getattr(self, attr)!r}' for attr in self.__slots__)

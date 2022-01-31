@@ -565,7 +565,7 @@ class SyncWebhook(BaseWebhook):
         .. versionadded:: 2.0
     """
 
-    __slots__: Tuple[str, ...] = ('session',)
+    __slots__ = ('session',)
 
     def __init__(
         self,

@@ -185,9 +185,8 @@ async def logging_coroutine(coroutine: Coroutine[Any, Any, Any], *, info: str) -
 
 
 class ConnectionState:
-    if TYPE_CHECKING:
-        _get_websocket: Callable[..., DiscordWebSocket]
-        _get_client: Callable[[], Client]
+    _get_websocket: Callable[..., DiscordWebSocket]
+    _get_client: Callable[[], Client]
 
     def __init__(
         self,
@@ -1598,7 +1597,7 @@ class ConnectionState:
             elif isinstance(channel, GroupChannel):
                 member = utils.find(lambda x: x.id == user_id, channel.recipients)
 
-            timestamp = datetime.datetime.fromtimestamp(data.get('timestamp'), tz=datetime.timezone.utc)
+            timestamp = datetime.datetime.fromtimestamp(data['timestamp'], tz=datetime.timezone.utc)
             if member is not None:
                 self.dispatch('typing', channel, member, timestamp)
             else:

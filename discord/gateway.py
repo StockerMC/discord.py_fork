@@ -967,7 +967,7 @@ class DiscordVoiceWebSocket:
 
     async def load_secret_key(self, data: SessionDescription) -> None:
         log.info('received secret key for voice connection')
-        self.secret_key = self._connection.secret_key = data.get('secret_key')
+        self.secret_key = self._connection.secret_key = data['secret_key']
         await self.speak()
         await self.speak(SpeakingState.none)
 

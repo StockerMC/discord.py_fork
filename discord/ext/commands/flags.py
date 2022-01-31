@@ -256,14 +256,13 @@ def get_flags(namespace: Dict[str, Any], globals: Dict[str, Any], locals: Dict[s
 
 
 class FlagsMeta(type):
-    if TYPE_CHECKING:
-        __commands_is_flag__: bool
-        __commands_flags__: Dict[str, Flag]
-        __commands_flag_aliases__: Dict[str, str]
-        __commands_flag_regex__: Pattern[str]
-        __commands_flag_case_insensitive__: bool
-        __commands_flag_delimiter__: str
-        __commands_flag_prefix__: str
+    __commands_is_flag__: bool
+    __commands_flags__: Dict[str, Flag]
+    __commands_flag_aliases__: Dict[str, str]
+    __commands_flag_regex__: Pattern[str]
+    __commands_flag_case_insensitive__: bool
+    __commands_flag_delimiter__: str
+    __commands_flag_prefix__: str
 
     def __new__(
         cls,

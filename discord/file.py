@@ -78,8 +78,7 @@ class File:
         '_closer',
     )
 
-    if TYPE_CHECKING:
-        fp: io.BufferedIOBase
+    fp: io.BufferedIOBase
 
     def __init__(
         self,
@@ -88,7 +87,7 @@ class File:
         *,
         spoiler: bool = False,
         description: Optional[str] = None,
-    ):
+    ) -> None:
         if isinstance(fp, io.IOBase):
             if not (fp.seekable() and fp.readable()):
                 raise ValueError(f'File buffer {fp!r} must be seekable and readable')

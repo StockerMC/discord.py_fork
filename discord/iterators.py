@@ -44,7 +44,6 @@ __all__ = (
 if TYPE_CHECKING:
     from .types.user import (
         User as UserPayload,
-        PartialUser as PartialUserPayload,
     )
     from .types.audit_log import (
         AuditLog as AuditLogPayload,
@@ -162,7 +161,7 @@ class _ChunkedAsyncIterator(_AsyncIterator[List[T]]):
 
 
 class _MappedAsyncIterator(_AsyncIterator[T]):
-    def __init__(self, iterator: _AsyncIterator[T], func: Callable[[T], Union[T, Awaitable[T]]]):
+    def __init__(self, iterator: _AsyncIterator[T], func: Callable[[T], Union[T, Awaitable[T]]]) -> None:
         self.iterator: _AsyncIterator[T] = iterator
         self.func: Callable[[T], Union[T, Awaitable[T]]] = func
 
@@ -173,7 +172,7 @@ class _MappedAsyncIterator(_AsyncIterator[T]):
 
 
 class _FilteredAsyncIterator(_AsyncIterator[T_co]):
-    def __init__(self, iterator: _AsyncIterator[T_co], predicate: _Func[T_co, bool]):
+    def __init__(self, iterator: _AsyncIterator[T_co], predicate: _Func[T_co, bool]) -> None:
         self.iterator: _AsyncIterator[T_co] = iterator
 
         if predicate is None:
@@ -556,7 +555,7 @@ class GuildIterator(_AsyncIterator['Guild']):
         limit: Optional[int],
         before: Optional[Union[Snowflake, datetime.datetime]] = None,
         after: Optional[Union[Snowflake, datetime.datetime]] = None,
-    ):
+    ) -> None:
         if isinstance(before, datetime.datetime):
             before = Object(id=time_snowflake(before, high=False))
         if isinstance(after, datetime.datetime):
@@ -703,7 +702,7 @@ class ArchivedThreadIterator(_AsyncIterator['Thread']):
         joined: bool,
         private: bool,
         before: Optional[Union[Snowflake, datetime.datetime]] = None,
-    ):
+    ) -> None:
         self.channel_id: int = channel_id
         self.guild: Guild = guild
         self.limit: Optional[int] = limit
@@ -714,7 +713,7 @@ class ArchivedThreadIterator(_AsyncIterator['Thread']):
         if joined and not private:
             raise ValueError('Cannot iterate over joined public archived threads')
 
-        self.before: Optional[str]
+        self.before: Optional[_Snowflake]
         if before is None:
             self.before = None
         elif isinstance(before, datetime.datetime):
@@ -728,7 +727,7 @@ class ArchivedThreadIterator(_AsyncIterator['Thread']):
             else:
                 self.before = snowflake_time(before.id).isoformat()
 
-        self.update_before: Callable[[ThreadPayload], str] = self.get_archive_timestamp
+        self.update_before: Callable[[ThreadPayload], _Snowflake] = self.get_archive_timestamp
 
         self.endpoint: Callable[..., Response[ThreadPaginationPayload]]
         if joined:
@@ -756,8 +755,8 @@ class ArchivedThreadIterator(_AsyncIterator['Thread']):
         return data['thread_metadata']['archive_timestamp']
 
     @staticmethod
-    def get_thread_id(data: ThreadPayload) -> str:
-        return data['id']  # type: ignore
+    def get_thread_id(data: ThreadPayload) -> _Snowflake:
+        return data['id']
 
     async def fill_queue(self) -> None:
         if not self.has_more:
