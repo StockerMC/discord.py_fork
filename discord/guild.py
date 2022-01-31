@@ -452,7 +452,7 @@ class Guild(Hashable):
             role = Role(guild=self, data=r, state=state)
             self._roles[role.id] = role
 
-        self.mfa_level: MFALevel = guild.get('mfa_level') 
+        self.mfa_level: MFALevel = guild.get('mfa_level')
         self.emojis: Tuple[Emoji, ...] = tuple(map(lambda d: state.store_emoji(self, d), guild.get('emojis', [])))
         self.stickers: Tuple[GuildSticker, ...] = tuple(
             map(lambda d: state.store_sticker(self, d), guild.get('stickers', []))
