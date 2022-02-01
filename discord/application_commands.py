@@ -619,57 +619,51 @@ def _get_options(
 
         if attr_name in annotation_namespace:
             annotation = resolve_annotation(annotation_namespace[attr_name], globals, locals, cache)
-
+            annotation_type = MISSING
             origin = getattr(annotation, '__origin__', None)
-            is_union = origin is Union
+            is_union = origin is Union or PY_310 and annotation.__class__ is types.UnionType  # type: ignore
             args = []
-            if not is_union:
-                if PY_310 and annotation.__class__ is types.UnionType:  # type: ignore
-                    args = annotation.__args__
-            else:
-                args = annotation.__args__
 
             if is_union:
-                args = list(args)
+                args = list(annotation.__args__)
                 if type(None) in args:
                     attr.required = False
                     args.remove(type(None))
 
                 for arg in args:
+                    annotation_type = arg
                     nested_origin = getattr(arg, '__origin__', None)
                     if nested_origin is Literal:
-                        choices = _transform_literal_choices(attr_name, attr.type, arg)
-                        annotation = choices[0]
-                        attr.choices.extend(choices[1])
+                        annotation_type, choices = _transform_literal_choices(attr_name, attr.type, arg)
+                        attr.choices.extend(choices)
 
                     channel_type = CHANNEL_TYPE_MAPPING.get(arg)
                     if channel_type is not None:
                         attr.channel_types.add(channel_type)
 
-                annotation = args[0]
-
             elif origin is Literal:
-                choices = _transform_literal_choices(attr_name, attr.type, annotation)
-                annotation = choices[0]
-                attr.choices.extend(choices[1])
+                annotation_type, choices = _transform_literal_choices(attr_name, attr.type, annotation)
+                attr.choices.extend(choices)
 
-            resolved_option_type = _resolve_option_type(annotation)
+            else:
+                annotation_type = annotation
+
+            resolved_option_type = _resolve_option_type(annotation_type)
 
             if attr.type is MISSING:
                 attr.type = resolved_option_type
 
-                channel_type = CHANNEL_TYPE_MAPPING.get(annotation)
-                if channel_type is not None:
-                    attr.channel_types.add(channel_type)
+            channel_type = CHANNEL_TYPE_MAPPING.get(annotation)
+            if channel_type is not None:
+                attr.channel_types.add(channel_type)
 
         if attr.name is MISSING:
             attr.name = attr_name
 
-        options[attr_name] = attr
+        if attr.type is MISSING:
+            raise TypeError(f'The type of the option {attr.name!r} must be set.')
 
-    for option in options.values():
-        if option.type is MISSING:
-            raise TypeError(f'the type of the option {option.name!r} must be set')
+        options[attr_name] = attr
 
     return options
 
