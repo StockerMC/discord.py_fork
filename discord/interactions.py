@@ -880,13 +880,14 @@ class InteractionResponse:
         if self._responded:
             raise InteractionResponded(self._parent)
 
+        # TODO: remove the need for this import within the function
+        from .ui.modal import Modal
+
         if not isinstance(modal, Modal):
             raise TypeError(f'expected an instance of Modal not {modal.__class__!r}')
 
         parent = self._parent
-        msg = parent.message
         state = parent._state
-        message_id = msg.id if msg else None
         if parent.type not in (InteractionType.component, InteractionType.application_command):
             return
 
