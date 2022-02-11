@@ -429,6 +429,14 @@ class PublicUserFlags(BaseFlags):
         .. versionadded:: 2.0
         """
         return UserFlags.bot_http_interactions.value
+    
+    @flag_value
+    def flagged_spammer(self):
+        """:class:`bool`: Returns ``True`` if the user is flagged by discord as a spammer.
+
+        .. versionadded:: 2.0
+        """
+        return UserFlags.flagged_spammer.value
 
     def all(self) -> List[UserFlags]:
         """List[:class:`UserFlags`]: Returns all public flags the user has."""
