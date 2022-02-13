@@ -890,10 +890,8 @@ def _get_used_subcommand(options: List[ApplicationCommandInteractionDataOption])
 
 
 # the original function is flatten_user in member.py
-def flatten(
-    original_cls: Union[Type[Interaction[Any]], Type[InteractionResponse]], original_attr: str
-) -> Callable[[Type[BaseApplicationCommandResponse[Any]]], Type[BaseApplicationCommandResponse[Any]]]:
-    def decorator(cls: Type[BaseApplicationCommandResponse[Any]]) -> Type[BaseApplicationCommandResponse[Any]]:
+def flatten(original_cls: type, original_attr: str) -> Callable[[Type[T]], Type[T]]:
+    def decorator(cls: Type[T]) -> Type[T]:
         for attr, value in original_cls.__dict__.items():
 
             # ignore private/special methods
