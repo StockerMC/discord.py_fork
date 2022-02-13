@@ -701,6 +701,9 @@ class Locale(Enum):
     uk = 'uk'
     vi = 'vi'
 
+    def __str__(self) -> str:
+        return self.value
+
 
 class MFALevel(Enum):
     none = 0
