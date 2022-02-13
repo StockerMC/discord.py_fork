@@ -98,7 +98,7 @@ class PartialInviteChannel:
 
     __slots__ = ('id', 'name', 'type')
 
-    def __init__(self, data: InviteChannelPayload):
+    def __init__(self, data: InviteChannelPayload) -> None:
         self.id: int = int(data['id'])
         self.name: str = data['name']
         self.type: ChannelType = try_enum(ChannelType, data['type'])

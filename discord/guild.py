@@ -312,7 +312,7 @@ class Guild(Hashable):
         3: _GuildLimit(emoji=250, stickers=60, bitrate=384e3, filesize=104857600),
     }
 
-    def __init__(self, *, data: GuildPayload, state: ConnectionState):
+    def __init__(self, *, data: GuildPayload, state: ConnectionState) -> None:
         self._channels: Dict[int, GuildChannel] = {}
         self._members: Dict[int, Member] = {}
         self._voice_states: Dict[int, VoiceState] = {}
@@ -434,14 +434,14 @@ class Guild(Hashable):
         if member_count is not None:
             self._member_count: int = member_count
 
-        self.name: str = guild.get('name')
+        self.name: str = guild.get('name')  # type: ignore
         self.region: VoiceRegion = try_enum(VoiceRegion, guild.get('region'))
         self.verification_level: VerificationLevel = try_enum(VerificationLevel, guild.get('verification_level'))
         self.default_notifications: NotificationLevel = try_enum(
             NotificationLevel, guild.get('default_message_notifications')
         )
         self.explicit_content_filter: ContentFilter = try_enum(ContentFilter, guild.get('explicit_content_filter', 0))
-        self.afk_timeout: int = guild.get('afk_timeout')
+        self.afk_timeout: int = guild.get('afk_timeout')  # type: ignore
         self._icon: Optional[str] = guild.get('icon')
         self._banner: Optional[str] = guild.get('banner')
         self.unavailable: bool = guild.get('unavailable', False)
@@ -2509,14 +2509,6 @@ class Guild(Hashable):
         :class:`GuildSticker`
             The created sticker.
         """
-        # the tags key is set later
-        payload: CreateGuildSticker = {  # type: ignore
-            'name': name,
-        }
-
-        if description:
-            payload['description'] = description
-
         try:
             emoji = unicodedata.name(emoji)
         except TypeError:
@@ -2524,7 +2516,13 @@ class Guild(Hashable):
         else:
             emoji = emoji.replace(' ', '_')
 
-        payload['tags'] = emoji
+        payload: CreateGuildSticker = {
+            'name': name,
+            'tags': emoji,
+        }
+
+        if description:
+            payload['description'] = description
 
         data = await self._state.http.create_guild_sticker(self.id, payload, file, reason)
         return self._state.store_sticker(self, data)

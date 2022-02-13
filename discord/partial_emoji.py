@@ -95,7 +95,7 @@ class PartialEmoji(_EmojiTag, AssetMixin):
 
     _CUSTOM_EMOJI_RE = re.compile(r'<?(?P<animated>a)?:?(?P<name>[A-Za-z0-9\_]+):(?P<id>[0-9]{13,20})>?')
 
-    def __init__(self, *, name: Optional[str], animated: bool = False, id: Optional[int] = None):
+    def __init__(self, *, name: Optional[str], animated: bool = False, id: Optional[int] = None) -> None:
         self.animated: bool = animated
         self.name: Optional[str] = name
         self.id: Optional[int] = id
@@ -173,7 +173,7 @@ class PartialEmoji(_EmojiTag, AssetMixin):
     def __repr__(self) -> str:
         return f'<{self.__class__.__name__} animated={self.animated} name={self.name!r} id={self.id}>'
 
-    def __eq__(self, other: Any) -> bool:
+    def __eq__(self, other: object) -> bool:
         if self.is_unicode_emoji():
             return isinstance(other, PartialEmoji) and self.name == other.name
 
@@ -181,7 +181,7 @@ class PartialEmoji(_EmojiTag, AssetMixin):
             return self.id == other.id
         return False
 
-    def __ne__(self, other: Any) -> bool:
+    def __ne__(self, other: object) -> bool:
         return not self.__eq__(other)
 
     def __hash__(self) -> int:

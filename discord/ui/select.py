@@ -23,7 +23,7 @@ DEALINGS IN THE SOFTWARE.
 """
 
 from __future__ import annotations
-from typing import List, Optional, TYPE_CHECKING, Tuple, TypeVar, Type, Callable, Union, Any
+from typing import List, Optional, TYPE_CHECKING, Tuple, TypeVar, Callable, Union, Any
 import inspect
 import os
 
