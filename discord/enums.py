@@ -78,6 +78,7 @@ __all__ = (
     'ScheduledEventEntityType',
     'ScheduledEventStatus',
     'Locale',
+    'MFALevel',
 )
 
 if TYPE_CHECKING:
@@ -699,6 +700,14 @@ class Locale(Enum):
     tr = 'tr'
     uk = 'uk'
     vi = 'vi'
+
+
+class MFALevel(Enum):
+    none = 0
+    elevated = 1
+
+    def __int__(self) -> int:
+        return self.value
 
 
 T = TypeVar('T')

@@ -70,6 +70,7 @@ from .enums import (
     NSFWLevel,
     ScheduledEventPrivacyLevel,
     ScheduledEventEntityType,
+    MFALevel,
 )
 from .mixins import Hashable
 from .user import User
@@ -99,7 +100,6 @@ if TYPE_CHECKING:
         Ban as BanPayload,
         Guild as GuildPayload,
         RolePositionUpdate,
-        MFALevel,
         GuildFeature,
     )
     from .types.threads import (
@@ -206,10 +206,8 @@ class Guild(Hashable):
         .. versionadded:: 1.4
     description: Optional[:class:`str`]
         The guild's description.
-    mfa_level: :class:`int`
-        Indicates the guild's two factor authorisation level. If this value is 0 then
-        the guild does not require 2FA for their administrative members. If the value is
-        1 then they do.
+    mfa_level: :class:`MFALevel`
+        The guild's two factor authorisation level.
     verification_level: :class:`VerificationLevel`
         The guild's verification level.
     explicit_content_filter: :class:`ContentFilter`
@@ -452,7 +450,7 @@ class Guild(Hashable):
             role = Role(guild=self, data=r, state=state)
             self._roles[role.id] = role
 
-        self.mfa_level: MFALevel = guild.get('mfa_level')
+        self.mfa_level: MFALevel = try_enum(MFALevel, guild.get('mfa_level', 0))
         self.emojis: Tuple[Emoji, ...] = tuple(map(lambda d: state.store_emoji(self, d), guild.get('emojis', [])))
         self.stickers: Tuple[GuildSticker, ...] = tuple(
             map(lambda d: state.store_sticker(self, d), guild.get('stickers', []))
