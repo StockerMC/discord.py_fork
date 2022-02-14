@@ -45,7 +45,7 @@ BF = TypeVar('BF', bound='BaseFlags')
 
 
 class flag_value:
-    def __init__(self, func: Callable[[Any], int]):
+    def __init__(self, func: Callable[[Any], int]) -> None:
         self.flag: int = func(None)
         self.__doc__: Optional[str] = func.__doc__
 
@@ -116,10 +116,10 @@ class BaseFlags:
         self.value = value
         return self
 
-    def __eq__(self, other: Any) -> bool:
+    def __eq__(self, other: object) -> bool:
         return isinstance(other, self.__class__) and self.value == other.value
 
-    def __ne__(self, other: Any) -> bool:
+    def __ne__(self, other: object) -> bool:
         return not self.__eq__(other)
 
     def __hash__(self) -> int:
@@ -981,7 +981,7 @@ class MemberCacheFlags(BaseFlags):
         return self
 
     @property
-    def _empty(self):
+    def _empty(self) -> bool:
         return self.value == self.DEFAULT_VALUE
 
     @flag_value
@@ -1029,7 +1029,7 @@ class MemberCacheFlags(BaseFlags):
 
         return self
 
-    def _verify_intents(self, intents: Intents):
+    def _verify_intents(self, intents: Intents) -> None:
         if self.voice and not intents.voice_states:
             raise ValueError('MemberCacheFlags.voice requires Intents.voice_states')
 
@@ -1037,7 +1037,7 @@ class MemberCacheFlags(BaseFlags):
             raise ValueError('MemberCacheFlags.joined requires Intents.members')
 
     @property
-    def _voice_only(self):
+    def _voice_only(self) -> bool:
         return self.value == 1
 
 

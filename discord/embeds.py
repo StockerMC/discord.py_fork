@@ -25,7 +25,7 @@ DEALINGS IN THE SOFTWARE.
 from __future__ import annotations
 
 import datetime
-from typing import Any, Dict, Final, List, Mapping, Protocol, TYPE_CHECKING, Type, TypeVar, Union, Optional
+from typing import Any, Dict, Final, List, Mapping, Protocol, TYPE_CHECKING, TypeVar, Union, Optional
 
 from . import utils
 from .colour import Colour
@@ -50,7 +50,7 @@ EmptyEmbed: Final = _EmptyEmbed()
 
 
 class EmbedProxy:
-    def __init__(self, layer: Dict[str, Any]):
+    def __init__(self, layer: Dict[str, Any]) -> None:
         self.__dict__.update(layer)
 
     def __len__(self) -> int:
@@ -172,8 +172,7 @@ class Embed:
         'description',
     )
 
-    if TYPE_CHECKING:
-        _colour: Union[int, Colour, _EmptyEmbed]
+    _colour: Union[int, Colour, _EmptyEmbed]
 
     Empty: Final = EmptyEmbed
 
@@ -187,7 +186,7 @@ class Embed:
         url: MaybeEmpty[Any] = EmptyEmbed,
         description: MaybeEmpty[Any] = EmptyEmbed,
         timestamp: Optional[datetime.datetime] = None,
-    ):
+    ) -> None:
         self.colour = colour if colour is not EmptyEmbed else color
         self.title: MaybeEmpty[str] = title
         self.type: EmbedType = type
@@ -311,7 +310,7 @@ class Embed:
         return getattr(self, '_colour', EmptyEmbed)
 
     @colour.setter
-    def colour(self, value: Union[int, Colour, _EmptyEmbed]) -> None:  # type: ignore
+    def colour(self, value: Union[int, Colour, _EmptyEmbed]) -> None:
         if isinstance(value, (Colour, _EmptyEmbed)):
             self._colour = value
         elif isinstance(value, int):
@@ -324,7 +323,7 @@ class Embed:
         def color(self) -> MaybeEmpty[Colour]: ...
 
         @color.setter
-        def color(self, value: Union[int, Colour, _EmptyEmbed]) -> None: ...  # type: ignore
+        def color(self, value: Union[int, Colour, _EmptyEmbed]) -> None: ...
     else:
         color = colour
 

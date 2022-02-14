@@ -70,6 +70,7 @@ from .enums import (
     NSFWLevel,
     ScheduledEventPrivacyLevel,
     ScheduledEventEntityType,
+    MFALevel,
 )
 from .mixins import Hashable
 from .user import User
@@ -99,7 +100,6 @@ if TYPE_CHECKING:
         Ban as BanPayload,
         Guild as GuildPayload,
         RolePositionUpdate,
-        MFALevel,
         GuildFeature,
     )
     from .types.threads import (
@@ -206,10 +206,8 @@ class Guild(Hashable):
         .. versionadded:: 1.4
     description: Optional[:class:`str`]
         The guild's description.
-    mfa_level: :class:`int`
-        Indicates the guild's two factor authorisation level. If this value is 0 then
-        the guild does not require 2FA for their administrative members. If the value is
-        1 then they do.
+    mfa_level: :class:`MFALevel`
+        The guild's two factor authorisation level.
     verification_level: :class:`VerificationLevel`
         The guild's verification level.
     explicit_content_filter: :class:`ContentFilter`
@@ -312,7 +310,7 @@ class Guild(Hashable):
         3: _GuildLimit(emoji=250, stickers=60, bitrate=384e3, filesize=104857600),
     }
 
-    def __init__(self, *, data: GuildPayload, state: ConnectionState):
+    def __init__(self, *, data: GuildPayload, state: ConnectionState) -> None:
         self._channels: Dict[int, GuildChannel] = {}
         self._members: Dict[int, Member] = {}
         self._voice_states: Dict[int, VoiceState] = {}
@@ -434,14 +432,14 @@ class Guild(Hashable):
         if member_count is not None:
             self._member_count: int = member_count
 
-        self.name: str = guild.get('name')
+        self.name: str = guild.get('name')  # type: ignore
         self.region: VoiceRegion = try_enum(VoiceRegion, guild.get('region'))
         self.verification_level: VerificationLevel = try_enum(VerificationLevel, guild.get('verification_level'))
         self.default_notifications: NotificationLevel = try_enum(
             NotificationLevel, guild.get('default_message_notifications')
         )
         self.explicit_content_filter: ContentFilter = try_enum(ContentFilter, guild.get('explicit_content_filter', 0))
-        self.afk_timeout: int = guild.get('afk_timeout')
+        self.afk_timeout: int = guild.get('afk_timeout')  # type: ignore
         self._icon: Optional[str] = guild.get('icon')
         self._banner: Optional[str] = guild.get('banner')
         self.unavailable: bool = guild.get('unavailable', False)
@@ -452,7 +450,7 @@ class Guild(Hashable):
             role = Role(guild=self, data=r, state=state)
             self._roles[role.id] = role
 
-        self.mfa_level: MFALevel = guild.get('mfa_level')
+        self.mfa_level: MFALevel = try_enum(MFALevel, guild.get('mfa_level', 0))
         self.emojis: Tuple[Emoji, ...] = tuple(map(lambda d: state.store_emoji(self, d), guild.get('emojis', [])))
         self.stickers: Tuple[GuildSticker, ...] = tuple(
             map(lambda d: state.store_sticker(self, d), guild.get('stickers', []))
@@ -2509,14 +2507,6 @@ class Guild(Hashable):
         :class:`GuildSticker`
             The created sticker.
         """
-        # the tags key is set later
-        payload: CreateGuildSticker = {  # type: ignore
-            'name': name,
-        }
-
-        if description:
-            payload['description'] = description
-
         try:
             emoji = unicodedata.name(emoji)
         except TypeError:
@@ -2524,7 +2514,13 @@ class Guild(Hashable):
         else:
             emoji = emoji.replace(' ', '_')
 
-        payload['tags'] = emoji
+        payload: CreateGuildSticker = {
+            'name': name,
+            'tags': emoji,
+        }
+
+        if description:
+            payload['description'] = description
 
         data = await self._state.http.create_guild_sticker(self.id, payload, file, reason)
         return self._state.store_sticker(self, data)

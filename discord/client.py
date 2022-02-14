@@ -276,7 +276,7 @@ class Client:
         *,
         loop: Optional[asyncio.AbstractEventLoop] = None,
         **options: Any,
-    ):
+    ) -> None:
         # self.ws is set in the connect method
         self.ws: DiscordWebSocket = None  # type: ignore
         self.loop: asyncio.AbstractEventLoop = asyncio.get_event_loop() if loop is None else loop

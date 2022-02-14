@@ -263,14 +263,14 @@ class Attachment(Hashable):
         '_http',
     )
 
-    def __init__(self, *, data: AttachmentPayload, state: ConnectionState):
+    def __init__(self, *, data: AttachmentPayload, state: ConnectionState) -> None:
         self.id: int = int(data['id'])
         self.size: int = data['size']
         self.height: Optional[int] = data.get('height')
         self.width: Optional[int] = data.get('width')
         self.filename: str = data['filename']
-        self.url: str = data.get('url')
-        self.proxy_url: str = data.get('proxy_url')
+        self.url: str = data['url']
+        self.proxy_url: str = data['proxy_url']
         self._http = state.http
         self.content_type: Optional[str] = data.get('content_type')
         self.ephemeral: bool = data.get('ephemeral', False)
@@ -443,7 +443,7 @@ class DeletedReferencedMessage:
 
     __slots__ = ('_parent',)
 
-    def __init__(self, parent: MessageReference):
+    def __init__(self, parent: MessageReference) -> None:
         self._parent: MessageReference = parent
 
     def __repr__(self) -> str:
@@ -502,7 +502,14 @@ class MessageReference:
 
     __slots__ = ('message_id', 'channel_id', 'guild_id', 'fail_if_not_exists', 'resolved', '_state')
 
-    def __init__(self, *, message_id: int, channel_id: int, guild_id: Optional[int] = None, fail_if_not_exists: bool = True):
+    def __init__(
+        self,
+        *,
+        message_id: int,
+        channel_id: int,
+        guild_id: Optional[int] = None,
+        fail_if_not_exists: bool = True,
+    ) -> None:
         self._state: Optional[ConnectionState] = None
         self.resolved: Optional[Union[Message, DeletedReferencedMessage]] = None
         self.message_id: Optional[int] = message_id
@@ -1839,7 +1846,7 @@ class PartialMessage(Hashable):
         to_reference = Message.to_reference
         to_message_reference_dict = Message.to_message_reference_dict
 
-    def __init__(self, *, channel: PartialMessageableChannel, id: int):
+    def __init__(self, *, channel: PartialMessageableChannel, id: int) -> None:
         if channel.type not in (
             ChannelType.text,
             ChannelType.news,

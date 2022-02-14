@@ -99,7 +99,7 @@ DISCORD_EPOCH = 1420070400000
 
 
 class _MissingSentinel:
-    def __eq__(self, other: Any) -> bool:
+    def __eq__(self, other: object) -> bool:
         return False
 
     def __bool__(self) -> bool:
@@ -203,7 +203,7 @@ def cached_slot_property(name: str) -> Callable[[Callable[[T], T_co]], CachedSlo
 class SequenceProxy(Sequence[T_co]):
     """Read-only proxy of a Sequence."""
 
-    def __init__(self, proxied: Sequence[T_co]):
+    def __init__(self, proxied: Sequence[T_co]) -> None:
         self.__proxied = proxied
 
     def __getitem__(self, idx: int) -> T_co:
@@ -212,7 +212,7 @@ class SequenceProxy(Sequence[T_co]):
     def __len__(self) -> int:
         return len(self.__proxied)
 
-    def __contains__(self, item: Any) -> bool:
+    def __contains__(self, item: object) -> bool:
         return item in self.__proxied
 
     def __iter__(self) -> Iterator[T_co]:

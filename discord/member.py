@@ -130,8 +130,13 @@ class VoiceState:
         'suppress',
     )
 
-    def __init__(self, *, data: Union[VoiceStatePayload, GuildVoiceStatePayload], channel: Optional[VocalGuildChannel] = None):
-        self.session_id: str = data.get('session_id')
+    def __init__(
+        self,
+        *,
+        data: Union[VoiceStatePayload, GuildVoiceStatePayload],
+        channel: Optional[VocalGuildChannel] = None,
+    ) -> None:
+        self.session_id: str = data['session_id']
         self._update(data, channel)
 
     def _update(self, data: Union[VoiceStatePayload, GuildVoiceStatePayload], channel: Optional[VocalGuildChannel]):
@@ -290,7 +295,7 @@ class Member(discord.abc.Messageable, _UserTag):
         accent_colour: Optional[Colour]
         _to_minimal_user_json: Callable[[], UserPayload]
 
-    def __init__(self, *, data: MemberWithUserPayload, guild: Guild, state: ConnectionState):
+    def __init__(self, *, data: MemberWithUserPayload, guild: Guild, state: ConnectionState) -> None:
         self._state: ConnectionState = state
         self._user: User = state.store_user(data['user'])
         self.guild: Guild = guild
@@ -313,10 +318,10 @@ class Member(discord.abc.Messageable, _UserTag):
             f' bot={self._user.bot} nick={self.nick!r} guild={self.guild!r}>'
         )
 
-    def __eq__(self, other: Any) -> bool:
+    def __eq__(self, other: object) -> bool:
         return isinstance(other, _UserTag) and other.id == self.id
 
-    def __ne__(self, other: Any) -> bool:
+    def __ne__(self, other: object) -> bool:
         return not self.__eq__(other)
 
     def __hash__(self) -> int:

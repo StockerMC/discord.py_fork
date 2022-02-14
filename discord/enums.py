@@ -78,6 +78,7 @@ __all__ = (
     'ScheduledEventEntityType',
     'ScheduledEventStatus',
     'Locale',
+    'MFALevel',
 )
 
 if TYPE_CHECKING:
@@ -100,11 +101,10 @@ def _is_descriptor(obj: Any) -> bool:
 
 
 class EnumMeta(type):
-    if TYPE_CHECKING:
-        __name__: ClassVar[str]
-        _enum_member_names_: ClassVar[List[str]]
-        _enum_member_map_: ClassVar[Dict[str, Any]]
-        _enum_value_map_: ClassVar[Dict[Any, Any]]
+    __name__: ClassVar[str]
+    _enum_member_names_: ClassVar[List[str]]
+    _enum_member_map_: ClassVar[Dict[str, Any]]
+    _enum_value_map_: ClassVar[Dict[Any, Any]]
 
     def __new__(cls, name: str, bases: Tuple[type, ...], attrs: Dict[str, Any], *, comparable: bool = False) -> Self:
         value_mapping = {}
@@ -160,13 +160,13 @@ class EnumMeta(type):
     def __members__(cls) -> Mapping[str, Any]:
         return types.MappingProxyType(cls._enum_member_map_)
 
-    def __call__(cls, value: Any) -> Any:
+    def __call__(cls, value: str) -> Any:
         try:
             return cls._enum_value_map_[value]
         except (KeyError, TypeError):
             raise ValueError(f"{value!r} is not a valid {cls.__name__}")
 
-    def __getitem__(cls, key: Any) -> Any:
+    def __getitem__(cls, key: str) -> Any:
         return cls._enum_member_map_[key]
 
     def __setattr__(cls, name: str, value: Any) -> NoReturn:
@@ -188,10 +188,10 @@ if TYPE_CHECKING:
     import enum
 
     class Enum(enum.Enum):
-        def __le__(self, other: Self) -> bool: ...
-        def __ge__(self, other: Self) -> bool: ...
-        def __lt__(self, other: Self) -> bool: ...
-        def __gt__(self, other: Self) -> bool: ...
+        def __le__(self, other: object) -> bool: ...
+        def __ge__(self, other: object) -> bool: ...
+        def __lt__(self, other: object) -> bool: ...
+        def __gt__(self, other: object) -> bool: ...
 else:
 
     class Enum(metaclass=EnumMeta):
@@ -700,6 +700,17 @@ class Locale(Enum):
     tr = 'tr'
     uk = 'uk'
     vi = 'vi'
+
+    def __str__(self) -> str:
+        return self.value
+
+
+class MFALevel(Enum):
+    none = 0
+    elevated = 1
+
+    def __int__(self) -> int:
+        return self.value
 
 
 T = TypeVar('T')

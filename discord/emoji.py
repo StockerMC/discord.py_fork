@@ -93,7 +93,7 @@ class Emoji(_EmojiTag, AssetMixin):
         having the :attr:`~Permissions.manage_emojis` permission.
     """
 
-    __slots__: Tuple[str, ...] = (
+    __slots__ = (
         'require_colons',
         'animated',
         'managed',
@@ -106,7 +106,7 @@ class Emoji(_EmojiTag, AssetMixin):
         'available',
     )
 
-    def __init__(self, *, guild: Guild, state: ConnectionState, data: EmojiPayload):
+    def __init__(self, *, guild: Guild, state: ConnectionState, data: EmojiPayload) -> None:
         self.guild_id: int = guild.id
         self._state: ConnectionState = state
         self._from_data(data)
@@ -140,10 +140,10 @@ class Emoji(_EmojiTag, AssetMixin):
     def __repr__(self) -> str:
         return f'<Emoji id={self.id} name={self.name!r} animated={self.animated} managed={self.managed}>'
 
-    def __eq__(self, other: Any) -> bool:
+    def __eq__(self, other: object) -> bool:
         return isinstance(other, _EmojiTag) and self.id == other.id
 
-    def __ne__(self, other: Any) -> bool:
+    def __ne__(self, other: object) -> bool:
         return not self.__eq__(other)
 
     def __hash__(self) -> int:

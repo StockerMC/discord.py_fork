@@ -30,7 +30,7 @@ import json
 import re
 
 from urllib.parse import quote as urlquote
-from typing import Any, Dict, List, Literal, NamedTuple, Optional, TYPE_CHECKING, Tuple, Union, Type, overload
+from typing import Any, Dict, List, Literal, NamedTuple, Optional, TYPE_CHECKING, Union, Type, overload
 from contextvars import ContextVar
 
 import aiohttp
@@ -805,7 +805,7 @@ class WebhookMessage(Message):
 
 
 class BaseWebhook(Hashable):
-    __slots__: Tuple[str, ...] = (
+    __slots__ = (
         'id',
         'type',
         'guild_id',
@@ -983,14 +983,15 @@ class Webhook(BaseWebhook):
         .. versionadded:: 2.0
     """
 
-    __slots__: Tuple[str, ...] = ('session',)
+    __slots__ = ('session',)
 
     def __init__(
         self,
         data: WebhookPayload,
         session: aiohttp.ClientSession,
         token: Optional[str] = None,
-        state: Optional[Union[ConnectionState, _WebhookState]] = None):
+        state: Optional[Union[ConnectionState, _WebhookState]] = None
+    ) -> None:
         super().__init__(data, token, state)
         self.session: aiohttp.ClientSession = session
 

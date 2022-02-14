@@ -141,7 +141,14 @@ class FFmpegAudio(AudioSource):
     .. versionadded:: 1.3
     """
 
-    def __init__(self, source: Union[str, io.BufferedIOBase], *, executable: str = 'ffmpeg', args: Any, **subprocess_kwargs: Any):
+    def __init__(
+        self,
+        source: Union[str, io.BufferedIOBase],
+        *,
+        executable: str = 'ffmpeg',
+        args: Any,
+        **subprocess_kwargs: Any,
+    ) -> None:
         piping = subprocess_kwargs.get('stdin') == subprocess.PIPE
         if piping and isinstance(source, str):
             raise TypeError("parameter conflict: 'source' parameter cannot be a string when piping to stdin")
@@ -255,7 +262,7 @@ class FFmpegPCMAudio(FFmpegAudio):
         pipe: bool = False,
         stderr: Optional[IO[str]] = None,
         before_options: Optional[str] = None,
-        options: Optional[str] = None
+        options: Optional[str] = None,
     ) -> None:
         args = []
         subprocess_kwargs = {'stdin': subprocess.PIPE if pipe else subprocess.DEVNULL, 'stderr': stderr}
@@ -588,7 +595,7 @@ class PCMVolumeTransformer(AudioSource, Generic[AT]):
         The audio source is opus encoded.
     """
 
-    def __init__(self, original: AT, volume: float = 1.0):
+    def __init__(self, original: AT, volume: float = 1.0) -> None:
         if not isinstance(original, AudioSource):
             raise TypeError(f'expected AudioSource not {original.__class__.__name__}.')
 

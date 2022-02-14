@@ -227,7 +227,7 @@ class VoiceClient(VoiceProtocol):
     ssrc: int
 
 
-    def __init__(self, client: Client, channel: abc.Connectable):
+    def __init__(self, client: Client, channel: abc.Connectable) -> None:
         if not has_nacl:
             raise RuntimeError("PyNaCl library needed in order to use voice")
 
@@ -250,7 +250,7 @@ class VoiceClient(VoiceProtocol):
         self.sequence: int = 0
         self.timestamp: int = 0
         self.timeout: float = 0
-        self._runner: asyncio.Task = MISSING
+        self._runner: asyncio.Task[None] = MISSING
         self._player: Optional[AudioPlayer] = None
         self.encoder: Encoder = MISSING
         self._lite_nonce: int = 0
@@ -307,7 +307,7 @@ class VoiceClient(VoiceProtocol):
             _log.info('Ignoring extraneous voice server update.')
             return
 
-        self.token: str = data.get('token')
+        self.token: str = data['token']
         self.server_id: int = int(data['guild_id'])
         endpoint = data.get('endpoint')
 
@@ -364,7 +364,7 @@ class VoiceClient(VoiceProtocol):
         self._connected.set()
         return ws
 
-    async def connect(self, *, reconnect: bool, timeout: float) ->None:
+    async def connect(self, *, timeout: float, reconnect: bool) ->None:
         _log.info('Connecting to voice...')
         self.timeout = timeout
 
@@ -526,7 +526,7 @@ class VoiceClient(VoiceProtocol):
 
     # audio related
 
-    def _get_voice_packet(self, data):
+    def _get_voice_packet(self, data: bytes) -> bytes:
         header = bytearray(12)
 
         # Formulate rtp header
@@ -539,20 +539,20 @@ class VoiceClient(VoiceProtocol):
         encrypt_packet = getattr(self, '_encrypt_' + self.mode)
         return encrypt_packet(header, data)
 
-    def _encrypt_xsalsa20_poly1305(self, header: bytes, data) -> bytes:
+    def _encrypt_xsalsa20_poly1305(self, header: bytes, data: bytes) -> bytes:
         box = nacl.secret.SecretBox(bytes(self.secret_key))
         nonce = bytearray(24)
         nonce[:12] = header
 
         return header + box.encrypt(bytes(data), bytes(nonce)).ciphertext
 
-    def _encrypt_xsalsa20_poly1305_suffix(self, header: bytes, data) -> bytes:
+    def _encrypt_xsalsa20_poly1305_suffix(self, header: bytes, data: bytes) -> bytes:
         box = nacl.secret.SecretBox(bytes(self.secret_key))
         nonce = nacl.utils.random(nacl.secret.SecretBox.NONCE_SIZE) # type: ignore
 
         return header + box.encrypt(bytes(data), nonce).ciphertext + nonce
 
-    def _encrypt_xsalsa20_poly1305_lite(self, header: bytes, data) -> bytes:
+    def _encrypt_xsalsa20_poly1305_lite(self, header: bytes, data: bytes) -> bytes:
         box = nacl.secret.SecretBox(bytes(self.secret_key))
         nonce = bytearray(24)
 

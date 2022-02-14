@@ -847,10 +847,10 @@ class ApplicationCommandOptions:
         except KeyError:
             raise AttributeError(name) from None
 
-    def __eq__(self, other: Any) -> bool:
+    def __eq__(self, other: object) -> bool:
         return isinstance(other, self.__class__) and self.__application_command_options__ == other.__application_command_options__
 
-    def __ne__(self, other: Any) -> bool:
+    def __ne__(self, other: object) -> bool:
         return not self.__eq__(other)
 
     def __bool__(self) -> bool:
@@ -884,10 +884,8 @@ def _get_used_subcommand(options: List[ApplicationCommandInteractionDataOption])
 
 
 # the original function is flatten_user in member.py
-def flatten(
-    original_cls: Union[Type[Interaction[Any]], Type[InteractionResponse]], original_attr: str
-) -> Callable[[Type[BaseApplicationCommandResponse[Any]]], Type[BaseApplicationCommandResponse[Any]]]:
-    def decorator(cls: Type[BaseApplicationCommandResponse[Any]]) -> Type[BaseApplicationCommandResponse[Any]]:
+def flatten(original_cls: type, original_attr: str) -> Callable[[Type[T]], Type[T]]:
+    def decorator(cls: Type[T]) -> Type[T]:
         for attr, value in original_cls.__dict__.items():
 
             # ignore private/special methods
@@ -1218,11 +1216,11 @@ class BaseApplicationCommand:
 
     __discord_application_command__: ClassVar[bool] = True
 
-    __application_command_repr_attrs__: Dict[str, str] = {  # actual key: key to display
+    # attribute: key to display
+    __application_command_repr_attrs__: Dict[str, str] = {
         '__application_command_name__': 'name',
         '__application_command_type__': 'type',
     }
-
     _cog: Optional[Cog] = None
 
     @overload

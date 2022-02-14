@@ -140,3 +140,10 @@ January 25, 2022
   * ``InteractionMessage.edit``
   
     * ``attachments``
+
+February 13, 2022
+-----------------
+
+- Added the ``spammer`` user flag
+- Changed ``Guild.mfa_level`` to the newly added ``MFALevel`` enum
+- Added the ``str(x)`` method to the ``Locale`` enum

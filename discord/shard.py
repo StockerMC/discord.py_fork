@@ -317,8 +317,7 @@ class AutoShardedClient(Client):
         An optional list of shard_ids to launch the shards with.
     """
 
-    if TYPE_CHECKING:
-        _connection: AutoShardedConnectionState
+    _connection: AutoShardedConnectionState
 
     def __init__(self, *args: Any, loop: Optional[asyncio.AbstractEventLoop] = None, **kwargs: Any) -> None:
         kwargs.pop('shard_id', None)
