@@ -640,13 +640,14 @@ class ApplicationCommandOptionType(Enum):
     sub_command = 1
     sub_command_group = 2
     string = 3
-    integer = 4 # Any integer between -2^53 and 2^53
+    integer = 4  # Any integer between -2^53 and 2^53
     boolean = 5
     user = 6
-    channel = 7 # Includes all channel types + categories
+    channel = 7  # Includes all channel types + categories
     role = 8
-    mentionable = 9 # Includes users and roles
-    number = 10 # Any double between -2^53 and 2^53
+    mentionable = 9  # Includes users and roles
+    number = 10  # Any double between -2^53 and 2^53
+    attachment = 11  # Attachment object
 
     def __int__(self) -> int:
         return self.value

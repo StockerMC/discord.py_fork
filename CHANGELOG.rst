@@ -153,3 +153,4 @@ February 14, 2022
 
 - Added the ``slowmode_delay`` keyword argument to ``TextChannel.create_thread`` and ``Message.create_thread``
 - Added the ``reason`` keyword argument to ``Message.create_thread``
+- Added the attachment application command option type
