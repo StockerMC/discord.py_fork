@@ -264,6 +264,7 @@ class ApplicationCommandOption(Generic[ApplicationCommandOptionChoiceType]):
         The callable for responses to when a user is typing an autocomplete option. This can be an :data:`typing.AsyncIterator`
         that yields choices with types of :class:`str`, :class:`int` or `:class:`float`. This can also be a
         :ref:`coroutine <coroutine>` that returns an iterable of choices with types of :class:`str`, :class:`int` or `:class:`float`.
+        :noindex:
     min_value: Optional[:class:`int`]
         The minimum value permitted for this option.
         This is only valid for options of type :attr:`ApplicationCommandOptionType.integer`.
