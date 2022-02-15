@@ -678,6 +678,7 @@ class TextChannel(discord.abc.Messageable, discord.abc.GuildChannel, Hashable):
         message: Optional[Snowflake] = None,
         auto_archive_duration: ThreadArchiveDuration = MISSING,
         type: Optional[ChannelType] = None,
+        slowmode_delay: Optional[int] = None,
         reason: Optional[str] = None,
     ) -> Thread:
         """|coro|
@@ -704,6 +705,10 @@ class TextChannel(discord.abc.Messageable, discord.abc.GuildChannel, Hashable):
             The type of thread to create. If a ``message`` is passed then this parameter
             is ignored, as a thread created with a message is always a public thread.
             By default this creates a private thread if this is ``None``.
+        slowmode_delay: Optional[:class:`int`]
+            Specifies the slowmode rate limit for user in this channel, in seconds.
+            The maximum value possible is `21600`. By default no slowmode rate limit
+            if this is ``None``.
         reason: :class:`str`
             The reason for creating a new thread. Shows up on the audit log.
 
@@ -729,6 +734,7 @@ class TextChannel(discord.abc.Messageable, discord.abc.GuildChannel, Hashable):
                 name=name,
                 auto_archive_duration=auto_archive_duration or self.default_auto_archive_duration,
                 type=type.value,
+                rate_limit_per_user=slowmode_delay,
                 reason=reason,
             )
         else:
@@ -737,6 +743,7 @@ class TextChannel(discord.abc.Messageable, discord.abc.GuildChannel, Hashable):
                 message.id,
                 name=name,
                 auto_archive_duration=auto_archive_duration or self.default_auto_archive_duration,
+                rate_limit_per_user=slowmode_delay,
                 reason=reason,
             )
 

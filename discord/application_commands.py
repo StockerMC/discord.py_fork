@@ -56,7 +56,7 @@ from .utils import resolve_annotation, MISSING, copy_doc, async_all
 from .member import Member
 from .user import User
 from .role import Role
-from .message import Message
+from .message import Message, Attachment
 from .interactions import Interaction, InteractionResponse, InteractionMessage
 from .object import Object
 from .guild import Guild
@@ -84,7 +84,6 @@ if TYPE_CHECKING:
     from .file import File
     from .ui.view import View
     from .mentions import AllowedMentions
-    from .message import Attachment
 
     T = TypeVar('T')
     Coro = Coroutine[Any, Any, T]
@@ -103,8 +102,9 @@ if TYPE_CHECKING:
         Type[User],
         Type[Role],
         Type[Object],
-        ChannelTypes,
         Type[GuildChannel],
+        Type[Attachment],
+        ChannelTypes,
     ]
     ApplicationCommandKey = Tuple[str, int, Optional['ApplicationCommandKey']]  # name, type, parent
     InteractionChannel = Union[
@@ -156,6 +156,7 @@ OPTION_TYPE_MAPPING: Final[Dict[ValidOptionTypes, ApplicationCommandOptionType]]
     Role: ApplicationCommandOptionType.role,
     Object: ApplicationCommandOptionType.mentionable,
     GuildChannel: ApplicationCommandOptionType.channel,
+    Attachment: ApplicationCommandOptionType.attachment,
 }
 
 CHANNEL_TYPE_MAPPING: Final[Dict[ChannelTypes, ChannelType]] = {
@@ -381,7 +382,7 @@ class ApplicationCommandOption(Generic[ApplicationCommandOptionChoiceType]):
         if self.choices:
             ret['choices'] = [choice.to_dict() for choice in self.choices]
 
-        if self.options is not None:
+        if self.options:
             ret['options'] = [option.to_dict() for option in self.options]
 
         if self.channel_types:
@@ -835,6 +836,9 @@ class ApplicationCommandOptions:
                             value = Object(id=int(value))
                     else:
                         value = obj
+            elif option_type == 11:  # attachment
+                resolved_attachment = resolved_data['attachments'][value]  # type: ignore
+                value = Attachment(data=resolved_attachment, state=state)
 
             self.__application_command_options__[option['name']] = value
 

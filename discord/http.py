@@ -968,11 +968,13 @@ class HTTPClient:
         *,
         name: str,
         auto_archive_duration: threads.ThreadArchiveDuration,
+        rate_limit_per_user: Optional[int],
         reason: Optional[str] = None,
     ) -> Response[threads.Thread]:
         payload = {
             'name': name,
             'auto_archive_duration': auto_archive_duration,
+            'rate_limit_per_user': rate_limit_per_user,
         }
 
         route = Route(
@@ -988,6 +990,7 @@ class HTTPClient:
         auto_archive_duration: threads.ThreadArchiveDuration,
         type: threads.ThreadType,
         invitable: bool = True,
+        rate_limit_per_user: Optional[int],
         reason: Optional[str] = None,
     ) -> Response[threads.Thread]:
         payload = {
@@ -995,6 +998,7 @@ class HTTPClient:
             'auto_archive_duration': auto_archive_duration,
             'type': type,
             'invitable': invitable,
+            'rate_limit_per_user': rate_limit_per_user,
         }
 
         route = Route('POST', '/channels/{channel_id}/threads', channel_id=channel_id)
