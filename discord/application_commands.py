@@ -261,10 +261,6 @@ class ApplicationCommandOption(Generic[ApplicationCommandOptionChoiceType]):
         and the option was not provided by the user.
     channel_types: Set[:class:`ChannelType`]
         The valid channel types for this option. This is only valid for options of type :attr:`ApplicationCommandOptionType.channel`.
-    autocomplete: Callable[[:class:`AutocompleteResponse`], Any]
-        The callable for responses to when a user is typing an autocomplete option. This can be an :data:`typing.AsyncIterator`
-        that yields choices with types of :class:`str`, :class:`int` or `:class:`float`. This can also be a
-        :ref:`coroutine <coroutine>` that returns an iterable of choices with types of :class:`str`, :class:`int` or `:class:`float`.
     min_value: Optional[:class:`int`]
         The minimum value permitted for this option.
         This is only valid for options of type :attr:`ApplicationCommandOptionType.integer`.
@@ -318,21 +314,32 @@ class ApplicationCommandOption(Generic[ApplicationCommandOptionChoiceType]):
     def autocomplete(
         self, func: AutocompleteCallback[SlashCommandT, ApplicationCommandOptionChoiceType]
     ) -> AutocompleteCallback[SlashCommandT, ApplicationCommandOptionChoiceType]:
-        """A decorator that registers a callback for an autocomplete option.
+        """A decorator that registers a callback for an autocomplete option. 
 
-        Functions being registered can be :data:`typing.AsyncIterator` that yields choices of type :class:`str`.
-        This can also be a :ref:`coroutine <coroutine>` that returns an iterable of choices of type :class:`str`.
+        The function being registered can be an :data:`typing.AsyncIterator` that yields choices of the same type as the option
+        (e.g. :class:`int` if the type of the option is :attr:`ApplicationCommandOption.integer`). The choice can also be an
+        :class:`ApplicationCommandOptionChoice` with the appropriate value type. The function can also be a :ref:`coroutine <coroutine>`
+        that returns an iterable of choices.
 
-        If a choice is an :class:`ApplicationCommandOptionChoice`, the value must be of type :class:`str` as well.
-        
+        If a choice is an :class:`ApplicationCommandOptionChoice`, the value must be of type :class:`str`.
+
+        .. note::
+
+            Only options of type :attr:`ApplicationCommandOptionType.string`, :attr:`ApplicationCommandOptionType.integer`,
+            and :attr:`ApplicationCommandOptionType.number` can be decorated with this decorator.
+
         Raises
         -------
         TypeError
-            The function being listened to is not a coroutine function or async generator function.
+            The function being listened to is not a coroutine function or async generator function or the option
+            being decorated is not a string, integer, or number option.
         """
 
         if not inspect.iscoroutinefunction(func) and not inspect.isasyncgenfunction(func):
             raise TypeError('Autocomplete option callbacks must be a coroutine function or async generator function.')
+
+        if self.type not in (ApplicationCommandOptionType.string, ApplicationCommandOptionType.number, ApplicationCommandOptionType.integer):
+            raise TypeError('Only string, integer, or number options can be decorated with the autocomplete method')
 
         self._autocomplete = func
         return func
