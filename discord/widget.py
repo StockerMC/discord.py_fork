@@ -138,9 +138,8 @@ class WidgetMember(BaseUser):
         The member's status.
     nick: Optional[:class:`str`]
         The member's nickname.
-    avatar: Optional[:class:`str`]
+    avatar_url: Optional[:class:`str`]
         The member's avatar hash.
-        :noindex:
     activity: Optional[Union[:class:`BaseActivity`, :class:`Spotify`]]
         The member's activity.
     deafened: Optional[:class:`bool`]
@@ -185,6 +184,7 @@ class WidgetMember(BaseUser):
         self.deafened: Optional[bool] = data.get('deaf', False) or data.get('self_deaf', False)
         self.muted: Optional[bool] = data.get('mute', False) or data.get('self_mute', False)
         self.suppress: Optional[bool] = data.get('suppress', False)
+        self.avatar_url: Optional[str] = data.get('avatar_url')
 
         try:
             game = data['game']
