@@ -261,11 +261,10 @@ class ApplicationCommandOption(Generic[ApplicationCommandOptionChoiceType]):
         and the option was not provided by the user.
     channel_types: Set[:class:`ChannelType`]
         The valid channel types for this option. This is only valid for options of type :attr:`ApplicationCommandOptionType.channel`.
-    autocomplete: Callable[[:class:`AutocompleteResponse`], Any]
+    autocomplete_choices: Callable[[:class:`AutocompleteResponse`], Any]
         The callable for responses to when a user is typing an autocomplete option. This can be an :data:`typing.AsyncIterator`
         that yields choices with types of :class:`str`, :class:`int` or `:class:`float`. This can also be a
         :ref:`coroutine <coroutine>` that returns an iterable of choices with types of :class:`str`, :class:`int` or `:class:`float`.
-        :noindex:
     min_value: Optional[:class:`int`]
         The minimum value permitted for this option.
         This is only valid for options of type :attr:`ApplicationCommandOptionType.integer`.
@@ -285,7 +284,7 @@ class ApplicationCommandOption(Generic[ApplicationCommandOptionChoiceType]):
         'channel_types',
         'min_value',
         'max_value',
-        '_autocomplete',
+        'autocomplete_choices',
     )
     def __init__(
         self,
@@ -311,7 +310,7 @@ class ApplicationCommandOption(Generic[ApplicationCommandOptionChoiceType]):
         self.channel_types: Set[ChannelType] = set(channel_types) if channel_types is not None else set()
         self.min_value: Optional[Union[int, float]] = min_value
         self.max_value: Optional[Union[int, float]] = max_value
-        self._autocomplete: Optional[AutocompleteCallback] = None
+        self.autocomplete_choices: Optional[AutocompleteCallback] = None
 
     def __repr__(self) -> str:
         return f'<{self.__class__.__name__} type={self.type!r} name={self.name!r} description={self.description!r} required={self.required!r}>'
@@ -335,14 +334,14 @@ class ApplicationCommandOption(Generic[ApplicationCommandOptionChoiceType]):
         if not inspect.iscoroutinefunction(func) and not inspect.isasyncgenfunction(func):
             raise TypeError('Autocomplete option callbacks must be a coroutine function or async generator function.')
 
-        self._autocomplete = func
+        self.autocomplete_choices = func
         return func
 
     async def _define_autocomplete_result(self, *, response: AutocompleteResponse[Any], command: SlashCommand) -> None:
-        if self._autocomplete is None:
+        if self.autocomplete_choices is None:
             return
 
-        result = self._autocomplete(command, response)
+        result = self.autocomplete_choices(command, response)
         choices: Iterable[Union[str, ApplicationCommandOptionChoiceTypes]]
         if inspect.isasyncgen(result):
             choices = [choice async for choice in result]
@@ -394,7 +393,7 @@ class ApplicationCommandOption(Generic[ApplicationCommandOptionChoiceType]):
         if self.min_value:
             ret['min_value'] = self.min_value
 
-        if self._autocomplete is not None:
+        if self.autocomplete_choices is not None:
             ret['autocomplete'] = True
 
         return ret
