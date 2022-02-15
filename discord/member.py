@@ -701,7 +701,7 @@ class Member(discord.abc.Messageable, _UserTag):
         +------------------------------+--------------------------------------+
         | voice_channel                | :attr:`Permissions.move_members`     |
         +------------------------------+--------------------------------------+
-        | timed_out_until                | :attr:`Permissions.moderate_members` |
+        | timed_out_until              | :attr:`Permissions.moderate_members` |
         +------------------------------+--------------------------------------+
 
         All parameters are optional.

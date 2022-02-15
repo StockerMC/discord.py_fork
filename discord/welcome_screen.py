@@ -157,8 +157,6 @@ class WelcomeScreenChannel:
     emoji: Optional[Union[:class:`Emoji`, :class:`PartialEmoji`]]
         The emoji for the channel, if one is set. If the emoji is a
         unicode emoji, it will be a :class:`PartialEmoji`.
-    channel: Optional[:class:`TextChannel`]
-        The channel for the welcome channel.
     """
 
     __slots__ = (
