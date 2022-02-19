@@ -244,6 +244,7 @@ class MessageType(Enum):
     application_command = 20
     thread_starter_message = 21
     guild_invite_reminder = 22
+    context_menu_command = 23
 
 
 class VoiceRegion(Enum):
