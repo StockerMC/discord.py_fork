@@ -1,4 +1,4 @@
-from typing import Union
+from typing import List
 from discord.ext import commands
 
 import discord
@@ -13,20 +13,21 @@ class QuestionsBot(commands.Bot):
 
 
 class QuestionsModal(discord.ui.Modal):
-    def __init__(self, user: Union[discord.User, discord.Member]):
-        children = [
+    def __init__(self, user):
+        children: List[discord.ui.Item] = [
             discord.ui.InputText(label='What is your favourite colour?', style=discord.InputTextStyle.short),
             discord.ui.InputText(label='What is your favourite animal?', style=discord.InputTextStyle.short),
             discord.ui.InputText(label='What are your favourite countries?',style=discord.InputTextStyle.paragraph),
         ]
 
-        super().__init__(title=f'{user.display_name}\'s Questionnaire', children=children)
+        super().__init__(title=f'{user}\'s Questionnaire', children=children)
 
     async def callback(self, interaction: discord.Interaction) -> None:
-        message = f'Your favourite colour is **{self.children[0].value}**!\n'
-        message += f'Your favourite animal is **{self.children[1].value}**!\n'
-        favourite_countries = len(self.children[3].value.split("\n"))
+        message = f'Your favourite colour is **{self.children[0].value}**!\n'  # type: ignore
+        message += f'Your favourite animal is **{self.children[1].value}**!\n'  # type: ignore
+        favourite_countries = len(self.children[2].value.split())  # type: ignore
         message += f'You have **{favourite_countries}** favourite countries!'
+
         await interaction.response.send_message(message, ephemeral=True)
 
 class QuestionsView(discord.ui.View):
