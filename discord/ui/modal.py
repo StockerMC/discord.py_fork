@@ -44,6 +44,7 @@ import traceback
 
 from functools import partial
 from itertools import groupby
+from .view import _component_factory, _component_to_item, _walk_all_components
 from ..utils import MISSING
 
 __all__ = (
@@ -51,10 +52,11 @@ __all__ = (
 )
 
 if TYPE_CHECKING:
-    from .input_text import InputText
+    from .item import Item
+    from ..components import Component
     from ..interactions import Interaction
     from ..state import ConnectionState
-    from ..types.interactions import ModalComponentData
+    from ..types.interactions import ModalInteractionData
     from ..types.components import InputText as InputTextPayload
 
 class _ModalWeights:
@@ -62,7 +64,7 @@ class _ModalWeights:
         'weights',
     )
 
-    def __init__(self, children: List[InputText[Any]]):
+    def __init__(self, children: List[Item[Any]]):
         self.weights: List[int] = [0, 0, 0, 0, 0]
 
         key = lambda i: sys.maxsize if i.row is None else i.row
@@ -71,14 +73,14 @@ class _ModalWeights:
             for item in group:
                 self.add_item(item)
 
-    def find_open_space(self, item: InputText[Any]) -> int:
+    def find_open_space(self, item: Item[Any]) -> int:
         for index, weight in enumerate(self.weights):
             if weight + item.width <= 5:
                 return index
 
         raise ValueError('could not find open space for item')
 
-    def add_item(self, item: InputText[Any]) -> None:
+    def add_item(self, item: Item[Any]) -> None:
         if item.row is not None:
             total = self.weights[item.row] + item.width
             if total > 5:
@@ -90,7 +92,7 @@ class _ModalWeights:
             self.weights[index] += item.width
             item._rendered_row = index
 
-    def remove_item(self, item: InputText[Any]) -> None:
+    def remove_item(self, item: Item[Any]) -> None:
         if item._rendered_row is not None:
             self.weights[item._rendered_row] -= item.width
             item._rendered_row = None
@@ -101,14 +103,18 @@ class _ModalWeights:
 class Modal:
     """Represents a UI modal.
 
-    This implements similar functionality to :class:`discord.ui.Modal`.
+    This implements similar functionality to :class:`discord.ui.View`.
+
+    .. note::
+
+        A modal must have at least one child.
 
     Parameters
     ----------
     timeout: Optional[:class:`float`]
         Timeout in seconds from last interaction with the UI before no longer accepting input.
         If ``None`` then there is no timeout.
-    children: List[:class:`discord.ui.InputText`]
+    children: List[:class:`Item`]
         The children of the modal.
         A modal can have a maximum of 5 children.
     title: Optional[:class:`str`]
@@ -126,17 +132,16 @@ class Modal:
         title: str,
         timeout: Optional[float] = 180,
         custom_id: str = MISSING,
-        children: List[InputText[Any]] = MISSING,
+        children: List[Item[Any]] = MISSING,
     ) -> None:
         self.title: str = title
-        self.children: List[InputText[Any]] = children
+        self.children: List[Item[Any]] = children
         self.custom_id: str = os.urandom(16).hex() if custom_id is MISSING else custom_id
         self.timeout: Optional[float] = timeout
         self.id: str = os.urandom(16).hex()
-        self._provided_values: List[ModalComponentData] = []
         self._provided_custom_id: bool = custom_id is not MISSING
         self.__weights = _ModalWeights(self.children)
-        self.__cancel_callback: Optional[Callable[[Modal], None]] = None
+        self.__cancel_callback: Optional[Callable[[], None]] = None
         self.__timeout_expiry: Optional[float] = None
         self.__timeout_task: Optional[asyncio.Task[None]] = None
         loop = asyncio.get_running_loop()
@@ -163,7 +168,7 @@ class Modal:
             await asyncio.sleep(self.__timeout_expiry - now)
 
     def to_components(self) -> List[InputTextPayload]:
-        def key(item: InputText[Any]) -> int:
+        def key(item: Item[Any]) -> int:
             return item._rendered_row or 0
 
         children = sorted(self.children, key=key)
@@ -188,18 +193,18 @@ class Modal:
             return time.monotonic() + self.timeout
         return None
 
-    def add_item(self, item: InputText[Any]) -> None:
+    def add_item(self, item: Item[Any]) -> None:
         """Adds an item to the modal.
 
         Parameters
         -----------
-        item: :class:`discord.ui.InputText`
+        item: :class:`Item`
             The item to add to the modal.
 
         Raises
         --------
         TypeError
-            An :class:`discord.ui.InputText` was not passed.
+            An :class:`Item` was not passed.
         ValueError
             Maximum number of children has been exceeded (5)
             or the row the item is trying to be added to is full.
@@ -208,20 +213,18 @@ class Modal:
         if len(self.children) > 5:
             raise ValueError('maximum number of children exceeded')
 
-        if not isinstance(item, InputText):
-            raise TypeError(f'expected InputText not {item.__class__!r}')
+        if not isinstance(item, Item):
+            raise TypeError(f'expected Item not {item.__class__!r}')
 
         self.__weights.add_item(item)
-
-        item._modal = self
         self.children.append(item)
 
-    def remove_item(self, item: InputText[Any]) -> None:
+    def remove_item(self, item: Item[Any]) -> None:
         """Removes an item from the nidak.
 
         Parameters
         -----------
-        item: :class:`discord.ui.InputText`
+        item: :class:`Item`
             The item to remove from the modal.
         """
 
@@ -237,12 +240,11 @@ class Modal:
         self.children.clear()
         self.__weights.clear()
 
-    # !!!!!!!!!
     async def interaction_check(self, interaction: Interaction[Any]) -> bool:
         """|coro|
 
-        A callback that is called when an interaction happens within the view
-        that checks whether the view should process item callbacks for the interaction.
+        A callback that is called when a modal is submitted that checks whether
+        the modal's callback should be called.
 
         This is useful to override if, for example, you want to ensure that the
         interaction author is a given user.
@@ -262,15 +264,14 @@ class Modal:
         Returns
         ---------
         :class:`bool`
-            Whether the view children's callbacks should be called.
+            Whether the modal's callback should be called.
         """
         return True
 
-    # !!!!!!!!!
     async def on_timeout(self) -> None:
         """|coro|
 
-        A callback that is called when a view's timeout elapses without being explicitly stopped.
+        A callback that is called when a modal's timeout elapses without being explicitly stopped.
         """
         pass
 
@@ -278,7 +279,7 @@ class Modal:
     async def on_error(self, error: Exception, interaction: Interaction[Any]) -> None:
         """|coro|
 
-        A callback that is called when an item's callback or :meth:`interaction_check`
+        A callback that is called when the modal's callback or :meth:`interaction_check`
         fails with an error.
 
         The default implementation prints the traceback to stderr.
@@ -308,8 +309,8 @@ class Modal:
         except Exception as e:
             return await self.on_error(e, interaction)
 
-    def _start_listening_from_store(self, store: ModalStore) -> None:
-        self.__cancel_callback = partial(store.remove_modal)
+    def _start_listening_from_store(self, store: ModalStore, user_id: int) -> None:
+        self.__cancel_callback = partial(store.remove_modal, self, user_id)
         if self.timeout:
             loop = asyncio.get_running_loop()
             if self.__timeout_task is not None:
@@ -345,7 +346,7 @@ class Modal:
             self.__timeout_task = None
 
         if self.__cancel_callback:
-            self.__cancel_callback(self)
+            self.__cancel_callback()
             self.__cancel_callback = None
 
     def is_finished(self) -> bool:
@@ -380,7 +381,15 @@ class Modal:
 
     async def callback(self, interaction: Interaction[Any]) -> None:
         """|coro|
-        
+
+        The callback associated with this UI modal when it is submitted.
+
+        This can be overriden by subclasses.
+
+        Parameters
+        -----------
+        interaction: :class:`.Interaction`
+            The interaction that triggered this UI modal.
         """
         pass
 
@@ -390,6 +399,23 @@ class Modal:
             'custom_id': self.custom_id,
             'components': self.to_components()
         }
+
+    def refresh(self, components: List[Component]) -> None:
+        old_state: Dict[Tuple[int, str], Item] = {
+            (item.type.value, item.custom_id): item  # type: ignore
+            for item in self.children
+        }
+        children: List[Item] = []
+        for component in _walk_all_components(components):
+            try:
+                older = old_state[(component.type.value, component.custom_id)]  # type: ignore
+            except (KeyError, AttributeError):
+                children.append(_component_to_item(component))
+            else:
+                older.refresh_component(component)
+                children.append(older)
+
+        self.children = children
 
 
 class ModalStore:
@@ -407,35 +433,25 @@ class ModalStore:
         for k in to_remove:
             del self._modals[k]
 
-    @property
-    def persistent_modals(self) -> Sequence[Modal]:
-        # fmt: off
-        modals = {
-            modal.id: modal
-            for (_, modal) in self._modals.items()
-            if modal.is_persistent()
-        }
-        # fmt: on
-        return list(modals.values())
-
-    def add_modal(self, modal: Modal) -> None:
+    def add_modal(self, modal: Modal, user_id: int) -> None:
         self.__verify_integrity()
 
-        modal._start_listening_from_store(self)
-        for item in modal.children:
-            if item.is_dispatchable():
-                self._modals[(item.type.value, message_id, item.custom_id)] = (modal, item)  # type: ignore
+        modal._start_listening_from_store(self, user_id)
+        self._modals[(user_id, modal.custom_id)] = modal  # type: ignore
 
-    def remove_modal(self, modal: Modal) -> None:
-        for item in modal.children:
-            if item.is_dispatchable():
-                self._modals.pop((item.type.value, item.custom_id), None)  # type: ignore
+    def remove_modal(self, modal: Modal, user_id: int) -> None:
+        self._modals.pop((user_id, modal.custom_id))  # type: ignore
 
-    def dispatch(self, custom_id: str, interaction: Interaction[Any]) -> None:
+    def dispatch(self, custom_id: str, interaction: Interaction) -> None:
         self.__verify_integrity()
-        key = (interaction.id, custom_id)
+        key = (interaction.user.id, custom_id)  # type: ignore
         modal = self._modals.get(key)
         if modal is None:
             return
 
+        data: ModalInteractionData = interaction.data  # type: ignore
+        components = [component for row in data.get('components', []) for component in row['components']]
+        modal.refresh([_component_factory(d) for d in components])
+
         asyncio.create_task(modal._scheduled_task(interaction), name=f'discord-ui-modal-dispatch-{modal.id}')
+        self.remove_modal(modal, interaction.user.id)  # type: ignore

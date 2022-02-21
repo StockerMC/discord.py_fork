@@ -421,12 +421,8 @@ class ConnectionState:
     def guilds(self) -> List[Guild]:
         return list(self._guilds.values())
 
-    def store_modal(self, modal: Modal) -> None:
-        self._modal_store.add_modal(modal)
-
-    @property
-    def persistent_modals(self) -> Sequence[Modal]:
-        return self._modal_store.persistent_modals
+    def store_modal(self, modal: Modal, user_id: int) -> None:
+        self._modal_store.add_modal(modal, user_id)
 
     def _get_guild(self, guild_id: Optional[int]) -> Optional[Guild]:
         if guild_id is None:
@@ -877,6 +873,9 @@ class ConnectionState:
                 asyncio.create_task(command_option._define_autocomplete_result(response=response, command=used_command))  # type: ignore
 
                 break
+        elif data['type'] == 5:  # modal submit
+            custom_id = interaction.data['custom_id']  # type: ignore
+            self._modal_store.dispatch(custom_id, interaction)
 
         self.dispatch('interaction', interaction)
 

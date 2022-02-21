@@ -873,14 +873,31 @@ class InteractionResponse:
         self._responded = True
 
     async def send_modal(self, modal: Modal) -> None:
-        # TODO: note that you can't respond to modal submit interactions with modals
         """|coro|
-        
+
+        Responds to this interaction with a modal.
+
+        .. note::
+
+            You cannot respond with a modal to interactions with type
+            :attr:`InteractionType.modal_submit`.
+
+        Parameters
+        ----------
+        modal: :class:`discord.ui.Modal`
+            The modal to respond to the interaction with.
+
+        Raises
+        -------
+        HTTPException
+            Sending the message failed.
+        InteractionResponded
+            This interaction has already been responded to before.
         """
         if self._responded:
             raise InteractionResponded(self._parent)
 
-        # TODO: remove the need for this import within the function
+        # circular import
         from .ui.modal import Modal
 
         if not isinstance(modal, Modal):
@@ -903,7 +920,7 @@ class InteractionResponse:
         )
 
         if not modal.is_finished():
-            state.store_modal(modal)
+            state.store_modal(modal, parent.user.id)  # type: ignore
 
         self._responded = True
 

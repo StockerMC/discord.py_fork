@@ -82,6 +82,7 @@ from .ui.view import View
 from .stage_instance import StageInstance
 from .threads import Thread
 from .sticker import GuildSticker, StandardSticker, StickerPack, _sticker_factory
+from .ui.modal import Modal
 from .application_commands import (
     SlashCommand,
     MessageCommand,
@@ -104,7 +105,6 @@ if TYPE_CHECKING:
     from .member import Member
     from .voice_client import VoiceProtocol
     from .cog import Cog
-    from .ui.modal import Modal
 
     T = TypeVar('T')
     P = ParamSpec('P')
@@ -1769,14 +1769,6 @@ class Client:
         .. versionadded:: 2.0
         """
         return self._connection.persistent_views
-
-    @property
-    def persistent_modals(self) -> Sequence[Modal]:
-        """Sequence[:class:`.Modal`]: A sequence of persistent modals added to the client.
-        
-        .. versionadded:: 2.0
-        """
-        return self._connection.persistent_modals
 
     async def is_owner(self, user: Snowflake) -> bool:
         """|coro|

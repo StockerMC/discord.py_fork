@@ -24,8 +24,11 @@ DEALINGS IN THE SOFTWARE.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, TypeVar, Tuple, Optional, Type
+from typing import TYPE_CHECKING, Any, TypeVar, Tuple, Optional, Type
 import os
+
+from discord.interactions import Interaction
+from discord.types.interactions import ModalInteractionData
 
 from .item import Item
 from ..enums import ComponentType, InputTextStyle
@@ -36,7 +39,6 @@ __all__ = (
 )
 
 if TYPE_CHECKING:
-    from .modal import Modal
     from .view import View
 
     from ..types.components import (
@@ -63,10 +65,12 @@ class InputText(Item[V]):
 
     Parameters
     ------------
-    label: :class:`str`
-        The label of the text input.
+    label: Optional[:class:`str`]
+        The label of the text input. This is ``None`` if the text input
+        was received from a modal submit interaction.
     style: :class:`discord.InputTextStyle`
-        The style of the text input.
+        The style of the text input. This will have an unknown enumeration value
+        if the text input was received from a modal submit interaction.
     custom_id: Optional[:class:`str`]
         The ID of the text input that gets received during an interaction.
     placeholder: Optional[:class:`str`]
@@ -113,7 +117,6 @@ class InputText(Item[V]):
         row: Optional[int] = None,
     ):
         super().__init__()
-        self._modal: Optional[Modal] = None
         self._received_value: Optional[str] = None
         self._provided_custom_id = custom_id is not None
         if custom_id is None:
@@ -145,7 +148,7 @@ class InputText(Item[V]):
         self._underlying.style = value
 
     @property
-    def label(self) -> str:
+    def label(self) -> Optional[str]:
         """:class:`str`: The label of the text input."""
         return self._underlying.label
 
@@ -213,8 +216,8 @@ class InputText(Item[V]):
 
     @property
     def value(self) -> Optional[str]:
-        """Optional[:class:`str`]: The received text from a user or the pre-filled text of the text input."""
-        return self._received_value or self._underlying.value
+        """Optional[:class:`str`]: The pre-filled text of the text input."""
+        return self._underlying.value
 
     @value.setter
     def value(self, value: Optional[str]) -> None:
@@ -223,11 +226,16 @@ class InputText(Item[V]):
 
         self._underlying.value = value
 
+    @property
+    def received_value(self) -> Optional[str]:
+        """Optional[:class:`str`]: The value entered by the user, if any."""
+        return self._received_value
+
     @classmethod
     def from_component(cls: Type[IT], component: InputTextComponent) -> IT:
         return cls(
             style=component.style,
-            label=component.label,
+            label=component.label,  # type: ignore
             row=None,
         )
 
@@ -244,11 +252,7 @@ class InputText(Item[V]):
 
     def refresh_component(self, component: InputTextComponent) -> None:
         self._underlying = component
+        self._received_value = component.value
 
-    #         data: ModalInteractionData = interaction.data  # type: ignore
-        # for component in data.get('components', []):
-        #     if component['type'] == 1:
-        #         for sub_component in component.get('components', []):
-        #             if sub_component['type'] == 4:  # text input
-        #                 # refactor this (style will be an unknown enum)
-        #                 self._provided_values.append(sub_component)
+    def refresh_state(self, component: InputTextPayload) -> None:
+        self._received_value = component.get('value')
