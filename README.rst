@@ -16,7 +16,9 @@ This is a fork of discord.py
 
 Please read the `gist <https://gist.github.com/Rapptz/4a2f62751b9600a31a0d3c78100287f1>`_ for why the original was discontinued.
 
-A list of changes made to the fork from the original are in the `changelog <https://github.com/StockerMC/discord.py/blob/master/CHANGELOG.rst>`_
+A list of changes made to the fork from the original are in the `changelog <CHANGELOG.rst>`_.
+
+Application commands are documented in `<application_commands.md>`_.
 
 Key Features
 -------------
