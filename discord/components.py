@@ -387,9 +387,8 @@ class InputText(Component):
 
     Attributes
     ------------
-    label: Optional[:class:`str`]
-        The label of the text input. This is ``None`` if the text input
-        was received from a modal submit interaction.
+    label: :class:`str`
+        The label of the text input.
     style: :class:`discord.InputTextStyle`
         The style of the text input. This will have an unknown enumeration value
         if the text input was received from a modal submit interaction.
@@ -401,7 +400,7 @@ class InputText(Component):
     required: :class:`bool`
         Whether the text input is required.
     value: Optional[:class:`str`]
-        ...
+        The pre-filled text of the text input.
     min_length: Optional[:class:`int`]
         The minimum length of the text input.
     max_length: Optional[:class:`int`]
@@ -422,7 +421,7 @@ class InputText(Component):
 
     def __init__(self, data: InputTextPayload) -> None:
         self.type: ComponentType = ComponentType.input_text
-        self.label: Optional[str] = data.get('label')
+        self.label: str = data.get('label')  # type: ignore
         self.style: InputTextStyle = try_enum(InputTextStyle, data.get('style'))
         self.custom_id: str = data['custom_id']
         self.placeholder: Optional[str] = data.get('placeholder')

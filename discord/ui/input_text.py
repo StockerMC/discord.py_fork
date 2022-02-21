@@ -24,11 +24,8 @@ DEALINGS IN THE SOFTWARE.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, TypeVar, Tuple, Optional, Type
+from typing import TYPE_CHECKING, TypeVar, Tuple, Optional, Type
 import os
-
-from discord.interactions import Interaction
-from discord.types.interactions import ModalInteractionData
 
 from .item import Item
 from ..enums import ComponentType, InputTextStyle
@@ -117,7 +114,7 @@ class InputText(Item[V]):
         row: Optional[int] = None,
     ):
         super().__init__()
-        self._received_value: Optional[str] = None
+        self._received_value: str = ''
         self._provided_custom_id = custom_id is not None
         if custom_id is None:
             custom_id = os.urandom(16).hex()
@@ -227,8 +224,9 @@ class InputText(Item[V]):
         self._underlying.value = value
 
     @property
-    def received_value(self) -> Optional[str]:
-        """Optional[:class:`str`]: The value entered by the user, if any."""
+    def received_value(self) -> str:
+        """:class:`str`: The value entered by the user. This is an empty string if the
+        user did not provide a value for the text input."""
         return self._received_value
 
     @classmethod
@@ -252,7 +250,4 @@ class InputText(Item[V]):
 
     def refresh_component(self, component: InputTextComponent) -> None:
         self._underlying = component
-        self._received_value = component.value
-
-    def refresh_state(self, component: InputTextPayload) -> None:
-        self._received_value = component.get('value')
+        self._received_value = component.value  # type: ignore
