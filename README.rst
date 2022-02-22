@@ -121,10 +121,6 @@ Slash Command Example
             print(f'Logged in as {self.user} (ID: {self.user.id})')
             print('------')
 
-    class AuthorDefault(discord.ApplicationCommandOptionDefault):
-        async def default(self, response: discord.SlashCommandResponse):
-            return response.user
-
     client = MyClient()
 
     # setting `guild_ids` in development is better when possible because
@@ -135,7 +131,11 @@ Slash Command Example
 
         # the `required` kwarg keyword argument can also be set to `False`
         # instead of typehinting the argument as optional
-        user: typing.Optional[discord.User] = discord.application_command_option(description='The user to get information about.', default=AuthorDefault)
+        user: typing.Optional[discord.User] = discord.application_command_option(
+            description='The user to get information about.',
+            # the default callback can also be a coroutine function
+            default=lambda response: response.user,
+        )
 
         async def callback(self, response: discord.SlashCommandResponse):
             avatar = response.options.user.display_avatar.url
