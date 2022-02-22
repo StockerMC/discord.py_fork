@@ -25,6 +25,7 @@ During testing, it is recommended to set specific guilds that commands will be u
 To add a command to the bot, use the ``@client.application_command`` decorator on the class or use the ``client.add_application_command`` method. The ``client.add_application_command`` should be used if arguments need to be passed to the class.
 
 The ``Client.register_application_commands_at_startup`` keyword argument is ``True`` by default. This calls the ``Client.register_application_commands_at_startup`` method when the bot starts up.
+- It is recommended that you set this to ``False`` when you have not modified any commands.
 
 The ``Client.register_application_commands_at_startup`` method overrides ALL commands that have been uploaded with commands added to the bot.
 - This method does not do anything if no commands were added to the bot.
