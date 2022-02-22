@@ -85,9 +85,21 @@ class Animal(discord.SlashCommand):
 
 ### Default Values
 
-Default values can be set for optional options. To set a default value for an option, set the ``default`` keyword argument to the literal default value, or a coroutine function taking one argument, ``SlashCommandResponse``, that returns the default value. For example:
+Default values can be set for optional options. To set a default value for an option, set the ``default`` keyword argument to the default value itself or a callable taking one argument, ``SlashCommandResponse``, that returns the default value. The callable can be a ergular function or coroutine function. For example:
 ```python
+class Avatar(discord.SlashCommand):
+    """Get the avatar of the provided user or yourself"""
 
+    # the `required` kwarg keyword argument can also be set to `False`
+    # instead of typehinting the argument as optional
+    user: typing.Optional[discord.User] = discord.application_command_option(
+        description='The user to get the avatar from',
+        default=lambda response: response.user
+    )
+
+    async def callback(self, response: discord.SlashCommandResponse):
+        avatar = response.options.user.display_avatar.url
+        await response.send_message(avatar, ephemeral=True)
 ```
 
 ### Channel Types
