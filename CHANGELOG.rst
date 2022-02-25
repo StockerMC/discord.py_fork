@@ -175,7 +175,9 @@ February 24, 2022
 ^^^^^^^^^^^^^^^^
 
 Implemented modal interactions:
+
 - Added the following classes:
+
   * ``discord.InputText`` (component)
   * ``discord.ui.InputText`` (item)
   * ``discord.ui.Modal``
