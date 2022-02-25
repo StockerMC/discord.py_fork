@@ -45,7 +45,7 @@ BF = TypeVar('BF', bound='BaseFlags')
 
 
 class flag_value:
-    def __init__(self, func: Callable[[Any], int]):
+    def __init__(self, func: Callable[[Any], int]) -> None:
         self.flag: int = func(None)
         self.__doc__: Optional[str] = func.__doc__
 
@@ -116,10 +116,10 @@ class BaseFlags:
         self.value = value
         return self
 
-    def __eq__(self, other: Any) -> bool:
+    def __eq__(self, other: object) -> bool:
         return isinstance(other, self.__class__) and self.value == other.value
 
-    def __ne__(self, other: Any) -> bool:
+    def __ne__(self, other: object) -> bool:
         return not self.__eq__(other)
 
     def __hash__(self) -> int:
@@ -306,6 +306,13 @@ class MessageFlags(BaseFlags):
         """
         return 128
 
+    @flag_value
+    def failed_to_mention_some_roles_in_thread(self):
+        """:class:`bool`: Returns ``True`` if the source message failed to mention some roles and add their members to the thread.
+        
+        .. versionadded:: 2.0
+        """
+        return 256
 
 @fill_with_flags()
 class PublicUserFlags(BaseFlags):
@@ -429,6 +436,14 @@ class PublicUserFlags(BaseFlags):
         .. versionadded:: 2.0
         """
         return UserFlags.bot_http_interactions.value
+    
+    @flag_value
+    def spammer(self):
+        """:class:`bool`: Returns ``True`` if the user is flagged by discord as a spammer.
+
+        .. versionadded:: 2.0
+        """
+        return UserFlags.spammer.value
 
     def all(self) -> List[UserFlags]:
         """List[:class:`UserFlags`]: Returns all public flags the user has."""
@@ -973,7 +988,7 @@ class MemberCacheFlags(BaseFlags):
         return self
 
     @property
-    def _empty(self):
+    def _empty(self) -> bool:
         return self.value == self.DEFAULT_VALUE
 
     @flag_value
@@ -1021,7 +1036,7 @@ class MemberCacheFlags(BaseFlags):
 
         return self
 
-    def _verify_intents(self, intents: Intents):
+    def _verify_intents(self, intents: Intents) -> None:
         if self.voice and not intents.voice_states:
             raise ValueError('MemberCacheFlags.voice requires Intents.voice_states')
 
@@ -1029,7 +1044,7 @@ class MemberCacheFlags(BaseFlags):
             raise ValueError('MemberCacheFlags.joined requires Intents.members')
 
     @property
-    def _voice_only(self):
+    def _voice_only(self) -> bool:
         return self.value == 1
 
 

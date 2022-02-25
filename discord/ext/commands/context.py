@@ -34,7 +34,7 @@ import discord.utils
 from discord.message import Message
 
 if TYPE_CHECKING:
-    from typing_extensions import ParamSpec, Self
+    from typing_extensions import ParamSpec
 
     from discord.abc import MessageableChannel
     from discord.guild import Guild
@@ -121,7 +121,8 @@ class Context(discord.abc.Messageable, Generic[BotT]):
         or invoked.
     """
 
-    def __init__(self,
+    def __init__(
+        self,
         *,
         message: Message,
         bot: BotT,
@@ -136,7 +137,7 @@ class Context(discord.abc.Messageable, Generic[BotT]):
         subcommand_passed: Optional[str] = None,
         command_failed: bool = False,
         current_parameter: Optional[inspect.Parameter] = None,
-    ):
+    ) -> None:
         self.message: Message = message
         self.bot: BotT = bot
         self.args: List[Any] = args or []

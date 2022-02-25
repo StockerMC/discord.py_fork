@@ -2768,7 +2768,7 @@ of :class:`enum.Enum`.
 
         The guild may contain NSFW content.
 
-..class:: ApplicationCommandType
+.. class:: ApplicationCommandType
 
     Represents the type of a Discord application command.
 
@@ -2786,7 +2786,7 @@ of :class:`enum.Enum`.
 
         A message command.
 
-..class:: ApplicationCommandOptionType
+.. class:: ApplicationCommandOptionType
 
     Represents the type of an option of a Discord application command.
 
@@ -2833,7 +2833,7 @@ of :class:`enum.Enum`.
 
         Any float or integer between -2^53 and 2^53.
 
-..class:: Locale
+.. class:: Locale
 
     Specifies the selected locale of a user or guild.
 
@@ -2958,6 +2958,20 @@ of :class:`enum.Enum`.
     .. attribute:: vi
 
         The Vietnamese locale.
+
+.. class:: MFALevel
+
+    Represents the guild's two factor authorisation level.
+
+    .. versionadded:: 2.0
+
+    .. attribute:: none
+
+        The guild does not require 2FA for their administrative members.
+
+    .. attribute:: elevated
+
+        The guild requires 2FA for their administrative members.
 
 Async Iterator
 ----------------

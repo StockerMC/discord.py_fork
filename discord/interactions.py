@@ -25,12 +25,12 @@ DEALINGS IN THE SOFTWARE.
 """
 
 from __future__ import annotations
-from typing import Any, Dict, List, Optional, TYPE_CHECKING, Tuple, Union, TypeVar, Generic, overload
+from typing import Any, Dict, List, Optional, TYPE_CHECKING, Union, TypeVar, Generic, overload
 import asyncio
 
 from . import utils
 from .enums import try_enum, InteractionType, InteractionResponseType, Locale
-from .errors import InteractionResponded, HTTPException, ClientException, InvalidArgument
+from .errors import InteractionResponded, HTTPException, ClientException
 from .channel import PartialMessageable, ChannelType
 
 from .user import User
@@ -120,7 +120,7 @@ class Interaction(Generic[ClientT]):
         The client of the executed interaction.
     """
 
-    __slots__: Tuple[str, ...] = (
+    __slots__ = (
         'id',
         'type',
         'guild_id',
@@ -454,12 +454,12 @@ class InteractionResponse:
     .. versionadded:: 2.0
     """
 
-    __slots__: Tuple[str, ...] = (
+    __slots__ = (
         '_responded',
         '_parent',
     )
 
-    def __init__(self, parent: Interaction[Any]):
+    def __init__(self, parent: Interaction[Any]) -> None:
         self._parent: Interaction[Any] = parent
         self._responded: bool = False
 
@@ -928,7 +928,7 @@ class InteractionResponse:
 class _InteractionMessageState:
     __slots__ = ('_parent', '_interaction')
 
-    def __init__(self, interaction: Interaction[Any], parent: ConnectionState):
+    def __init__(self, interaction: Interaction[Any], parent: ConnectionState) -> None:
         self._interaction: Interaction[Any] = interaction
         self._parent: ConnectionState = parent
 

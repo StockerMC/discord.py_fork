@@ -72,7 +72,7 @@ class Component:
         The type of component.
     """
 
-    __slots__: Tuple[str, ...] = ('type',)
+    __slots__ = ('type',)
 
     __repr_info__: ClassVar[Tuple[str, ...]]
     type: ComponentType
@@ -114,7 +114,7 @@ class ActionRow(Component):
         The children components that this holds, if any.
     """
 
-    __slots__: Tuple[str, ...] = ('children',)
+    __slots__ = ('children',)
 
     __repr_info__: ClassVar[Tuple[str, ...]] = __slots__
 
@@ -158,7 +158,7 @@ class Button(Component):
         The emoji of the button, if available.
     """
 
-    __slots__: Tuple[str, ...] = (
+    __slots__ = (
         'style',
         'custom_id',
         'url',
@@ -232,7 +232,7 @@ class SelectMenu(Component):
         Whether the select is disabled or not.
     """
 
-    __slots__: Tuple[str, ...] = (
+    __slots__ = (
         'custom_id',
         'placeholder',
         'min_values',
@@ -293,7 +293,7 @@ class SelectOption:
         Whether this option is selected by default.
     """
 
-    __slots__: Tuple[str, ...] = (
+    __slots__ = (
         'label',
         'value',
         'description',

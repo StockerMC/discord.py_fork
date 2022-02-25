@@ -57,7 +57,7 @@ class ExponentialBackoff(Generic[T]):
         number in between may be returned.
     """
 
-    def __init__(self, base: int = 1, *, integral: T = False):
+    def __init__(self, base: int = 1, *, integral: T = False) -> None:
         self._base: int = base
 
         self._exp: int = 0
@@ -69,7 +69,7 @@ class ExponentialBackoff(Generic[T]):
         rand = random.Random()
         rand.seed()
 
-        self._randfunc: Callable[..., Union[int, float]] = rand.randrange if integral else rand.uniform   # type: ignore
+        self._randfunc: Callable[..., Union[int, float]] = rand.randrange if integral else rand.uniform
 
     @overload
     def delay(self: ExponentialBackoff[Literal[False]]) -> float:

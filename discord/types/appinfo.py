@@ -30,7 +30,16 @@ from .user import User
 from .team import Team
 from .snowflake import Snowflake
 
-class BaseAppInfo(TypedDict):
+
+class _BaseAppInfoOptional(TypedDict, total=False):
+    flags: int
+    terms_of_service_url: str
+    privacy_policy_url: str
+    hook: bool
+    max_participants: int
+
+
+class BaseAppInfo(_BaseAppInfoOptional):
     id: Snowflake
     name: str
     verify_key: str
@@ -38,15 +47,13 @@ class BaseAppInfo(TypedDict):
     summary: str
     description: str
 
+
 class _AppInfoOptional(TypedDict, total=False):
     team: Team
     guild_id: Snowflake
     primary_sku_id: Snowflake
     slug: str
-    terms_of_service_url: str
-    privacy_policy_url: str
-    hook: bool
-    max_participants: int
+
 
 class AppInfo(BaseAppInfo, _AppInfoOptional):
     rpc_origins: List[str]
@@ -54,14 +61,11 @@ class AppInfo(BaseAppInfo, _AppInfoOptional):
     bot_public: bool
     bot_require_code_grant: bool
 
+
 class _PartialAppInfoOptional(TypedDict, total=False):
     rpc_origins: List[str]
     cover_image: str
-    hook: bool
-    terms_of_service_url: str
-    privacy_policy_url: str
-    max_participants: int
-    flags: int
+
 
 class PartialAppInfo(_PartialAppInfoOptional, BaseAppInfo):
     pass

@@ -90,9 +90,9 @@ if TYPE_CHECKING:
     from .types.snowflake import SnowflakeList
 
 
-async def _single_delete_strategy(messages: Iterable[Message]):
+async def _single_delete_strategy(messages: Iterable[Message], reason: Optional[str]) -> None:
     for m in messages:
-        await m.delete()
+        await m.delete(reason=reason)
 
 
 class TextChannel(discord.abc.Messageable, discord.abc.GuildChannel, Hashable):
@@ -167,7 +167,7 @@ class TextChannel(discord.abc.Messageable, discord.abc.GuildChannel, Hashable):
         'default_auto_archive_duration',
     )
 
-    def __init__(self, *, state: ConnectionState, guild: Guild, data: TextChannelPayload):
+    def __init__(self, *, state: ConnectionState, guild: Guild, data: TextChannelPayload) -> None:
         self._state: ConnectionState = state
         self.id: int = int(data['id'])
         self._type: int = data['type']
@@ -360,7 +360,7 @@ class TextChannel(discord.abc.Messageable, discord.abc.GuildChannel, Hashable):
             {'topic': self.topic, 'nsfw': self.nsfw, 'rate_limit_per_user': self.slowmode_delay}, name=name, reason=reason
         )
 
-    async def delete_messages(self, messages: Iterable[Snowflake]) -> None:
+    async def delete_messages(self, messages: Iterable[Snowflake], reason: Optional[str] = None) -> None:
         """|coro|
 
         Deletes a list of messages. This is similar to :meth:`Message.delete`
@@ -380,6 +380,8 @@ class TextChannel(discord.abc.Messageable, discord.abc.GuildChannel, Hashable):
         -----------
         messages: Iterable[:class:`abc.Snowflake`]
             An iterable of messages denoting which ones to bulk delete.
+        reason: Optional[:class:`str`]
+            The reason for deleting these messages. Shows up on the audit log.
 
         Raises
         ------
@@ -400,14 +402,14 @@ class TextChannel(discord.abc.Messageable, discord.abc.GuildChannel, Hashable):
 
         if len(messages) == 1:
             message_id: int = messages[0].id
-            await self._state.http.delete_message(self.id, message_id)
+            await self._state.http.delete_message(self.id, message_id, reason=reason)
             return
 
         if len(messages) > 100:
             raise ClientException('Can only bulk delete messages up to 100 messages')
 
         message_ids: SnowflakeList = [m.id for m in messages]
-        await self._state.http.delete_messages(self.id, message_ids)
+        await self._state.http.delete_messages(self.id, message_ids, reason=reason)
 
     async def purge(
         self,
@@ -419,6 +421,7 @@ class TextChannel(discord.abc.Messageable, discord.abc.GuildChannel, Hashable):
         around: Optional[SnowflakeTime] = None,
         oldest_first: Optional[bool] = False,
         bulk: bool = True,
+        reason: Optional[str] = None,
     ) -> List[Message]:
         """|coro|
 
@@ -462,6 +465,8 @@ class TextChannel(discord.abc.Messageable, discord.abc.GuildChannel, Hashable):
             If ``True``, use bulk delete. Setting this to ``False`` is useful for mass-deleting
             a bot's own messages without :attr:`Permissions.manage_messages`. When ``True``, will
             fall back to single delete if messages are older than two weeks.
+        reason: Optional[:class:`str`]
+            The reason for deleting the messages. Shows up on the audit log.
 
         Raises
         -------
@@ -489,7 +494,7 @@ class TextChannel(discord.abc.Messageable, discord.abc.GuildChannel, Hashable):
         async for message in iterator:
             if count == 100:
                 to_delete = ret[-100:]
-                await strategy(to_delete)
+                await strategy(to_delete, reason=reason)
                 count = 0
                 await asyncio.sleep(1)
 
@@ -502,7 +507,7 @@ class TextChannel(discord.abc.Messageable, discord.abc.GuildChannel, Hashable):
                     await ret[-1].delete()
                 elif count >= 2:
                     to_delete = ret[-count:]
-                    await strategy(to_delete)
+                    await strategy(to_delete, reason=reason)
 
                 count = 0
                 strategy = _single_delete_strategy
@@ -514,10 +519,10 @@ class TextChannel(discord.abc.Messageable, discord.abc.GuildChannel, Hashable):
         if count >= 2:
             # more than 2 messages -> bulk delete
             to_delete = ret[-count:]
-            await strategy(to_delete)
+            await strategy(to_delete, reason=reason)
         elif count == 1:
             # delete a single message
-            await ret[-1].delete()
+            await ret[-1].delete(reason=reason)
 
         return ret
 
@@ -678,6 +683,7 @@ class TextChannel(discord.abc.Messageable, discord.abc.GuildChannel, Hashable):
         message: Optional[Snowflake] = None,
         auto_archive_duration: ThreadArchiveDuration = MISSING,
         type: Optional[ChannelType] = None,
+        slowmode_delay: Optional[int] = None,
         reason: Optional[str] = None,
     ) -> Thread:
         """|coro|
@@ -704,6 +710,10 @@ class TextChannel(discord.abc.Messageable, discord.abc.GuildChannel, Hashable):
             The type of thread to create. If a ``message`` is passed then this parameter
             is ignored, as a thread created with a message is always a public thread.
             By default this creates a private thread if this is ``None``.
+        slowmode_delay: Optional[:class:`int`]
+            Specifies the slowmode rate limit for user in this channel, in seconds.
+            The maximum value possible is `21600`. By default no slowmode rate limit
+            if this is ``None``.
         reason: :class:`str`
             The reason for creating a new thread. Shows up on the audit log.
 
@@ -729,6 +739,7 @@ class TextChannel(discord.abc.Messageable, discord.abc.GuildChannel, Hashable):
                 name=name,
                 auto_archive_duration=auto_archive_duration or self.default_auto_archive_duration,
                 type=type.value,
+                rate_limit_per_user=slowmode_delay,
                 reason=reason,
             )
         else:
@@ -737,6 +748,7 @@ class TextChannel(discord.abc.Messageable, discord.abc.GuildChannel, Hashable):
                 message.id,
                 name=name,
                 auto_archive_duration=auto_archive_duration or self.default_auto_archive_duration,
+                rate_limit_per_user=slowmode_delay,
                 reason=reason,
             )
 
@@ -801,7 +813,7 @@ class VocalGuildChannel(discord.abc.Connectable, discord.abc.GuildChannel, Hasha
         'video_quality_mode',
     )
 
-    def __init__(self, *, state: ConnectionState, guild: Guild, data: Union[VoiceChannelPayload, StageChannelPayload]):
+    def __init__(self, *, state: ConnectionState, guild: Guild, data: Union[VoiceChannelPayload, StageChannelPayload]) -> None:
         self._state: ConnectionState = state
         self.id: int = int(data['id'])
         self._update(guild, data)
@@ -820,8 +832,8 @@ class VocalGuildChannel(discord.abc.Connectable, discord.abc.GuildChannel, Hasha
         self.video_quality_mode: VideoQualityMode = try_enum(VideoQualityMode, data.get('video_quality_mode', 1))
         self.category_id: Optional[int] = utils._get_as_snowflake(data, 'parent_id')
         self.position: int = data['position']
-        self.bitrate: int = data.get('bitrate')
-        self.user_limit: int = data.get('user_limit')
+        self.bitrate: int = data['bitrate']
+        self.user_limit: int = data['user_limit']
         self._fill_overwrites(data)
 
     @property
@@ -1353,7 +1365,7 @@ class CategoryChannel(discord.abc.GuildChannel, Hashable):
 
     __slots__ = ('name', 'id', 'guild', 'nsfw', '_state', 'position', '_overwrites', 'category_id')
 
-    def __init__(self, *, state: ConnectionState, guild: Guild, data: CategoryChannelPayload):
+    def __init__(self, *, state: ConnectionState, guild: Guild, data: CategoryChannelPayload) -> None:
         self._state: ConnectionState = state
         self.id: int = int(data['id'])
         self._update(guild, data)
@@ -1585,7 +1597,7 @@ class StoreChannel(discord.abc.GuildChannel, Hashable):
         '_overwrites',
     )
 
-    def __init__(self, *, state: ConnectionState, guild: Guild, data: StoreChannelPayload):
+    def __init__(self, *, state: ConnectionState, guild: Guild, data: StoreChannelPayload) -> None:
         self._state: ConnectionState = state
         self.id: int = int(data['id'])
         self._update(guild, data)
@@ -1735,7 +1747,7 @@ class DMChannel(discord.abc.Messageable, Hashable):
 
     __slots__ = ('id', 'recipient', 'me', '_state')
 
-    def __init__(self, *, me: ClientUser, state: ConnectionState, data: DMChannelPayload):
+    def __init__(self, *, me: ClientUser, state: ConnectionState, data: DMChannelPayload) -> None:
         self._state: ConnectionState = state
         self.recipient: Optional[User] = state.store_user(data['recipients'][0])
         self.me: ClientUser = me
@@ -1867,7 +1879,7 @@ class GroupChannel(discord.abc.Messageable, Hashable):
 
     __slots__ = ('id', 'recipients', 'owner_id', 'owner', '_icon', 'name', 'me', '_state')
 
-    def __init__(self, *, me: ClientUser, state: ConnectionState, data: GroupChannelPayload):
+    def __init__(self, *, me: ClientUser, state: ConnectionState, data: GroupChannelPayload) -> None:
         self._state: ConnectionState = state
         self.id: int = int(data['id'])
         self.me: ClientUser = me
@@ -2001,7 +2013,7 @@ class PartialMessageable(discord.abc.Messageable, Hashable):
         The channel type associated with this partial messageable, if given.
     """
 
-    def __init__(self, state: Union[ConnectionState, _WebhookState], id: int, type: Optional[ChannelType] = None):
+    def __init__(self, state: Union[ConnectionState, _WebhookState], id: int, type: Optional[ChannelType] = None) -> None:
         self._state: Union[ConnectionState, _WebhookState] = state
         self._channel: Object = Object(id=id)
         self.id: int = id

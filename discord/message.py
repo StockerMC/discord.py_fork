@@ -263,14 +263,14 @@ class Attachment(Hashable):
         '_http',
     )
 
-    def __init__(self, *, data: AttachmentPayload, state: ConnectionState):
+    def __init__(self, *, data: AttachmentPayload, state: ConnectionState) -> None:
         self.id: int = int(data['id'])
         self.size: int = data['size']
         self.height: Optional[int] = data.get('height')
         self.width: Optional[int] = data.get('width')
         self.filename: str = data['filename']
-        self.url: str = data.get('url')
-        self.proxy_url: str = data.get('proxy_url')
+        self.url: str = data['url']
+        self.proxy_url: str = data['proxy_url']
         self._http = state.http
         self.content_type: Optional[str] = data.get('content_type')
         self.ephemeral: bool = data.get('ephemeral', False)
@@ -443,7 +443,7 @@ class DeletedReferencedMessage:
 
     __slots__ = ('_parent',)
 
-    def __init__(self, parent: MessageReference):
+    def __init__(self, parent: MessageReference) -> None:
         self._parent: MessageReference = parent
 
     def __repr__(self) -> str:
@@ -502,7 +502,14 @@ class MessageReference:
 
     __slots__ = ('message_id', 'channel_id', 'guild_id', 'fail_if_not_exists', 'resolved', '_state')
 
-    def __init__(self, *, message_id: int, channel_id: int, guild_id: Optional[int] = None, fail_if_not_exists: bool = True):
+    def __init__(
+        self,
+        *,
+        message_id: int,
+        channel_id: int,
+        guild_id: Optional[int] = None,
+        fail_if_not_exists: bool = True,
+    ) -> None:
         self._state: Optional[ConnectionState] = None
         self.resolved: Optional[Union[Message, DeletedReferencedMessage]] = None
         self.message_id: Optional[int] = message_id
@@ -1102,8 +1109,9 @@ class Message(Hashable):
         return self.type not in (
             MessageType.default,
             MessageType.reply,
-            MessageType.application_command,
+            MessageType.chat_input_command,
             MessageType.thread_starter_message,
+            MessageType.context_menu_command,
         )
 
     @utils.cached_slot_property('_cs_system_content')
@@ -1220,7 +1228,7 @@ class Message(Hashable):
         if self.type is MessageType.guild_invite_reminder:
             return 'Wondering who to invite?\nStart by inviting anyone who can help you build the server!'
 
-    async def delete(self, *, delay: Optional[float] = None) -> None:
+    async def delete(self, *, delay: Optional[float] = None, reason: Optional[str] = None) -> None:
         """|coro|
 
         Deletes the message.
@@ -1237,6 +1245,8 @@ class Message(Hashable):
         delay: Optional[:class:`float`]
             If provided, the number of seconds to wait in the background
             before deleting the message. If the deletion fails then it is silently ignored.
+        reason: Optional[:class:`str`]
+            The reason for deleting this message. Shows up on the audit log.
 
         Raises
         ------
@@ -1252,13 +1262,13 @@ class Message(Hashable):
             async def delete(delay: float):
                 await asyncio.sleep(delay)
                 try:
-                    await self._state.http.delete_message(self.channel.id, self.id)
+                    await self._state.http.delete_message(self.channel.id, self.id, reason=reason)
                 except HTTPException:
                     pass
 
             asyncio.create_task(delete(delay))
         else:
-            await self._state.http.delete_message(self.channel.id, self.id)
+            await self._state.http.delete_message(self.channel.id, self.id, reason=reason)
 
     @overload
     async def edit(
@@ -1668,7 +1678,14 @@ class Message(Hashable):
         """
         await self._state.http.clear_reactions(self.channel.id, self.id)
 
-    async def create_thread(self, *, name: str, auto_archive_duration: ThreadArchiveDuration = MISSING) -> Thread:
+    async def create_thread(
+        self,
+        *,
+        name: str,
+        auto_archive_duration: ThreadArchiveDuration = MISSING,
+        slowmode_delay: Optional[int] = None,
+        reason: Optional[str] = None,
+    ) -> Thread:
         """|coro|
 
         Creates a public thread from this message.
@@ -1687,6 +1704,12 @@ class Message(Hashable):
         auto_archive_duration: :class:`int`
             The duration in minutes before a thread is automatically archived for inactivity.
             If not provided, the channel's default auto archive duration is used.
+        slowmode_delay: Optional[:class:`int`]
+            Specifies the slowmode rate limit for user in this channel, in seconds.
+            The maximum value possible is `21600`. By default no slowmode rate limit
+            if this is ``None``.
+        reason: :class:`str`
+            The reason for creating a new thread. Shows up on the audit log.
 
         Raises
         -------
@@ -1711,6 +1734,8 @@ class Message(Hashable):
             self.id,
             name=name,
             auto_archive_duration=auto_archive_duration or default_auto_archive_duration,
+            rate_limit_per_user=slowmode_delay,
+            reason=reason,
         )
         return Thread(guild=self.guild, state=self._state, data=data)
 
@@ -1839,7 +1864,7 @@ class PartialMessage(Hashable):
         to_reference = Message.to_reference
         to_message_reference_dict = Message.to_message_reference_dict
 
-    def __init__(self, *, channel: PartialMessageableChannel, id: int):
+    def __init__(self, *, channel: PartialMessageableChannel, id: int) -> None:
         if channel.type not in (
             ChannelType.text,
             ChannelType.news,

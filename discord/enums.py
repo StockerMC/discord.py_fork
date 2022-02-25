@@ -78,6 +78,7 @@ __all__ = (
     'ScheduledEventEntityType',
     'ScheduledEventStatus',
     'Locale',
+    'MFALevel',
     'InputTextStyle',
 )
 
@@ -101,11 +102,10 @@ def _is_descriptor(obj: Any) -> bool:
 
 
 class EnumMeta(type):
-    if TYPE_CHECKING:
-        __name__: ClassVar[str]
-        _enum_member_names_: ClassVar[List[str]]
-        _enum_member_map_: ClassVar[Dict[str, Any]]
-        _enum_value_map_: ClassVar[Dict[Any, Any]]
+    __name__: ClassVar[str]
+    _enum_member_names_: ClassVar[List[str]]
+    _enum_member_map_: ClassVar[Dict[str, Any]]
+    _enum_value_map_: ClassVar[Dict[Any, Any]]
 
     def __new__(cls, name: str, bases: Tuple[type, ...], attrs: Dict[str, Any], *, comparable: bool = False) -> Self:
         value_mapping = {}
@@ -161,13 +161,13 @@ class EnumMeta(type):
     def __members__(cls) -> Mapping[str, Any]:
         return types.MappingProxyType(cls._enum_member_map_)
 
-    def __call__(cls, value: Any) -> Any:
+    def __call__(cls, value: str) -> Any:
         try:
             return cls._enum_value_map_[value]
         except (KeyError, TypeError):
             raise ValueError(f"{value!r} is not a valid {cls.__name__}")
 
-    def __getitem__(cls, key: Any) -> Any:
+    def __getitem__(cls, key: str) -> Any:
         return cls._enum_member_map_[key]
 
     def __setattr__(cls, name: str, value: Any) -> NoReturn:
@@ -189,10 +189,10 @@ if TYPE_CHECKING:
     import enum
 
     class Enum(enum.Enum):
-        def __le__(self, other: Self) -> bool: ...
-        def __ge__(self, other: Self) -> bool: ...
-        def __lt__(self, other: Self) -> bool: ...
-        def __gt__(self, other: Self) -> bool: ...
+        def __le__(self, other: object) -> bool: ...
+        def __ge__(self, other: object) -> bool: ...
+        def __lt__(self, other: object) -> bool: ...
+        def __gt__(self, other: object) -> bool: ...
 else:
 
     class Enum(metaclass=EnumMeta):
@@ -242,9 +242,10 @@ class MessageType(Enum):
     guild_discovery_grace_period_final_warning = 17
     thread_created = 18
     reply = 19
-    application_command = 20
+    chat_input_command = 20
     thread_starter_message = 21
     guild_invite_reminder = 22
+    context_menu_command = 23
 
 
 class VoiceRegion(Enum):
@@ -499,6 +500,7 @@ class UserFlags(Enum):
     verified_bot_developer = 131072
     discord_certified_moderator = 262144
     bot_http_interactions = 524288
+    spammer = 1048576
 
 
 class ActivityType(Enum):
@@ -642,13 +644,14 @@ class ApplicationCommandOptionType(Enum):
     sub_command = 1
     sub_command_group = 2
     string = 3
-    integer = 4 # Any integer between -2^53 and 2^53
+    integer = 4  # Any integer between -2^53 and 2^53
     boolean = 5
     user = 6
-    channel = 7 # Includes all channel types + categories
+    channel = 7  # Includes all channel types + categories
     role = 8
-    mentionable = 9 # Includes users and roles
-    number = 10 # Any double between -2^53 and 2^53
+    mentionable = 9  # Includes users and roles
+    number = 10  # Any double between -2^53 and 2^53
+    attachment = 11  # Attachment object
 
     def __int__(self) -> int:
         return self.value
@@ -702,6 +705,17 @@ class Locale(Enum):
     tr = 'tr'
     uk = 'uk'
     vi = 'vi'
+
+    def __str__(self) -> str:
+        return self.value
+
+
+class MFALevel(Enum):
+    none = 0
+    elevated = 1
+
+    def __int__(self) -> int:
+        return self.value
 
 
 class InputTextStyle(Enum):

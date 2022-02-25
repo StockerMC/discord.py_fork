@@ -24,7 +24,7 @@ DEALINGS IN THE SOFTWARE.
 
 from __future__ import annotations
 
-from typing import Any, List, Optional, TYPE_CHECKING, Union
+from typing import List, Optional, TYPE_CHECKING, Union
 
 from .utils import snowflake_time, _get_as_snowflake, resolve_invite
 from .user import BaseUser
@@ -138,8 +138,6 @@ class WidgetMember(BaseUser):
         The member's status.
     nick: Optional[:class:`str`]
         The member's nickname.
-    avatar: Optional[:class:`str`]
-        The member's avatar hash.
     activity: Optional[Union[:class:`BaseActivity`, :class:`Spotify`]]
         The member's activity.
     deafened: Optional[:class:`bool`]
@@ -165,12 +163,11 @@ class WidgetMember(BaseUser):
         'connected_channel',
     )
 
-    if TYPE_CHECKING:
-        name: str
-        discriminator: str
-        id: int
-        bot: bool
-        activity: Optional[Union[BaseActivity, Spotify]]
+    name: str
+    discriminator: str
+    id: int
+    bot: bool
+    activity: Optional[Union[BaseActivity, Spotify]]
 
     def __init__(
         self,
@@ -279,10 +276,8 @@ class Widget:
     def __str__(self) -> str:
         return self.json_url
 
-    def __eq__(self, other: Any) -> bool:
-        if isinstance(other, Widget):
-            return self.id == other.id
-        return False
+    def __eq__(self, other: object) -> bool:
+        return isinstance(other, Widget) and other.id == self.id
 
     def __repr__(self) -> str:
         return f'<Widget id={self.id} name={self.name!r} invite_url={self.invite_url!r}>'

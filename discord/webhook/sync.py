@@ -37,7 +37,7 @@ import time
 import re
 
 from urllib.parse import quote as urlquote
-from typing import Any, Dict, List, Literal, Optional, TYPE_CHECKING, Tuple, Type, TypeVar, Union, Coroutine, overload
+from typing import Any, Dict, List, Literal, Optional, TYPE_CHECKING, Type, TypeVar, Union, overload
 
 from .. import utils
 from ..errors import InvalidArgument, HTTPException, Forbidden, NotFound, DiscordServerError
@@ -565,7 +565,7 @@ class SyncWebhook(BaseWebhook):
         .. versionadded:: 2.0
     """
 
-    __slots__: Tuple[str, ...] = ('session',)
+    __slots__ = ('session',)
 
     def __init__(
         self,
