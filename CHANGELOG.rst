@@ -163,10 +163,11 @@ Removed ``ApplicationCommandOptionDefault`` in favour of passing callables that 
 February 24, 2022
 -----------------
 
-Added the ``reason`` keyword argument to the following methods:
-- ``TextChannel.delete_messages``
-- ``TextChannel.purge``
-- ``Message.delete``
+- Added the ``reason`` keyword argument to the following methods:
+  * ``TextChannel.delete_messages``
+  * ``TextChannel.purge``
+  * ``Message.delete``
+- Bumped the library version to ``2.1.0`` from ``2.0.0a``
 
 Modals
 ------
