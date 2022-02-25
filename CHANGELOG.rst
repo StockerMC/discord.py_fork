@@ -159,3 +159,11 @@ February 21, 2022
 -----------------
 
 Removed ``ApplicationCommandOptionDefault`` in favour of passing callables that can be regular functions or coroutine functions.
+
+February 24, 2022
+-----------------
+
+Added the ``reason`` keyword argument to the following methods:
+- ``TextChannel.delete_messages``
+- ``TextChannel.purge``
+- ``Message.delete``
