@@ -179,4 +179,4 @@ Implemented modal interactions:
   * ``discord.InputText`` (component)
   * ``discord.ui.InputText`` (item)
   * ``discord.ui.Modal``
-- Added an example in `examples/modal.py<examples/modal.py>`_
+- Added an example in `examples/modal.py <examples/modal.py>`_
