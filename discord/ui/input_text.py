@@ -56,7 +56,7 @@ class InputText(Item[V]):
     .. note::
 
         :meth:`callback` will never be called.
-        See :meth:`Modal.callback` for more information.
+        See :class:`discord.ui.Modal` for more information.
 
     .. versionadded:: 2.0
 
