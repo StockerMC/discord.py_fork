@@ -167,3 +167,18 @@ Added the ``reason`` keyword argument to the following methods:
 - ``TextChannel.delete_messages``
 - ``TextChannel.purge``
 - ``Message.delete``
+
+Modals
+------
+
+February 24, 2022
+^^^^^^^^^^^^^^^^
+
+Implemented modal interactions:
+
+- Added the following classes:
+
+  * ``discord.InputText`` (component)
+  * ``discord.ui.InputText`` (item)
+  * ``discord.ui.Modal``
+- Added an example in `examples/modal.py <examples/modal.py>`_

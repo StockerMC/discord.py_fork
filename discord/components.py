@@ -25,7 +25,7 @@ DEALINGS IN THE SOFTWARE.
 from __future__ import annotations
 
 from typing import Any, ClassVar, Dict, List, Optional, TYPE_CHECKING, Tuple, Union
-from .enums import try_enum, ComponentType, ButtonStyle
+from .enums import try_enum, ComponentType, ButtonStyle, InputTextStyle
 from .utils import get_slots, MISSING
 from .partial_emoji import PartialEmoji, _EmojiTag
 
@@ -38,6 +38,7 @@ if TYPE_CHECKING:
         SelectMenu as SelectMenuPayload,
         SelectOption as SelectOptionPayload,
         ActionRow as ActionRowPayload,
+        InputText as InputTextPayload,
     )
     from .emoji import Emoji
 
@@ -48,6 +49,7 @@ __all__ = (
     'Button',
     'SelectMenu',
     'SelectOption',
+    'InputText',
 )
 
 
@@ -371,6 +373,95 @@ class SelectOption:
         return payload
 
 
+class InputText(Component):
+    """Represents a modal's text input.
+
+    This inherits from :class:`Component`.
+
+    .. note::
+
+        The user constructible and usable type to create a button is :class:`discord.ui.Button`
+        not this one.
+
+    .. versionadded:: 2.0
+
+    Attributes
+    ------------
+    label: :class:`str`
+        The label of the text input.
+    style: :class:`discord.InputTextStyle`
+        The style of the text input. This will have an unknown enumeration value
+        if the text input was received from a modal submit interaction.
+    custom_id: Optional[:class:`str`]
+        The ID of the input text that gets received during an interaction.
+    placeholder: Optional[:class:`str`]
+        The placeholder text that is shown if nothing is typed, if any.
+        The maximum length of the text input.
+    required: :class:`bool`
+        Whether the text input is required.
+    value: Optional[:class:`str`]
+        The pre-filled text of the text input.
+    min_length: Optional[:class:`int`]
+        The minimum length of the text input.
+    max_length: Optional[:class:`int`]
+    """
+
+    __slots__: Tuple[str, ...] = (
+        'style',
+        'label',
+        'custom_id',
+        'placeholder',
+        'required',
+        'value',
+        'min_length',
+        'max_length',
+    )
+
+    __repr_info__: ClassVar[Tuple[str, ...]] = __slots__
+
+    def __init__(self, data: InputTextPayload) -> None:
+        self.type: ComponentType = ComponentType.input_text
+        self.label: str = data.get('label')  # type: ignore
+        self.style: InputTextStyle = try_enum(InputTextStyle, data.get('style'))
+        self.custom_id: str = data['custom_id']
+        self.placeholder: Optional[str] = data.get('placeholder')
+        self.required: bool = data.get('required', True)
+        self.value: Optional[str] = data.get('value')
+        self.min_length: Optional[int] = None
+        self.max_length: Optional[int] = None
+
+        # are the int calls necessary?
+        try:
+            self.min_length = int(data['min_length'])
+        except KeyError:
+            pass
+
+        try:
+            self.max_length = int(data['max_length'])
+        except KeyError:
+            pass
+
+    def to_dict(self) -> InputTextPayload:
+        payload: InputTextPayload = {
+            'type': self.type.value,
+            'custom_id': self.custom_id,
+            'label': self.label,
+            'style': self.style.value,
+            'required': self.required,
+        }  # type: ignore
+
+        if self.value is not None:
+            payload['value'] = self.value
+
+        if self.min_length is not None:
+            payload['min_length'] = self.min_length
+
+        if self.max_length is not None:
+            payload['max_length'] = self.max_length
+
+        return payload
+
+
 def _component_factory(data: ComponentPayload) -> Component:
     component_type = data['type']
     if component_type == 1:
@@ -379,6 +470,8 @@ def _component_factory(data: ComponentPayload) -> Component:
         return Button(data)  # type: ignore
     elif component_type == 3:
         return SelectMenu(data)  # type: ignore
+    elif component_type == 4:
+        return InputText(data)  # type: ignore
     else:
         as_enum = try_enum(ComponentType, component_type)
         return Component._raw_construct(type=as_enum)

@@ -68,6 +68,7 @@ if TYPE_CHECKING:
     from aiohttp import ClientSession
     from .embeds import Embed
     from .ui.view import View
+    from .ui.modal import Modal
     from .channel import VoiceChannel, StageChannel, TextChannel, CategoryChannel, StoreChannel, PartialMessageable
     from .threads import Thread
     from .client import Client
@@ -868,6 +869,58 @@ class InteractionResponse:
 
         if view and not view.is_finished():
             state.store_view(view, message_id)
+
+        self._responded = True
+
+    async def send_modal(self, modal: Modal) -> None:
+        """|coro|
+
+        Responds to this interaction with a modal.
+
+        .. note::
+
+            You cannot respond with a modal to interactions with type
+            :attr:`InteractionType.modal_submit`.
+
+        Parameters
+        ----------
+        modal: :class:`discord.ui.Modal`
+            The modal to respond to the interaction with.
+
+        Raises
+        -------
+        HTTPException
+            Sending the message failed.
+        InteractionResponded
+            This interaction has already been responded to before.
+        """
+        if self._responded:
+            raise InteractionResponded(self._parent)
+
+        # circular import
+        from .ui.modal import Modal
+
+        if not isinstance(modal, Modal):
+            raise TypeError(f'expected an instance of Modal not {modal.__class__!r}')
+
+        parent = self._parent
+        state = parent._state
+        if parent.type not in (InteractionType.component, InteractionType.application_command):
+            return
+
+        data: Dict[str, Any] = modal.to_callback_data()
+
+        adapter = async_context.get()
+        await adapter.create_interaction_response(
+            parent.id,
+            parent.token,
+            session=parent._session,
+            type=InteractionResponseType.modal.value,
+            data=data,
+        )
+
+        if not modal.is_finished():
+            state.store_modal(modal, parent.user.id)  # type: ignore
 
         self._responded = True
 
