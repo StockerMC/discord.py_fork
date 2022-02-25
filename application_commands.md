@@ -1,6 +1,6 @@
 # Application Commands
 
-Application commands in this libary are based on 
+Application commands are based on the class based implementation in the [slash command DSL](https://gist.github.com/Rapptz/2a7a299aa075427357e9b8a970747c2c) made by Rapptz.
 
 Examples can be found in the [examples/application_commands directory](examples/application_commands).
 
