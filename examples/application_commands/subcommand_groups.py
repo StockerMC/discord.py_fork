@@ -6,10 +6,6 @@ class MyClient(discord.Client):
         print(f'Logged in as {self.user} (ID: {self.user.id})')
         print('------')
 
-class AuthorDefault(discord.ApplicationCommandOptionDefault):
-    async def default(self, response: discord.SlashCommandResponse):
-        return response.user
-
 # setting `guild_ids` in development is better when possible because
 # registering global commands has a 1 hour delay
 class Permissions(discord.SlashCommand, guild_ids=[123]):
@@ -21,7 +17,11 @@ class User(discord.SlashCommand, parent=Permissions, group=True):
 class Get(discord.SlashCommand, parent=User):
     """Get permissions for a user in the specified or current channel"""
 
-    user: typing.Optional[discord.User] = discord.application_command_option(description='The user to get', default=AuthorDefault)
+    user: typing.Optional[discord.User] = discord.application_command_option(
+        description='The user to get',
+        # the default callback can also be a coroutine function
+        default=lambda response: response.user,
+    )
 
     async def callback(self, response: discord.SlashCommandResponse):
         user = response.options.user

@@ -312,7 +312,7 @@ class Command(discord._types._BaseCommand, Generic[CogT, P, T]):
     def __init__(self, func: Union[
             Callable[Concatenate[CogT, ContextT, P], Coro[T]],
             Callable[Concatenate[ContextT, P], Coro[T]],
-        ], **kwargs: Any):
+        ], **kwargs: Any) -> None:
         if not asyncio.iscoroutinefunction(func):
             raise TypeError('Callback must be a coroutine.')
 

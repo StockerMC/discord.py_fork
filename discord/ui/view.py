@@ -23,7 +23,7 @@ DEALINGS IN THE SOFTWARE.
 """
 
 from __future__ import annotations
-from typing import TYPE_CHECKING, Any, Callable, ClassVar, Dict, Iterator, List, Optional, Sequence, Tuple, Coroutine
+from typing import TYPE_CHECKING, Any, Callable, ClassVar, Dict, Iterator, List, Optional, Sequence, Tuple
 from functools import partial
 from itertools import groupby
 
@@ -78,7 +78,7 @@ class _ViewWeights:
         'weights',
     )
 
-    def __init__(self, children: List[Item]):
+    def __init__(self, children: List[Item]) -> None:
         self.weights: List[int] = [0, 0, 0, 0, 0]
 
         key = lambda i: sys.maxsize if i.row is None else i.row
@@ -157,7 +157,7 @@ class View:
         self.children: List[Item[Any]] = []
         for func in self.__view_children_items__:
             item: Item[Any] = func.__discord_ui_model_type__(**func.__discord_ui_model_kwargs__)
-            item.callback = lambda interaction: func(self, item, interaction)
+            item.callback = partial(func, self, item)  # type: ignore
             item._view = self
             setattr(self, func.__name__, item)
             self.children.append(item)

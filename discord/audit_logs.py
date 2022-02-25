@@ -213,7 +213,7 @@ class AuditLogChanges:
     }
     # fmt: on
 
-    def __init__(self, entry: AuditLogEntry, data: List[AuditLogChangePayload]):
+    def __init__(self, entry: AuditLogEntry, data: List[AuditLogChangePayload]) -> None:
         self.before: AuditLogDiff = AuditLogDiff()
         self.after: AuditLogDiff = AuditLogDiff()
 
@@ -355,7 +355,7 @@ class AuditLogEntry(Hashable):
         which actions have this field filled out.
     """
 
-    def __init__(self, *, users: Dict[int, User], data: AuditLogEntryPayload, guild: Guild):
+    def __init__(self, *, users: Dict[int, User], data: AuditLogEntryPayload, guild: Guild) -> None:
         self._state: ConnectionState = guild._state
         self.guild: Guild = guild
         self._users: Dict[int, User] = users

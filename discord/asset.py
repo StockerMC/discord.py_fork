@@ -26,7 +26,7 @@ from __future__ import annotations
 
 import io
 import os
-from typing import Any, Literal, Optional, TYPE_CHECKING, Tuple, Union
+from typing import Any, Literal, Optional, TYPE_CHECKING, ClassVar, Union
 from .errors import DiscordException
 from .errors import InvalidArgument
 from . import utils
@@ -147,14 +147,14 @@ class Asset(AssetMixin):
             Returns the hash of the asset.
     """
 
-    __slots__: Tuple[str, ...] = (
+    __slots__ = (
         '_state',
         '_url',
         '_animated',
         '_key',
     )
 
-    BASE = 'https://cdn.discordapp.com'
+    BASE: ClassVar[str] = 'https://cdn.discordapp.com'
 
     def __init__(self, state: Union[ConnectionState, _WebhookState], *, url: str, key: str, animated: bool = False) -> None:
         self._state: Union[ConnectionState, _WebhookState] = state
@@ -272,7 +272,7 @@ class Asset(AssetMixin):
         shorten = self._url.replace(self.BASE, '')
         return f'<Asset url={shorten!r}>'
 
-    def __eq__(self, other: Any) -> bool:
+    def __eq__(self, other: object) -> bool:
         return isinstance(other, Asset) and self._url == other._url
 
     def __hash__(self) -> int:

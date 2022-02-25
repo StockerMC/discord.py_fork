@@ -100,7 +100,7 @@ class Permissions(BaseFlags):
 
     __slots__ = ()
 
-    def __init__(self, permissions: int = 0, **kwargs: bool):
+    def __init__(self, permissions: int = 0, **kwargs: bool) -> None:
         if not isinstance(permissions, int):
             raise TypeError(f'Expected int parameter, received {permissions.__class__.__name__} instead.')
 
@@ -703,7 +703,7 @@ class PermissionOverwrite:
         moderate_members: Optional[bool]
         timeout_members: Optional[bool]
 
-    def __init__(self, **kwargs: Optional[bool]):
+    def __init__(self, **kwargs: Optional[bool]) -> None:
         self._values: Dict[str, Optional[bool]] = {}
 
         for key, value in kwargs.items():
@@ -712,7 +712,7 @@ class PermissionOverwrite:
 
             setattr(self, key, value)
 
-    def __eq__(self, other: Any) -> bool:
+    def __eq__(self, other: object) -> bool:
         return isinstance(other, PermissionOverwrite) and self._values == other._values
 
     def _set(self, key: str, value: Optional[bool]) -> None:

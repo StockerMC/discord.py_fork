@@ -25,7 +25,7 @@ DEALINGS IN THE SOFTWARE.
 from __future__ import annotations
 
 from typing import Any, Optional, TYPE_CHECKING
-from .utils import parse_time, _get_as_snowflake, _bytes_to_base64_data, MISSING
+from .utils import parse_time, _bytes_to_base64_data, MISSING
 from .enums import VoiceRegion
 from .guild import Guild
 
@@ -48,7 +48,7 @@ class _FriendlyHttpAttributeErrorHelper:
 
 
 class _PartialTemplateState:
-    def __init__(self, *, state):
+    def __init__(self, *, state: ConnectionState) -> None:
         self.__state = state
         self.http = _FriendlyHttpAttributeErrorHelper()
 
@@ -62,7 +62,7 @@ class _PartialTemplateState:
 
     @property
     def self_id(self):
-        return self.__state.user.id
+        return self.__state.self_id
 
     @property
     def member_cache_flags(self):

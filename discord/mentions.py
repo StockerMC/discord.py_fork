@@ -40,7 +40,7 @@ class _FakeBool:
     def __repr__(self) -> str:
         return 'True'
 
-    def __eq__(self, other: Any) -> TypeGuard[Literal[True]]:
+    def __eq__(self, other: object) -> TypeGuard[Literal[True]]:
         return other is True
 
     def __bool__(self) -> Literal[True]:
@@ -94,7 +94,7 @@ class AllowedMentions:
         users: Union[bool, List[Snowflake]] = default,
         roles: Union[bool, List[Snowflake]] = default,
         replied_user: bool = default,
-    ):
+    ) -> None:
         self.everyone: bool = everyone
         self.users: Union[bool, List[Snowflake]] = users
         self.roles: Union[bool, List[Snowflake]] = roles
