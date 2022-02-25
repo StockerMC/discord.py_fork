@@ -13,6 +13,8 @@ class QuestionsBot(commands.Bot):
 
 
 class QuestionsModal(discord.ui.Modal):
+    children: List[discord.ui.InputText]
+
     def __init__(self, user):
         children: List[discord.ui.Item] = [
             discord.ui.InputText(label='What is your favourite colour?', style=discord.InputTextStyle.short),
@@ -23,8 +25,8 @@ class QuestionsModal(discord.ui.Modal):
         super().__init__(title=f'{user}\'s Questionnaire', children=children)
 
     async def callback(self, interaction: discord.Interaction) -> None:
-        message = f'Your favourite colour is **{self.children[0].value}**!\n'  # type: ignore
-        message += f'Your favourite animal is **{self.children[1].value}**!\n'  # type: ignore
+        message = f'Your favourite colour is **{self.children[0].value}**!\n'
+        message += f'Your favourite animal is **{self.children[1].value}**!\n'
         favourite_countries = len(self.children[2].value.split())  # type: ignore
         message += f'You have **{favourite_countries}** favourite countries!'
 
