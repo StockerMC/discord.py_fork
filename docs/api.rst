@@ -4652,6 +4652,22 @@ Select
 
 .. autofunction:: discord.ui.select
 
+InputText
+~~~~~~~~~~
+
+.. attributetable:: discord.ui.InputText
+
+.. autoclass:: discord.ui.InputText
+    :members:
+
+Modal
+~~~~~~~~
+
+.. attributetable:: discord.ui.Modal
+
+.. autoclass:: discord.ui.Modal
+    :members:
+
 
 Exceptions
 ------------
