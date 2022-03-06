@@ -20,6 +20,12 @@ A list of changes made to the fork from the original are in the `changelog <CHAN
 
 Application commands are documented in `<application_commands.md>`_.
 
+This fork is not being worked on anymore
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+In light of discord.py `resuming development <https://gist.github.com/Rapptz/c4324f17a80c94776832430007ad40e6>`_, this fork will not be worked on anymore.
+
+
 Key Features
 -------------
 
@@ -37,27 +43,27 @@ To install the library without full voice support, you can just run the followin
 .. code:: sh
 
     # Linux/macOS
-    python3 -m pip install -U git+https://github.com/StockerMC/discord.py
+    python3 -m pip install -U git+https://github.com/StockerMC/discord.py_fork
 
     # Windows
-    py -3 -m pip install -U git+https://github.com/StockerMC/discord.py
+    py -3 -m pip install -U git+https://github.com/StockerMC/discord.py_fork
 
 Otherwise to get voice support you should run the following command:
 
 .. code:: sh
 
     # Linux/macOS
-    python3 -m pip install -U "git+https://github.com/StockerMC/discord.py[voice]"
+    python3 -m pip install -U "git+https://github.com/StockerMC/discord.py_fork[voice]"
 
     # Windows
-    py -3 -m pip install -U git+https://github.com/StockerMC/discord.py[voice]
+    py -3 -m pip install -U git+https://github.com/StockerMC/discord.py_fork[voice]
 
 
 To install the development version, do the following:
 
 .. code:: sh
 
-    $ git clone git+https://github.com/StockerMC/discord.py
+    $ git clone git+https://github.com/StockerMC/discord.py_fork
     $ cd discord.py
     $ python3 -m pip install -U .[voice]
 
