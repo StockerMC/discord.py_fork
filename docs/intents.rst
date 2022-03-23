@@ -109,6 +109,36 @@ Member Intent
 
 .. _intents_member_cache:
 
+.. need_message_content_intent:
+
+Message Content Intent
+++++++++++++++++++++++++
+
+- Whether you have access to any of the following attributes:
+  
+  * :attr:`Message.content`
+  * :attr:`Message.embeds`
+  * :attr:`Message.attachments`
+  * :attr:`Message.components`
+
+This means that these attributes will be set to an empty string or list depending
+on the type of the attribute.
+
+The bot will still receive these attributes if:
+
+- The message was sent by the bot
+- The message was sent in the bot's DMs
+- The message mentions the bot
+
+These restrictions do not apply to messages received via interactions.
+
+For more information go to the :ref:`message content intent documentation <need_message_content_intent>`.
+
+.. note::
+
+    Currently, this requires opting in explicitly via the developer portal as well.
+    Bots in over 100 guilds will need to apply to Discord for verification.
+
 Member Cache
 -------------
 
