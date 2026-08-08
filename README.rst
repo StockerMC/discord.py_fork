@@ -20,10 +20,12 @@ A list of changes made to the fork from the original are in the `changelog <CHAN
 
 Application commands are documented in `<application_commands.md>`_.
 
-This fork is not being worked on anymore
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Status
+~~~~~~
 
-In light of discord.py `resuming development <https://gist.github.com/Rapptz/c4324f17a80c94776832430007ad40e6>`_, this fork will not be worked on anymore.
+This fork was maintained from August 2021, when development on discord.py was discontinued, until upstream development `resumed <https://gist.github.com/Rapptz/c4324f17a80c94776832430007ad40e6>`_ in 2022. During that time it tracked the Discord API directly, adding support for application commands, member timeouts and guild scheduled events.
+
+It is kept up as an archive and is no longer maintained.
 
 
 Key Features
@@ -63,8 +65,8 @@ To install the development version, do the following:
 
 .. code:: sh
 
-    $ git clone git+https://github.com/StockerMC/discord.py_fork
-    $ cd discord.py
+    $ git clone https://github.com/StockerMC/discord.py_fork
+    $ cd discord.py_fork
     $ python3 -m pip install -U .[voice]
 
 
@@ -121,6 +123,8 @@ Slash Command Example
 ~~~~~~~~~~~~~
 
 .. code:: py
+
+    import typing
 
     import discord
 

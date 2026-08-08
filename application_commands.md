@@ -6,8 +6,8 @@ Examples can be found in the [examples/application_commands directory](examples/
 
 ## Defining Commands
 
-- To define a application command, subclass ``SlashCommand``, ``MessageCommand``, or ``UserCommand``.
-- An application command must have a desdcription. This can be the docstring of the class or the ``description`` keyword argument.
+- To define an application command, subclass ``SlashCommand``, ``MessageCommand``, or ``UserCommand``.
+- An application command must have a description. This can be the docstring of the class or the ``description`` keyword argument.
 - Arguments are passed to the class with keyword arguments inline with the class definition. For example:
 ```python
 class Command(discord.SlashCommand, name='command_name'):

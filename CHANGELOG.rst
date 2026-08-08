@@ -20,8 +20,8 @@ September 21, 2021
 Implemented application commands:
 
 - Based on `Danny's class based slash command DSL <https://gist.github.com/Rapptz/2a7a299aa075427357e9b8a970747c2c>`_
-- `Examples <https://gist.github.com/StockerMC/discord.py/examples/application_commands>`_
-- Documentation: TODO
+- `Examples <examples/application_commands>`_
+- `Documentation <application_commands.md>`_
 
 October 8, 2021
 ^^^^^^^^^^^^^^^
